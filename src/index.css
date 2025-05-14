@@ -1,0 +1,72 @@
+:root {
+  /* Colors */
+  --primary-color: #1b4d69;  
+  --secondary-color: #8eabbb;  
+
+  --bg-primary-color: #fbfbfb;    
+  --bg-secondary-color: #f2f2f2;  
+
+
+  --text-color-primary: #000;
+  --text-color-secondary: #080505;
+  --text-color: #f1f1f1;
+
+  --sub-heading-fz:2rem;
+  --sub-heading-font-weight:400
+
+  
+}
+
+
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #eaeef2;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+.Toastify__toast {
+  backdrop-filter: blur(10px);
+  background: rgba(23, 66, 158, 0.4);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.css-dev-only-do-not-override-vryruh.ant-upload.ant-upload-drag,
+.css-dev-only-do-not-override-vryruh.ant-upload.ant-upload-drag p {
+  height: auto !important;
+  padding: 0 !important;
+}
+
+.ant-upload-wrapper .ant-upload-drag{
+  border: 1px dashed #e2e6ea;
+  height: auto ;
+}
+
+.ant-upload-wrapper .ant-upload-drag:hover{
+  border: 1px dashed #e2e6ea;
+}
+
+.ant-upload-wrapper .ant-upload-list{
+  box-shadow: inset 0px 3px 6px 0px rgba(0, 0, 0, 0.2);
+  max-height: 30px;
+  margin: 8px 8px 0 8px;
+  padding: 0 12px;
+  overflow-y: auto;
+}
+
+.ant-tooltip .css-dev-only-do-not-override-vryruh .ant-tooltip-placement-bottom{
+  display: none;
+}
+
+/*  maxHeight: '450px', overflowY: 'auto',  p:2, border:"1px solid black"  */

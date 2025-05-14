@@ -1,0 +1,70 @@
+import React, { useState } from 'react';
+import { Select, MenuItem } from '@mui/material';
+import { UserRound } from 'lucide-react'; 
+
+const arr_list = [
+  { id: 'any', name: 'Any Professional' },
+  { id: 'mohit', name: 'Mohit Kumar' },
+  { id: 'john', name: 'John Doe' },
+  { id: 'jane', name: 'Jane Smith' },
+];
+
+const ServiceStaffSelect = ({selectedStaff}) => {
+  const [selectedValue, setSelectedValue] = useState('any'); 
+
+  const handleChange = (event) => {
+    setSelectedValue(event.target.value); 
+    selectedStaff(event.target.value);
+  };
+
+  return (
+    <Select
+      fullWidth
+      value={selectedValue} 
+      onChange={handleChange}
+      startAdornment={<UserRound sx={{ mr: 2 }} />}
+      sx={{
+        bgcolor: '#dce1e6',
+        border: 'none',
+        py: 0,
+        borderRadius: 3,
+        px: '1.9rem',
+        '& fieldset': { border: 'none' },
+        '& .MuiSelect-select': { pl: 2, pr: 3 },
+        '& .MuiSelect-icon': { right: '2rem' },
+      }}
+      MenuProps={{
+        PaperProps: {
+          sx: {
+            borderRadius: 2,
+            '& .MuiList-root': {
+              paddingTop: 0,
+              paddingBottom: 0,
+            },
+            '& .MuiMenu-list': {
+              paddingTop: 0,
+              paddingBottom: 0,
+            },
+          },
+        },
+      }}
+    >
+      {arr_list.map((staff) => (
+        <MenuItem
+          key={staff.id} 
+          value={staff.id} 
+          sx={{
+            bgcolor: '#fff',
+            '&:hover': { bgcolor: '#eaeef2' },
+            '&.Mui-selected': { bgcolor: '#1b4d69', color: '#fff' }, 
+            '&.Mui-selected:hover': { bgcolor: '#1b4d69', color: '#fff' }, 
+          }}
+        >
+          {staff.name}
+        </MenuItem>
+      ))}
+    </Select>
+  );
+};
+
+export default ServiceStaffSelect;
