@@ -26,7 +26,11 @@ const theme = createTheme({
 
 
 export default function BusinessDocumentUploads() {
-  const previousData = useLocation();
+  const location = useLocation();
+  const storedData = localStorage.getItem('formData');
+  const previousData = location.state || (storedData ? JSON.parse(storedData) : {});
+
+
   const navigate = useNavigate();
   const [fileList, setFileList] = useState({});
 
@@ -34,12 +38,14 @@ export default function BusinessDocumentUploads() {
 
   const { 
     firstName, lastName, email, countryCode, phone, 
-    formData, teamSize, teamMembers, 
+    teamSize, teamMembers, 
     services 
-  } = previousData.state || {};
+  } = previousData || {};
+
+  
 
   const handleBackTeamPresence = () => {
-    navigate('/business-service-info', { state: previousData.state });
+    navigate('/business-service-info', { state: previousData });
   };
 
   // backend integration
@@ -47,22 +53,22 @@ export default function BusinessDocumentUploads() {
     try {
         // 1. Submit Business Details
         const businessPayload = {
-            BussinessUserId: Number(previousData.state.MerchantAccountID),
-            BussinessType: previousData.state.businessRole,
-            BusinessName: formData.businessName,
-            ProfileImage: formData.profilePicture ?? "",
-            Introduction: formData.introduction ?? null,
-            ShopNumber: formData.shopNumber ?? null,
-            StreetAddress: formData.streetAddress,
+            BussinessUserId: Number(previousData.MerchantAccountID),
+            BussinessType: previousData.businessRole,
+            BusinessName: previousData.formData.businessName,
+            ProfileImage: previousData.formData.profilePicture ?? "",
+            Introduction: previousData.formData.introduction ?? null,
+            ShopNumber: previousData.formData.shopNumber ?? null,
+            StreetAddress: previousData.formData.streetAddress,
             Nearby: null,
-            ZipCode: formData.zipCode,
-            Region: `${formData.city}, ${formData.state}`,
-            Latitude: parseFloat(formData.adrsLatitude),
-            Longitude: parseFloat(formData.adrsLongitude),
+            ZipCode: previousData.formData.zipCode,
+            Region: `${previousData.formData.city}, ${previousData.formData.state}`,
+            Latitude: parseFloat(previousData.formData.adrsLatitude),
+            Longitude: parseFloat(previousData.formData.adrsLongitude),
             LikesCount: 0,
-            website: formData.website ?? null,
-            OpeningTime: formData.openingTime ?? "00:00",
-            ClosingTime: formData.closingTime ?? "00:00",
+            website: previousData.formData.website ?? null,
+            OpeningTime: previousData.formData.openingTime ?? "00:00",
+            ClosingTime: previousData.formData.closingTime ?? "00:00",
             CreatedBy: 1,
             UpdatedBy: 1,
         };
@@ -73,100 +79,100 @@ export default function BusinessDocumentUploads() {
             body: JSON.stringify(businessPayload),
         });
 
-        const businessData = await businessResponse.json();
-        const businessId = Number(businessData.Data?._id);
+        // const businessData = await businessResponse.json();
+        // const businessId = Number(businessData.Data?._id);
   
-        if (!businessResponse.ok) throw new Error('Failed to save business details');
+        // if (!businessResponse.ok) throw new Error('Failed to save business details');
 
         // 2. Submit Staff Data
-        const staffPayload = teamMembers.map(member => ({
-          BussinessId: businessId,
-          Name: member.name,
-          StaffNumber: Number(member.id),
-          Gender: member.gender,
-          ProfileImage: member.profileImage || "",
-          Experience: String(member.experience), // Ensure it's a string
-          Role: Array.isArray(member.role) ? member.role.join(", ") : "General", // Convert to string
-          Specialization: "Orthopedics"
-        }));
+        // const staffPayload = teamMembers.map(member => ({
+        //   BussinessId: businessId,
+        //   Name: member.name,
+        //   StaffNumber: Number(member.id),
+        //   Gender: member.gender,
+        //   ProfileImage: member.profileImage || "",
+        //   Experience: String(member.experience), // Ensure it's a string
+        //   Role: Array.isArray(member.role) ? member.role.join(", ") : "General", // Convert to string
+        //   Specialization: "Orthopedics"
+        // }));
 
-        await fetch(`${constant.baseUrl}api/v1/Staff/create`, {
-            method: "POST", 
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(staffPayload),
-        });
+        // await fetch(`${constant.baseUrl}api/v1/Staff/create`, {
+        //     method: "POST", 
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify(staffPayload),
+        // });
 
-        // 3. Submit Services
-        const staffMap = new Map(teamMembers.map(member => [member.name, Number(member.id)]));
+        // // 3. Submit Services
+        // const staffMap = new Map(teamMembers.map(member => [member.name, Number(member.id)]));
        
-        const servicePayload = services.map(service => ({
-          BussinessId: businessId, 
-          ServiceName: service.name,
-          Price: parseFloat(service.price),
-          Duration: service.durationType === "days" 
-              ? `${service.duration}d`
-              : service.durationType === "hours"
-              ? `${service.duration}h`
-              : service.durationType === "minutes"
-              ? `${service.duration}m`
-              : service.durationType === "months"
-              ? `${service.duration}mo`
-              : `${service.duration}`,
-          AssignedStaffs: service.staff
-              .map(staffName => staffMap.get(staffName))
-              .filter(id => id !== undefined),
-          ImageURL: "",  
-          isDiscount: false,
-          DiscountPercentage: null  
-        }));
+        // const servicePayload = services.map(service => ({
+        //   BussinessId: businessId, 
+        //   ServiceName: service.name,
+        //   Price: parseFloat(service.price),
+        //   Duration: service.durationType === "days" 
+        //       ? `${service.duration}d`
+        //       : service.durationType === "hours"
+        //       ? `${service.duration}h`
+        //       : service.durationType === "minutes"
+        //       ? `${service.duration}m`
+        //       : service.durationType === "months"
+        //       ? `${service.duration}mo`
+        //       : `${service.duration}`,
+        //   AssignedStaffs: service.staff
+        //       .map(staffName => staffMap.get(staffName))
+        //       .filter(id => id !== undefined),
+        //   ImageURL: "",  
+        //   isDiscount: false,
+        //   DiscountPercentage: null  
+        // }));
 
-        await fetch(`${constant.baseUrl}api/v1/Service/create/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(servicePayload),
-        });
+        // await fetch(`${constant.baseUrl}api/v1/Service/create/`, {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(servicePayload),
+        // });
 
 
         
-        // 4. Submit Documents
-        const backendKeys = {
-            "Pan Card (Owner)": "PanCard",
-            "GST Certificate": "GstCertification",
-            "Business License": "BusinessLicense",
-            "Insurance Certificate": "InsuranceCertificate",
-            "Utility Bills": "UtilityBills",
-            "Upload Images": "Images",
-        };
+        // // 4. Submit Documents
+        // const backendKeys = {
+        //     "Pan Card (Owner)": "PanCard",
+        //     "GST Certificate": "GstCertification",
+        //     "Business License": "BusinessLicense",
+        //     "Insurance Certificate": "InsuranceCertificate",
+        //     "Utility Bills": "UtilityBills",
+        //     "Upload Images": "Images",
+        // };
 
-        const formData_n = new FormData();
-        Object.keys(fileList).forEach(docName => {
-            const key = backendKeys[docName];
-            if (key) {
-                fileList[docName].forEach(file => formData_n.append(key, file.originFileObj || file));
-            }
-        });
+        // const formData_n = new FormData();
+        // Object.keys(fileList).forEach(docName => {
+        //     const key = backendKeys[docName];
+        //     if (key) {
+        //         fileList[docName].forEach(file => formData_n.append(key, file.originFileObj || file));
+        //     }
+        // });
 
-        const url = `${constant.baseUrl}api/v1/Documents/create/?BussinessId=${businessId}`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrfToken },
-            body: formData_n,
-        });
+        // const url = `${constant.baseUrl}api/v1/Documents/create/?BussinessId=${businessId}`;
+        // const response = await fetch(url, {
+        //     method: 'POST',
+        //     headers: { 'X-CSRFToken': csrfToken },
+        //     body: formData_n,
+        // });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error uploading documents:", errorData);
-            alert("Document upload failed! Please reselect the documents and try again.");
-            setFileList({});
-            return;
-        }
+        // if (!response.ok) {
+        //     const errorData = await response.json();
+        //     console.error("Error uploading documents:", errorData);
+        //     alert("Document upload failed! Please reselect the documents and try again.");
+        //     setFileList({});
+        //     return;
+        // }
 
 
-        alert('All data uploaded successfully!');
+        // alert('All data uploaded successfully!');
         
-        localStorage.removeItem("formData");
-        navigate(previousData.pathname, { replace: true, state: null }); 
-        navigate('/business-page');
+        // localStorage.removeItem("formData");
+        // navigate(previousData.pathname, { replace: true, state: null }); 
+        // navigate('/business-page');
             
 
     } catch (error) {
@@ -196,7 +202,7 @@ export default function BusinessDocumentUploads() {
                   countryCode={countryCode}
                   phone={phone}
                   isSignIn={true}
-                  formData={previousData.state} 
+                  formData={previousData} 
                 />
 
               {/* <Box

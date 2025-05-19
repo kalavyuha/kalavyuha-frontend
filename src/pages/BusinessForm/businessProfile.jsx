@@ -29,9 +29,10 @@ const theme = createTheme({
 
 export default function BusinessProfileForm() {
   const navigate = useNavigate();
-  const previousData = useLocation();
+  const storedData = localStorage.getItem('formData');
+  const previousData = storedData ? JSON.parse(storedData) : {}
 
-  const { firstName, lastName, email, countryCode, phone, selectedId, formData: previousFormData } = previousData.state || {};
+  const { firstName, lastName, email, countryCode, phone, selectedId, formData: previousFormData } = previousData || {};
 
   const [formData, setFormData] = useState({
     businessName: previousFormData?.businessName || '',
@@ -52,7 +53,7 @@ export default function BusinessProfileForm() {
   // Function to navigate back and preserve form data
   const handleBack = () => {
     const combinedData = {
-      ...previousData.state,
+      ...previousData,
       formData, 
     };
     navigate('/business-info-selection', { state: combinedData });
@@ -60,7 +61,7 @@ export default function BusinessProfileForm() {
 
   const handleNextTeamPresence = () => {
     const combinedData = {
-      ...previousData.state,
+      ...previousData,
       formData,
       businessInfoCompleted:true,
       teamInfoCompleted:false
@@ -151,7 +152,7 @@ export default function BusinessProfileForm() {
                   countryCode={countryCode}
                   phone={phone}
                   isSignIn={true}
-                  formData={previousData.state} 
+                  formData={previousData} 
                 />
             </Grid>
 

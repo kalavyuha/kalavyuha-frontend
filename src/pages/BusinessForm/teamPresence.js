@@ -143,17 +143,19 @@ export default function TeamPresence() {
     }
   };
 
-  const previousData = useLocation();
+  
+  const location = useLocation();
+  const previousData = location.state || {};
+
   const {
     firstName,
     lastName,
     email,
     countryCode,
     phone,
-    formData: {previousFormData} = {}, 
     teamSize: previousTeamSize,
     teamMembers: previousTeamMembers,
-  } = previousData.state || {};
+  } = previousData || {};
 
   const [teamSize, setTeamSize] = useState(previousTeamSize || [1]);
   const [teamMembers, setTeamMembers] = useState(
@@ -162,12 +164,16 @@ export default function TeamPresence() {
 
   const handleBack = () => {
     const combinedData = {
-      ...previousData.state,
+      ...previousData,
       teamSize,
       teamMembers,
     };
     navigate('/business-profile-form', { state: combinedData });
   };
+
+  console.log("STERT")
+  console.log(previousData)
+  console.log("END")
 
   const addTeamMember = () => {
     const newMember = {
@@ -208,13 +214,15 @@ export default function TeamPresence() {
 
   const handleNextServiceMenu = () => {
     const combinedData = {
-      ...previousData.state,
+      ...previousData,
       teamSize,
       teamMembers,
       teamInfoCompleted: true,
     };
+    localStorage.setItem('formData', JSON.stringify(combinedData));
     navigate('/business-service-info', { state: combinedData });
   };
+
 
   const containerRef = useRef(null);
 
@@ -242,7 +250,7 @@ export default function TeamPresence() {
                   countryCode={countryCode}
                   phone={phone}
                   isSignIn={true}
-                  formData={previousData.state} 
+                  formData={previousData} 
                 />
 
             </Grid>

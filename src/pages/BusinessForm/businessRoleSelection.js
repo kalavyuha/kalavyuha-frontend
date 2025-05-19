@@ -35,9 +35,11 @@ const theme = createTheme({
 export default function BusinessRoleSelection() {
 
   const navigate = useNavigate();
-  const previousData = useLocation();
 
-  const { firstName, lastName, email, countryCode, phone } = previousData.state || {};
+  const storedFormData = localStorage.getItem('formData');
+  const previousData = storedFormData ? JSON.parse(storedFormData) : { businessRole: selected };
+  const { firstName, lastName, email, countryCode, phone } = previousData || {};
+
   const [selected, setSelected] = useState(null);
   
   const options = [
@@ -48,7 +50,7 @@ export default function BusinessRoleSelection() {
   ];
   
   useEffect(() => {
-    const savedRole = localStorage.getItem('selectedRole');
+    const savedRole = localStorage.getItem('businessRole');
     if (savedRole) {
       setSelected(JSON.parse(savedRole));
     }
@@ -56,24 +58,26 @@ export default function BusinessRoleSelection() {
   
   const handleSelect = (id) => {
     setSelected(id);
-    localStorage.setItem('selectedRole', JSON.stringify(id));
+    localStorage.setItem('businessRole', JSON.stringify(id));
   };
   
   const handleNextInfoSection = () => {
     if (selected) {
-      const formData = { ...previousData.state, businessRole: selected, isSignIn: true, businessInfoCompleted:false, teamInfoCompleted:false };
+      const formData = {
+        ...previousData,
+        businessRole: selected,
+        isSignIn: true,
+        businessInfoCompleted: false,
+        teamInfoCompleted: false
+      };
       localStorage.setItem('formData', JSON.stringify(formData));
-      
-      navigate('/business-info-selection', { state: formData });
+      navigate('/business-info-selection');
     } else {
       console.warn('No option selected');
     }
   };
   
-  const storedFormData = localStorage.getItem('formData');
-  const formData = storedFormData ? JSON.parse(storedFormData) : { businessRole: selected };
   
-  console.log(formData.businessRole)
   return (
     <ThemeProvider theme={theme}>
       <Box
@@ -90,13 +94,13 @@ export default function BusinessRoleSelection() {
             <Grid item xs={12} md={4}  square>
 
                 <LeftPanel
-                  firstName={formData.firstName}
-                  lastName={formData.lastName}
-                  email={formData.email}
-                  countryCode={formData.countryCode}
-                  phone={formData.phone}
+                  firstName={previousData.firstName}
+                  lastName={previousData.lastName}
+                  email={previousData.email}
+                  countryCode={previousData.countryCode}
+                  phone={previousData.phone}
                   businessRoleForm={true}
-                  formData={formData} 
+                  formData={previousData} 
                 />
             </Grid>
 

@@ -35,8 +35,11 @@ const theme = createTheme({
 
 export default function BusinessInfoSelection() {
   const navigate = useNavigate();
-  const previousData = useLocation();
-  const { firstName, lastName, email, countryCode, phone, businessRole } = previousData.state || {};
+  const storedData = localStorage.getItem('formData');
+  const previousData = storedData ? JSON.parse(storedData) : {};
+
+  const { firstName, lastName, email, countryCode, phone, businessRole } = previousData;
+
 
   const [selected, setSelected] = useState(null);
 
@@ -62,7 +65,7 @@ export default function BusinessInfoSelection() {
   
   const handleNext = () => {
     if (selected === 'no-website') {
-      const formData = { ...previousData.state, website: selected }; 
+      const formData = { ...previousData, website: selected }; 
       navigate('/business-profile-form', { state: formData });
     } else if (selected === 'have-website') {
       message.error('Functionality Under Progress PLEASE GO BACK');
@@ -71,7 +74,7 @@ export default function BusinessInfoSelection() {
   };
   
   const handleBackRoleSelect = () => {
-    navigate('/business-role-selection', { state: previousData.state });
+    navigate('/business-role-selection', { state: previousData });
   };
   
   return (
@@ -97,7 +100,7 @@ export default function BusinessInfoSelection() {
                   countryCode={countryCode}
                   phone={phone}
                   businessRoleForm = {true}
-                  formData={previousData.state} 
+                  formData={previousData} 
                 />
             </Grid>
 

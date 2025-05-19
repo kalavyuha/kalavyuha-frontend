@@ -27,13 +27,16 @@ const theme = createTheme({
 });
 
 export default function BusinessServiceInfo() {
-  const previousData = useLocation();
+  
   const navigate = useNavigate();
+    
+  const storedData = localStorage.getItem('formData');
+  const previousData = storedData ? JSON.parse(storedData) : {}
 
-  const { 
+  const {
     firstName, lastName, email, countryCode, phone,
-    formData, teamSize, teamMembers, services: previousServices 
-  } = previousData.state || {};
+    teamSize, teamMembers, services: previousServices,
+  } = previousData || {};
 
   const defaultService = [{
     id: '1',
@@ -52,7 +55,9 @@ export default function BusinessServiceInfo() {
   );
 
   const handleBackTeamPresence = () => {
-    navigate('/business-team-presence', { state: { ...previousData.state, services } });
+    const combinedData = { ...previousData, services };
+    localStorage.setItem('formData', JSON.stringify(combinedData));
+    navigate('/business-team-presence', { state: combinedData });
   };
 
   const handleNextDocumentUpload = () => {
@@ -60,8 +65,10 @@ export default function BusinessServiceInfo() {
       message.error("Please upload at least 5 non-empty services.");
       return;
     }
-    console.log(previousData.state)
-    navigate('/business-document-uploads', { state: { ...previousData.state, services } });
+    const combinedData = { ...previousData, services };
+  
+    localStorage.setItem('formData', JSON.stringify(combinedData));
+    navigate('/business-document-uploads', {state: combinedData });
   };
 
   const handleServicesChange = (updatedServices) => {
@@ -93,7 +100,7 @@ export default function BusinessServiceInfo() {
                   countryCode={countryCode}
                   phone={phone}
                   isSignIn={true}
-                  formData={previousData.state} 
+                  formData={previousData} 
                 />
             </Grid>
 
@@ -154,7 +161,7 @@ export default function BusinessServiceInfo() {
                               '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' },
                             }}
                             onClick={handleNextDocumentUpload}
-                            // disabled={services.length < 5}
+                            disabled={services.length < 5}
                           >
                             Next step
                           </Button>
