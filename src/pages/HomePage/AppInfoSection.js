@@ -40,7 +40,7 @@ const BookingAppLanding = () => {
             booking app
           </Typography>
           <Typography variant="h6" component="div" sx={{ color: "text.secondary", fontSize: { xs: "0.8rem", sm: "1rem", md: "1.1rem" } }}>
-            Download to get an instant discount on the first 2 bookings
+            <strong style={{ color: "#1b4d69" }}><u>Download</u></strong> now and save big on your first 2 bookings!
           </Typography>
         </Box>
 
@@ -54,7 +54,7 @@ const BookingAppLanding = () => {
             backdropFilter: "blur(10px)", 
             border: "5px solid rgba(255, 255, 255, 0.7)", 
             boxShadow: "0px 0px 15px rgba(255, 255, 255, 0.4)", 
-            width: { xs: "100%", md: "280px" },
+            width: { md: "280px" },
             textAlign: "center",
             zIndex: 1,
             marginTop: { xs: 0, md: "120px" },
@@ -84,7 +84,7 @@ const BookingAppLanding = () => {
                 backdropFilter: "blur(10px)",
                 border: "5px solid rgba(255, 255, 255, 0.7)",
                 boxShadow: "0px 0px 15px rgba(255, 255, 255, 0.4)",
-                width: { xs: "100%", md: "280px" },
+                width: {md: "280px" },
                 textAlign: "center",
                 zIndex: 1,
                 marginTop: { xs: 0, md: "40px" },
@@ -97,7 +97,7 @@ const BookingAppLanding = () => {
                 src={GiftBox}
                 alt="Gift Box"
                 sx={{
-                width: 50, // Adjust size as needed
+                width: 50, 
                 height: 50,
                 mb: 1,
                 }}
@@ -105,7 +105,7 @@ const BookingAppLanding = () => {
             <Typography variant="h6" fontWeight={600} mb={1}>
                 Earn Cashback, Bonuses & Gifts
             </Typography>
-            <Stack spacing={1} mt={2} sx={{alignItems: "center"}}>
+            <Stack spacing={1} mt={2} sx={{alignItems: "left"}}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <CheckCircleOutlineIcon sx={{ color: "text.secondary", fontSize: 18 }} />
                 <Typography variant="body2" color="text.secondary" textAlign="left">

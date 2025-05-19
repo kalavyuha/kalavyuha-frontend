@@ -81,7 +81,7 @@ const KalavyuhaBusinessPage = () => {
               height: '100%',
             }}
           >
-            <Box sx={{ flex: 1, pr: { sm: 2 }, pl:4, mb: { xs: 3, sm: 0 } }}>
+            <Box sx={{ flex: 1, pr: { sm: 2 }, px:4, my: { xs: 3, sm: 0 } }}>
               <Typography variant="h5" component="h2" fontWeight="bold" mb={1}>
                 Are you a business?
               </Typography>

@@ -37,19 +37,20 @@ import ColorLogo from "../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.
 
 
 const StyledAppBar = styled(AppBar)({
-  background: 'white',
-  boxShadow: 'none',
+  background: '#eaeef2',
+  boxShadow: '0px 2px 3px -2px rgba(0, 0, 0, 0.1)',
   transition: 'top 0.3s ease-in-out',
 });
 
 const NavButton = styled(Button)({
-  color: '#333',
+  color: '#1a1a1a',
   textTransform: 'none',
   fontSize: '16px',
-  borderRadius: '20px',
-  padding: '6px 18px',
+  borderRadius: '25px',
+  padding: '6px 24px',
+  '&:hover': {
   background: '#cdddec',
-  border: "1px solid black"
+  }
 });
 
 
@@ -59,13 +60,11 @@ const ProfileButton = styled(Button)({
   textTransform: 'none',
   fontSize: '16px',
   borderRadius: '20px',
-  padding: '6px 18px',
+  padding: '6px 24px',
   background: '#cdddec',
   '&:hover': {
-    // background: '#cdddec',
-
-    boxShadow: "1px 2px 5px -2px black",
-    // fontWeight:"550"
+    background: '#cdddec',
+    // boxShadow: "1px 2px 5px -2px black",
   },
 });
 
@@ -336,20 +335,17 @@ export default function Navbar() {
                   }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 'bold', lineHeight: 1, color: '#1b4d69' }}>
-                  Kalavyuha <br />{' '}
-                  <Typography component="span" sx={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#000' }}>
-                    Business
-                  </Typography>
+                  Kalavyuha 
                 </Typography>
               </Box>
 
             </Box>
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <NavButton size="large" startIcon={<Download />}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <NavButton startIcon={<Download />}>
                   Download
                 </NavButton>
-                <NavButton size="large" startIcon={<Store />}>
+                <NavButton startIcon={<Store />}>
                   Store
                 </NavButton>
               </Box>
@@ -363,9 +359,9 @@ export default function Navbar() {
                   color: '#333',
                   textTransform: 'none',
                   fontSize: '16px',
-                  borderRadius: '8px',
-                  padding: '6px 12px',
-                  border: "1px solid black",
+                  borderRadius: '20px',
+                  padding: '6px 18px',
+                  // border: "1px solid black",
                   // boxShadow:"1px 2px 5px -2px black",
                   '&:hover': {
                     boxShadow: "none",
@@ -376,24 +372,6 @@ export default function Navbar() {
                 >
                   <Notifications />
                 </IconButton>
-
-                {/* <IconButton size="small" color="#000" sx={{
-                    color: '#333',
-                    textTransform: 'none',
-                    fontSize: '16px',
-                    borderRadius: '8px',
-                    padding: '6px 12px',
-                    border: "1px solid black",
-                    // boxShadow:"1px 2px 5px -2px black",
-                    '&:hover':{
-                      background: '#cdddec',
-                      boxShadow:"none"
-                    },
-                    }}
-                    
-                  >
-                    <Settings />
-                  </IconButton> */}
               </Box>
 
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>

@@ -148,7 +148,7 @@ const Banner = () => {
                     <img
                       src={img || "/placeholder.svg"}
                       alt={`Banner ${idx + 1}`}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{ width: "100%",height:"40em", objectFit: "cover" }}
                     />
                   </div>
                 ))}
