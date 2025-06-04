@@ -82,6 +82,7 @@ function BeautyMain() {
   const fetchDetailData = async () => {
     setLoading(true)
     const result = await apiget(`api/v1/BussinessDetails/alldetails/${id}`);
+    console.log("resut",result)
     if (result && result.status === 200) {
       setBuisnessInfo(result?.data?.Data?.BusinessInfo);
       setServices(result?.data?.Data?.Services)
@@ -102,7 +103,7 @@ function BeautyMain() {
     setMatchingServices(services && services[0] ? services[0] : {});
    
   }, [services]);
-
+  console.log("data",buisnessInfo)
   return (
     <>
       <SearchBar onDataChange={''} buisnessInfo={buisnessInfo} />

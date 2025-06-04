@@ -53,7 +53,7 @@ const BusinessDocumentUploads = lazy(() => import("./pages/BusinessForm/business
 function App() {
     const location = useLocation();
     const hideNavbarRoutes = [
-        "/business-page",
+        // "/business-page",
         "/business-account",
         "/otp-verification",
         "/business-role-selection",

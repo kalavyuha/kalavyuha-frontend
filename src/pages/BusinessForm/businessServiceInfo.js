@@ -7,12 +7,11 @@ import {
   Grid,
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Logo from "../../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png"
 import { MessagesSquare, Send, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import { message } from 'antd';
 
 import { useLocation, useNavigate } from 'react-router-dom';
-import ServiceFormBox from '../../components/serviceMenu';
+import ServiceFormBox from './components/serviceMenu';
 import LeftPanel from './components/leftpanel'
 
 const theme = createTheme({
@@ -27,16 +26,21 @@ const theme = createTheme({
 });
 
 export default function BusinessServiceInfo() {
-  
   const navigate = useNavigate();
-    
-  const storedData = localStorage.getItem('formData');
-  const previousData = storedData ? JSON.parse(storedData) : {}
+  const location = useLocation();
 
-  const {
-    firstName, lastName, email, countryCode, phone,
-    teamSize, teamMembers, services: previousServices,
-  } = previousData || {};
+  const getInitialData = () => {
+    try {
+      const storedData = localStorage.getItem('formData');
+      return storedData ? JSON.parse(storedData) : {};
+    } catch (error) {
+      console.error('Error parsing stored data:', error);
+      return {};
+    }
+  };
+
+  const previousData = location.state || getInitialData(); 
+  const { firstName, lastName, email, countryCode, phone, teamSize, teamMembers } = previousData || {};
 
   const defaultService = [{
     id: '1',
@@ -51,8 +55,26 @@ export default function BusinessServiceInfo() {
   }];
 
   const [services, setServices] = useState(
-    previousServices?.length > 0 ? previousServices : defaultService
+    previousData.services?.length > 0 ? previousData.services : defaultService
   );
+
+  useEffect(() => {
+    const updateLocalStorage = () => {
+      try {
+        const combinedData = {
+          ...previousData,
+          services: services.map(service => ({
+            ...service,
+            image: service.image instanceof File ? null : service.image
+          }))
+        };
+        localStorage.setItem('formData', JSON.stringify(combinedData));
+      } catch (error) {
+        console.error('Error updating localStorage:', error);
+      }
+    };
+    updateLocalStorage();
+  }, [services, previousData]);
 
   const handleBackTeamPresence = () => {
     const combinedData = { ...previousData, services };
@@ -61,20 +83,26 @@ export default function BusinessServiceInfo() {
   };
 
   const handleNextDocumentUpload = () => {
-    if (services.filter(service => service.name.trim() !== '').length < 5) {
-      message.error("Please upload at least 5 non-empty services.");
+    const validServices = services.filter(service => 
+      service.name.trim() !== '' && 
+      service.name.trim() !== 'Enter Service Name'
+    );
+    
+    if (validServices.length < 5) {
+      message.error("Please add at least 5 valid services (with non-empty names).");
       return;
     }
+
     const combinedData = { ...previousData, services };
-  
+    console.log(combinedData)
     localStorage.setItem('formData', JSON.stringify(combinedData));
-    navigate('/business-document-uploads', {state: combinedData });
+    navigate('/business-document-uploads', { state: combinedData });
   };
 
   const handleServicesChange = (updatedServices) => {
+    console.log("updatedServices;",updatedServices)
     setServices(updatedServices);
   };
-  
 
 
   
@@ -124,7 +152,7 @@ export default function BusinessServiceInfo() {
 
                 <ServiceFormBox 
                   onServicesChange={handleServicesChange} 
-                  services={previousServices} 
+                  services={services} 
                   teamMembers={teamMembers || []} 
                 />
                 

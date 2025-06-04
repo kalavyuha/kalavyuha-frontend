@@ -18,10 +18,9 @@ import {
 } from '@mui/material';
 
 import { ThemeProvider, createTheme,  } from '@mui/material/styles';
-import Logo from "../../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png"
 import TeamProfile from "../../assets/images/busniessAccount/busniessProfile.jpg"
 
-import { MessagesSquare, Send, Plus, ArrowLeft, Minus, ChevronUp, ChevronDown } from 'lucide-react';
+import {  Plus, ArrowLeft, Minus } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { styled } from '@mui/system';
@@ -29,13 +28,17 @@ import { ImageUp } from 'lucide-react';
 
 import LeftPanel from './components/leftpanel';
 
-import Avatar1 from "../../assets/images/busniessAccount/avatar1_male.png";
-import Avatar2 from "../../assets/images/busniessAccount/avatar2_male.png";
-import Avatar3 from "../../assets/images/busniessAccount/avatar3_male.png";
-import Avatar4 from "../../assets/images/busniessAccount/avatar4_female.png";
-import Avatar5 from "../../assets/images/busniessAccount/avatar5_female.png";
-import Avatar6 from "../../assets/images/busniessAccount/avatar6_female.png";
+import Autocomplete from '@mui/material/Autocomplete';
 
+import {uploadImages } from './Apis/uploadAPI'
+const avatarUrls = [
+  "https://kalavyuha-s3-bucket.s3.ap-southeast-1.amazonaws.com/avatars/avatar1_male.png",
+  "https://kalavyuha-s3-bucket.s3.ap-southeast-1.amazonaws.com/avatars/avatar2_male.png",
+  "https://kalavyuha-s3-bucket.s3.ap-southeast-1.amazonaws.com/avatars/avatar3_male.png",
+  "https://kalavyuha-s3-bucket.s3.ap-southeast-1.amazonaws.com/avatars/avatar4_female.png",
+  "https://kalavyuha-s3-bucket.s3.ap-southeast-1.amazonaws.com/avatars/avatar5_female.png",
+  "https://kalavyuha-s3-bucket.s3.ap-southeast-1.amazonaws.com/avatars/avatar6_female.png"
+];
 
 
 const UploadBox = styled(Box)(({ theme }) => ({
@@ -47,7 +50,6 @@ const UploadBox = styled(Box)(({ theme }) => ({
 
 }));
 
-const avatars = [Avatar1, Avatar4, Avatar3, Avatar5, Avatar2, Avatar6];
 
 const theme = createTheme({
   palette: {
@@ -61,23 +63,59 @@ const theme = createTheme({
 });
 
 export default function TeamPresence() {
-
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getInitialData = () => {
+    try {
+      const storedData = localStorage.getItem('formData');
+      const parsedData = storedData ? JSON.parse(storedData) : {};
+      const stateData = location.state || {};
+      return { ...parsedData, ...stateData };
+    } catch (error) {
+      console.error('Error parsing stored data:', error);
+      return {};
+    }
+  };
+
+  const previousData = getInitialData();
+  console.log(previousData)
+  const { firstName, lastName, email, countryCode, phone } = previousData || {};
+
+  const [teamSize, setTeamSize] = useState(previousData.teamSize || [1]);
+  const [teamMembers, setTeamMembers] = useState(
+    previousData.teamMembers || [{ id: 1, name: '', experience: '', role: '', profileImage: null }]
+  );
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploadOpen, setIsUploadOpen] = useState(false); 
-  const [currentMemberId, setCurrentMemberId] = useState(null); 
-  
-  const scrollContainerRef = useRef(null); 
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [canScrollUp, setCanScrollUp] = useState(false);
-  const [canScrollDown, setCanScrollDown] = useState(true); 
-  const [isScrollable, setIsScrollable] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [currentMemberId, setCurrentMemberId] = useState(null);
+
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const updateLocalStorage = () => {
+      try {
+        const combinedData = {
+          ...previousData,
+          teamSize,
+          teamMembers,
+          teamInfoCompleted: false,
+        };
+        localStorage.setItem('formData', JSON.stringify(combinedData));
+      } catch (error) {
+        console.error('Error updating localStorage:', error);
+      }
+    };
+
+    updateLocalStorage();
+  }, [teamSize, teamMembers, previousData]);
 
   const handleUploadClick = (memberId) => {
     setCurrentMemberId(memberId);
-    setIsUploadOpen(true); 
+    setIsUploadOpen(true);
   };
 
   const handleCloseUpload = () => {
@@ -87,32 +125,60 @@ export default function TeamPresence() {
     setCurrentMemberId(null);
   };
 
-  const handleImageUpload = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setSelectedImage(file);
+  const handleImageUpload = async (event) => {
+    if (!event.target.files?.[0]) return;
+    
+    const file = event.target.files[0];
+    
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be smaller than 2MB');
+      return;
+    }
+
+    try {
+      const token = 'VIRoHdqUAtpklgKg';
+      const { data, error: uploadError } = await uploadImages([file], token);
+
+      console.log(data)
+      if (uploadError) throw new Error(uploadError);
+      if (!data?.Data?.length) throw new Error('No image URL returned');
+
+      console.log(data)
+      setSelectedImage({
+        s3Url: data?.Data?.[0] ?? '',
+        previewUrl: URL.createObjectURL(file) ,
+        fileName: file.name 
+      });
       setSelectedAvatar(null);
+
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert(`Image upload failed: ${err.message}`);
     }
   };
 
-  const handleAvatarSelect = (avatar) => {
-    setSelectedAvatar(avatar);
+
+  const handleAvatarSelect = (avatarUrl) => {
+    setSelectedAvatar(avatarUrl);
     setSelectedImage(null);
   };
 
   const handleSave = () => {
-    if (currentMemberId !== null) {
-      setTeamMembers(prevMembers =>
-        prevMembers.map(member => {
-          if (member.id === currentMemberId) {
-            return {
-              ...member,
-              profileImage: selectedImage || selectedAvatar || member.profileImage
-            };
-          }
-          return member;
-        })
-      );
+    if (currentMemberId === null) return;
+
+    setTeamMembers(prevMembers =>
+      prevMembers.map(member => {
+        if (member.id !== currentMemberId) return member;
+        
+        return {
+          ...member,
+          profileImage: selectedImage?.s3Url || selectedAvatar || member.profileImage
+        };
+      })
+    );
+
+    if (selectedImage?.previewUrl) {
+      URL.revokeObjectURL(selectedImage.previewUrl);
     }
     handleCloseUpload();
   };
@@ -122,10 +188,9 @@ export default function TeamPresence() {
     setSelectedAvatar(null);
   };
 
-  
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
+  // Drag and drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
     setIsDragging(true);
   };
 
@@ -133,48 +198,17 @@ export default function TeamPresence() {
     setIsDragging(false);
   };
 
-  const handleDrop = (event) => {
-    event.preventDefault();
+  const handleDrop = (e) => {
+    e.preventDefault();
     setIsDragging(false);
-    const file = event.dataTransfer.files[0];
-    if (file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
+    const file = e.dataTransfer.files[0];
+    if (file && ['image/png', 'image/jpeg'].includes(file.type)) {
       setSelectedImage(file);
       setSelectedAvatar(null);
     }
   };
 
-  
-  const location = useLocation();
-  const previousData = location.state || {};
-
-  const {
-    firstName,
-    lastName,
-    email,
-    countryCode,
-    phone,
-    teamSize: previousTeamSize,
-    teamMembers: previousTeamMembers,
-  } = previousData || {};
-
-  const [teamSize, setTeamSize] = useState(previousTeamSize || [1]);
-  const [teamMembers, setTeamMembers] = useState(
-    previousTeamMembers || [{ id: 1, name: '', experience: '', role: '', profileImage: null }]
-  );
-
-  const handleBack = () => {
-    const combinedData = {
-      ...previousData,
-      teamSize,
-      teamMembers,
-    };
-    navigate('/business-profile-form', { state: combinedData });
-  };
-
-  console.log("STERT")
-  console.log(previousData)
-  console.log("END")
-
+  // Team management functions
   const addTeamMember = () => {
     const newMember = {
       id: teamMembers.length + 1,
@@ -193,23 +227,32 @@ export default function TeamPresence() {
   };
 
   const updateTeamMember = (id, field, value) => {
-    setTeamMembers(
-      teamMembers.map((member) =>
+    setTeamMembers(prevMembers =>
+      prevMembers.map(member =>
         member.id === id ? { ...member, [field]: value } : member
       )
     );
   };
 
   const removeTeamMember = (id) => {
-    setTeamMembers(teamMembers.filter(member => member.id !== id));
+    setTeamMembers(prevMembers => prevMembers.filter(member => member.id !== id));
   };
 
   const handleTeamSizeChange = (event, newValue) => {
     setTeamSize([newValue]);
-
     if (newValue < teamMembers.length) {
-      setTeamMembers(teamMembers.slice(0, newValue));
+      setTeamMembers(prevMembers => prevMembers.slice(0, newValue));
     }
+  };
+
+  const handleBack = () => {
+    const combinedData = {
+      ...previousData,
+      teamSize,
+      teamMembers,
+    };
+    localStorage.setItem('formData', JSON.stringify(combinedData));
+    navigate('/business-profile-form', { state: combinedData });
   };
 
   const handleNextServiceMenu = () => {
@@ -219,13 +262,10 @@ export default function TeamPresence() {
       teamMembers,
       teamInfoCompleted: true,
     };
+    console.log("Handle Next Service: ", combinedData)
     localStorage.setItem('formData', JSON.stringify(combinedData));
     navigate('/business-service-info', { state: combinedData });
   };
-
-
-  const containerRef = useRef(null);
-
   
   return (
     <ThemeProvider theme={theme}>
@@ -341,7 +381,7 @@ export default function TeamPresence() {
                               >
                                 {teamMembers.map((member, index) => (
                                   <Box key={member.id} sx={{ mb: 2, p: 2, pb:4, boxShadow: '0 3px 2px rgba(0, 0, 0, 0.1)', borderRadius:"16px", position: 'relative'}}>
-                                    <Grid container spacing={2} alignItems="center">
+                                    <Grid container spacing={2} alignItems="flex-start">
                                       <Grid item xs={12} sm={7}>
                                         <TextField
                                           fullWidth
@@ -365,14 +405,35 @@ export default function TeamPresence() {
 
 
                                       <Grid item xs={12} sm={1}>
+                                  
                                         <Avatar
                                           src={
-                                            member.profileImage instanceof File 
+                                            // Case 1: It's a File/Blob object
+                                            member.profileImage instanceof File || member.profileImage instanceof Blob
                                               ? URL.createObjectURL(member.profileImage)
-                                              : member.profileImage || TeamProfile
+                                              // Case 2: It's a stored object with blob data
+                                              : member.profileImage?.blob
+                                                ? URL.createObjectURL(member.profileImage.blob)
+                                                // Case 3: It's a stored object with preview URL
+                                                : member.profileImage?.url
+                                                  ? member.profileImage.url
+                                                  // Case 4: It's a direct URL string (avatar selection)
+                                                  : typeof member.profileImage === 'string'
+                                                    ? member.profileImage
+                                                    : TeamProfile
                                           }
                                           alt="Profile"
                                           sx={{ width: 38, height: 38, borderRadius: 3, border: 1, borderColor: "#d9d9d9" }}
+                                          imgProps={{
+                                            onLoad: (e) => {
+                                              if (member.profileImage instanceof File || member.profileImage instanceof Blob) {
+                                                URL.revokeObjectURL(e.target.src);
+                                              }
+                                            },
+                                            onError: (e) => {
+                                              e.target.src = TeamProfile;
+                                            }
+                                          }}
                                         />
                                       </Grid>
 
@@ -433,26 +494,52 @@ export default function TeamPresence() {
 
                                       {/* set roles */}
                                       <Grid item xs={12} sm={6}>
-                                        <Select
-                                          fullWidth
+                                        <Autocomplete
                                           multiple
-                                          value={member.role || []} 
-                                          onChange={(e) => updateTeamMember(member.id, 'role', e.target.value)} 
-                                          displayEmpty
-                                          size="small"
-                                          sx={{ borderRadius: 2, background: "#fff" }}
-                                          renderValue={(selected) => {
-                                            if (selected.length === 0) {
-                                              return <b>Select role</b>;
-                                            }
-                                            return selected.join(', '); 
+                                          freeSolo
+                                          value={member.role || []}
+                                          onChange={(event, newValue) => {
+                                            updateTeamMember(member.id, 'role', newValue);
                                           }}
-                                        >
-                                          <MenuItem value="all">ALL</MenuItem>
-                                          <MenuItem value="developer">Developer</MenuItem>
-                                          <MenuItem value="designer">Designer</MenuItem>
-                                          <MenuItem value="manager">Manager</MenuItem>
-                                        </Select>
+                                          renderInput={(params) => (
+                                            <TextField
+                                              {...params}
+                                              size="small"
+                                              placeholder="Add Designation"
+                                              sx={{ 
+                                                borderRadius: 2, 
+                                                background: "#fff",
+                                                "& .MuiOutlinedInput-root": {
+                                                  minHeight: '40px', // Minimum height
+                                                  paddingTop: '6px',
+                                                  paddingBottom: '6px',
+                                                  alignItems: 'center',
+                                                  flexWrap: 'wrap',
+                                                }
+                                              }}
+                                            />
+                                          )}
+                                          options={[]}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && e.target.value) {
+                                              // Handle new role addition
+                                            }
+                                          }}
+                                          sx={{
+                                            "& .MuiAutocomplete-tag": {
+                                              margin: '2px',
+                                              height: '24px'
+                                            },
+                                            "& .MuiAutocomplete-inputRoot": {
+                                              paddingTop: '0px !important',
+                                              paddingBottom: '0px !important',
+                                              flexWrap: 'wrap',
+                                              maxHeight: '120px', 
+                                              overflowY: 'auto'
+                                            }
+                                          }}
+                                          disableClearable
+                                        />
                                       </Grid>
                                     </Grid>
                                     
@@ -571,7 +658,7 @@ export default function TeamPresence() {
                                             </UploadBox>
                                             {selectedImage && (
                                               <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
-                                                Image selected: {selectedImage.name}
+                                                Image selected: {selectedImage.fileName }
                                               </Typography>
                                             )}
                                           </Box>
@@ -603,19 +690,19 @@ export default function TeamPresence() {
                                                   '&:hover': { animationPlayState: 'paused' },
                                                 }}
                                               >
-                                                {[...avatars, ...avatars].map((avatar, index) => (
+                                               {[...avatarUrls, ...avatarUrls].map((avatarUrl, index) => (
                                                   <IconButton
-                                                    key={`${avatar}-${index}`}
-                                                    onClick={() => handleAvatarSelect(avatar)}
+                                                    key={`${avatarUrl}-${index}`}
+                                                    onClick={() => handleAvatarSelect(avatarUrl)}
                                                     sx={{
                                                       p: 0,
-                                                      border: selectedAvatar === avatar ? '2px solid' : 'none',
+                                                      border: selectedAvatar === avatarUrl ? '2px solid' : 'none',
                                                       borderColor: 'primary.main',
                                                     }}
                                                   >
                                                     <Avatar
-                                                      src={avatar}
-                                                      alt={`Avatar ${avatar}`}
+                                                      src={avatarUrl}
+                                                      alt={`Avatar ${index + 1}`}
                                                       sx={{ width: 76, height: 76 }}
                                                     />
                                                   </IconButton>

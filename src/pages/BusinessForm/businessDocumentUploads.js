@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -11,7 +11,11 @@ import { ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DocumentUpload from '../../components/documentUploads';
 import LeftPanel from './components/leftpanel'
-import { constant } from '../../constant.js';
+import { convertToBase64 } from './components/convert2base.js';
+import { createBusinessDetails} from './Apis/businessDetailsApi.js';
+import { createStaff} from './Apis/staffApi.js';
+import { createServices} from './Apis/servicesApi.js';
+import { uploadDocuments} from './Apis/documentsApi.js';
 
 const theme = createTheme({
   palette: {
@@ -26,15 +30,19 @@ const theme = createTheme({
 
 
 export default function BusinessDocumentUploads() {
+  
+  const authToken = "VIRoHdqUAtpklgKg";
+
   const location = useLocation();
   const storedData = localStorage.getItem('formData');
   const previousData = location.state || (storedData ? JSON.parse(storedData) : {});
-
-
   const navigate = useNavigate();
-  const [fileList, setFileList] = useState({});
-
-  const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1]; 
+  
+  const [fileList, setFileList] = useState(
+    localStorage.getItem('documentUploads') 
+      ? JSON.parse(localStorage.getItem('documentUploads')) 
+      : {}
+  );
 
   const { 
     firstName, lastName, email, countryCode, phone, 
@@ -43,143 +51,140 @@ export default function BusinessDocumentUploads() {
   } = previousData || {};
 
   
-
   const handleBackTeamPresence = () => {
-    navigate('/business-service-info', { state: previousData });
+    localStorage.setItem('formData', JSON.stringify({
+      ...previousData,
+      documentUploads: fileList  
+    }));
+    navigate('/business-service-info', { 
+      state: {
+        ...previousData,
+        documentUploads: fileList
+      } 
+    });
   };
 
   // backend integration
   const handleSubmit = async () => {
     try {
-        // 1. Submit Business Details
-        const businessPayload = {
-            BussinessUserId: Number(previousData.MerchantAccountID),
-            BussinessType: previousData.businessRole,
-            BusinessName: previousData.formData.businessName,
-            ProfileImage: previousData.formData.profilePicture ?? "",
-            Introduction: previousData.formData.introduction ?? null,
-            ShopNumber: previousData.formData.shopNumber ?? null,
-            StreetAddress: previousData.formData.streetAddress,
-            Nearby: null,
-            ZipCode: previousData.formData.zipCode,
-            Region: `${previousData.formData.city}, ${previousData.formData.state}`,
-            Latitude: parseFloat(previousData.formData.adrsLatitude),
-            Longitude: parseFloat(previousData.formData.adrsLongitude),
-            LikesCount: 0,
-            website: previousData.formData.website ?? null,
-            OpeningTime: previousData.formData.openingTime ?? "00:00",
-            ClosingTime: previousData.formData.closingTime ?? "00:00",
-            CreatedBy: 1,
-            UpdatedBy: 1,
+      const requiredDocuments = [
+        "Pan Card (Owner)",
+        "GST Certificate",
+        "Utility Bills"
+      ];
+      
+      const missingDocuments = requiredDocuments.filter(doc => {
+        return !fileList[doc] || fileList[doc].length === 0;
+      });
+
+      if (missingDocuments.length > 0) {
+        alert(`Please upload all required documents: ${missingDocuments.join(", ")}`);
+        return;
+      }
+
+      // // 1. Submit busniessDetails
+      const businessPayload = {
+        BussinessUserId: Number(previousData.MerchantAccountID),
+        BussinessType: previousData.businessRole,
+        BusinessName: previousData.formData.businessName,
+        ProfileImage: previousData.formData.profilePicture?.s3Url?.url || null,
+        Introduction: previousData.formData.introduction ?? null,
+        ShopNumber: previousData.formData.shopNumber ?? null,
+        StreetAddress: previousData.formData.streetAddress, 
+        Nearby: null, 
+        ZipCode: previousData.formData.zipCode,
+        Region: `${previousData.formData.city}, ${previousData.formData.state}`,
+        Latitude: parseFloat(previousData.formData.adrsLatitude) || 0.0,
+        Longitude: parseFloat(previousData.formData.adrsLongitude) || 0.0,
+        LikesCount: 0,
+        website: previousData.formData.website ?? null,
+        OpeningTime: previousData.formData.openingTime ?? "00:00",
+        ClosingTime: previousData.formData.closingTime ?? "00:00",
+        CreatedBy: 1,
+        UpdatedBy: 1,
+      };
+      
+      const businessData = await createBusinessDetails(businessPayload);
+      const businessId = Number(businessData.Data?._id);
+
+      // 2. Submit Staff Data
+      const staffPayload = previousData.teamMembers.map(member => ({
+        BussinessId: businessId,
+        StaffName: member.name,
+        StaffNumber: Number(member.id),
+        Gender: member.gender,
+        Experience: String(member.experience),
+        Specialization: Array.isArray(member.role) ? member.role.join(", ") : "General",
+        ProfileImage: member.profileImage?.url || null, 
+      }));
+
+      try {
+        console.log(staffPayload)
+        const staffData = await createStaff(staffPayload, authToken);
+        console.log("StaffResponse:", staffData);
+      } catch (error) {
+        console.error("Error creating staff:", error);
+      }
+
+      // 3. Submit Services
+      const staffMap = new Map(previousData.teamMembers.map(member => [member.name, Number(member.id)]));
+
+      const formatDuration = (duration, type) => {
+        const suffixMap = {
+          'days': 'd',
+          'hours': 'h',
+          'minutes': 'm',
+          'months': 'mo',
+          'mints': 'm' 
         };
+        return suffixMap[type] ? `${duration}${suffixMap[type]}` : duration;
+      };
 
-        const businessResponse = await fetch(`${constant.baseUrl}api/v1/BussinessDetails/create/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(businessPayload),
-        });
+      const servicePayload = previousData.services.map(service => ({
+        BussinessId: businessId,
+        ServiceName: service.name,
+        Price: parseFloat(service.price),
+        Duration: formatDuration(service.duration, service.durationType),
+        AssignedStaffs: service.staff
+          .map(staffName => staffMap.get(staffName))
+          .filter(id => id !== undefined),
+        ServiceImage: service.imageUrl || null,
+        isDiscount: false,
+        DiscountPercentage: null
+      }));
 
-        const businessData = await businessResponse.json();
-        const businessId = Number(businessData.Data?._id);
-  
-        if (!businessResponse.ok) throw new Error('Failed to save business details');
+      console.log(servicePayload)
+      try {
+        const response = await createServices(servicePayload, authToken);
+        console.log("Services Response:", response);
+      } catch (error) {
+        console.error("Error creating services:", error);
+        throw error;
+      }
 
-        // 2. Submit Staff Data
-        const staffPayload = teamMembers.map(member => ({
-          BussinessId: businessId,
-          Name: member.name,
-          StaffNumber: Number(member.id),
-          Gender: member.gender,
-          ProfileImage: member.profileImage || "",
-          Experience: String(member.experience), // Ensure it's a string
-          Role: Array.isArray(member.role) ? member.role.join(", ") : "General", // Convert to string
-          Specialization: "Orthopedics"
-        }));
+      // 4. Documents Uploads
+      await uploadDocuments(businessId, fileList, authToken);
+      alert('All data uploaded successfully!');
 
-        await fetch(`${constant.baseUrl}api/v1/Staff/create`, {
-            method: "POST", 
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(staffPayload),
-        });
-
-        // 3. Submit Services
-        const staffMap = new Map(teamMembers.map(member => [member.name, Number(member.id)]));
-       
-        const servicePayload = services.map(service => ({
-          BussinessId: businessId, 
-          ServiceName: service.name,
-          Price: parseFloat(service.price),
-          Duration: service.durationType === "days" 
-              ? `${service.duration}d`
-              : service.durationType === "hours"
-              ? `${service.duration}h`
-              : service.durationType === "minutes"
-              ? `${service.duration}m`
-              : service.durationType === "months"
-              ? `${service.duration}mo`
-              : `${service.duration}`,
-          AssignedStaffs: service.staff
-              .map(staffName => staffMap.get(staffName))
-              .filter(id => id !== undefined),
-          ImageURL: "",  
-          isDiscount: false,
-          DiscountPercentage: null  
-        }));
-
-        await fetch(`${constant.baseUrl}api/v1/Service/create/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(servicePayload),
-        });
-
-
-        
-        // 4. Submit Documents
-        const backendKeys = {
-            "Pan Card (Owner)": "PanCard",
-            "GST Certificate": "GstCertification",
-            "Business License": "BusinessLicense",
-            "Insurance Certificate": "InsuranceCertificate",
-            "Utility Bills": "UtilityBills",
-            "Upload Images": "Images",
-        };
-
-        const formData_n = new FormData();
-        Object.keys(fileList).forEach(docName => {
-            const key = backendKeys[docName];
-            if (key) {
-                fileList[docName].forEach(file => formData_n.append(key, file.originFileObj || file));
-            }
-        });
-
-        const url = `${constant.baseUrl}api/v1/Documents/create/?BussinessId=${businessId}`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrfToken },
-            body: formData_n,
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error uploading documents:", errorData);
-            alert("Document upload failed! Please reselect the documents and try again.");
-            setFileList({});
-            return;
-        }
-
-
-        alert('All data uploaded successfully!');
-        
-        localStorage.removeItem("formData");
-        navigate(previousData.pathname, { replace: true, state: null }); 
-        navigate('/business-page');
-            
-
+      localStorage.removeItem("documentUploads");
+      localStorage.removeItem("formData");
+      navigate('/business-page');
     } catch (error) {
-        console.error('Error during submission:', error);
+      console.error('Error during submission:', error);
+      localStorage.setItem('documentUploads', JSON.stringify(fileList));
+
+      if (error.message === 'Document upload failed') {
+        alert("Document upload failed! Please reselect the documents and try again.");
+        setFileList({});
+      } else {
         alert(`Error: ${error.message}`);
+      }
     }
   };
+
+  useEffect(() => {
+    localStorage.setItem('documentUploads', JSON.stringify(fileList));
+  }, [fileList]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -227,7 +232,12 @@ export default function BusinessDocumentUploads() {
                 </Typography>
 
                 
-                <DocumentUpload setFileListParent={setFileList}/>
+                <DocumentUpload 
+                  setFileListParent={(files) => {
+                    setFileList(files);
+                  }} 
+                  initialFiles={fileList}  
+                />
 
                 <Box sx={{ mt: 1, maxWidth: 600, width: '100%', mx: 4 }}>
                     
@@ -255,7 +265,7 @@ export default function BusinessDocumentUploads() {
                             sx={{ mt: 3, mb: 2, textTransform: "none", borderRadius: "24px", bgcolor: 'black', color: 'white', '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' } }}
                             onClick={handleSubmit}
                             >
-                            Preview
+                            Upload
                             </Button>
                         </Grid>
                         </Grid>

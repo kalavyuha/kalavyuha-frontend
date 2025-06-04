@@ -15,6 +15,9 @@ import { MessagesSquare, Send, ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MapComponent from './components/google.map';
 import LeftPanel from './components/leftpanel.js'; 
+import { convertToBase64 } from './components/convert2base.js';
+import { uploadImages } from './Apis/uploadAPI.js'
+
 
 const theme = createTheme({
   palette: {
@@ -29,45 +32,79 @@ const theme = createTheme({
 
 export default function BusinessProfileForm() {
   const navigate = useNavigate();
-  const storedData = localStorage.getItem('formData');
-  const previousData = storedData ? JSON.parse(storedData) : {}
+  
+  const getStoredData = () => {
+    try {
+      const storedData = localStorage.getItem('formData');
+      return storedData ? JSON.parse(storedData) : {};
+    } catch (error) {
+      console.error('Error parsing stored data:', error);
+      return {};
+    }
+  };
+  
+  const previousData = getStoredData();
 
-  const { firstName, lastName, email, countryCode, phone, selectedId, formData: previousFormData } = previousData || {};
+  const { firstName, lastName, email, countryCode, phone, selectedId } = previousData || {};
 
   const [formData, setFormData] = useState({
-    businessName: previousFormData?.businessName || '',
-    introduction: previousFormData?.introduction || '',
-    shopName: previousFormData?.shopName || '',
-    streetAddress: previousFormData?.streetAddress || '',
-    nearBy: previousFormData?.nearBy || '',
-    zipCode: previousFormData?.zipCode || '',
-    city: previousFormData?.city || '',
-    state: previousFormData?.state || '',
-    profilePicture: previousFormData?.profilePicture || null, 
-    adrsLatitude: previousFormData?.adrsLatitude || '',
-    adrsLongitude: previousFormData?.adrsLongitude || '',
+    businessName: previousData.formData?.businessName || '',
+    introduction: previousData.formData?.introduction || '',
+    shopName: previousData.formData?.shopName || '',
+    streetAddress: previousData.formData?.streetAddress || '',
+    nearBy: previousData.formData?.nearBy || '',
+    zipCode: previousData.formData?.zipCode || '',
+    city: previousData.formData?.city || '',
+    state: previousData.formData?.state || '',
+    profilePicture: previousData.formData?.profilePicture || null,
+    adrsLatitude: previousData.formData?.adrsLatitude || '',
+    adrsLongitude: previousData.formData?.adrsLongitude || '',
   });
 
   const [isNextDisabled, setIsNextDisabled] = useState(true);
 
-  // Function to navigate back and preserve form data
+  useEffect(() => {
+    const updateLocalStorage = () => {
+      try {
+        const combinedData = {
+          ...previousData,
+          formData,
+          businessInfoCompleted: true,
+        };
+        localStorage.setItem('formData', JSON.stringify(combinedData));
+      } catch (error) {
+        console.error('Error updating localStorage:', error);
+      }
+    };
+
+    updateLocalStorage();
+  }, [formData, previousData]);
+
   const handleBack = () => {
     const combinedData = {
       ...previousData,
-      formData, 
+      formData,
     };
+    localStorage.setItem('formData', JSON.stringify(combinedData));
     navigate('/business-info-selection', { state: combinedData });
   };
 
   const handleNextTeamPresence = () => {
-    const combinedData = {
+    const dataToStore = {
       ...previousData,
-      formData,
-      businessInfoCompleted:true,
-      teamInfoCompleted:false
+      formData: {
+        ...formData,
+         profilePicture: formData.profilePicture?.s3Url 
+        ? { s3Url: formData.profilePicture.s3Url } 
+        : null
+      },
+      businessInfoCompleted: true,
+      teamInfoCompleted: false
     };
-    console.log(combinedData)
-    navigate('/business-team-presence', { state: combinedData });
+    
+    console.log(dataToStore)
+    localStorage.setItem('formData', JSON.stringify(dataToStore));
+    navigate('/business-team-presence', { state: dataToStore });
   };
 
   const handleChange = (event) => {
@@ -97,30 +134,49 @@ export default function BusinessProfileForm() {
     const city = totalParts >= 4 ? parts[totalParts - 3] : "";
     const streetAddress = totalParts >= 5 ? parts.slice(1, totalParts - 3).join(", ") : "";
   
-    setFormData({
+    setFormData(prev => ({
+      ...prev,
       shopName,
       streetAddress,
       city,
       state,
       zipCode,
       adrsLatitude: lat, 
-      adrsLongitude: lng,  
-      busniessComplete:true,
-    });
+      adrsLongitude: lng,
+    }));
   };
 
-  const handleFileChange = (event) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      setFormData((prevState) => ({
-        ...prevState,
-        profilePicture: file,
+ 
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const token = 'VIRoHdqUAtpklgKg'; 
+      const { data, error: uploadError } = await uploadImages([file], token);
+
+      if (uploadError) {
+        throw new Error(uploadError);
+      }
+
+      const uploadedUrl = data?.Data?.[0];
+      if (!uploadedUrl) throw new Error('No URL returned from upload');
+
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture: {
+          s3Url: uploadedUrl,
+        },
       }));
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert(`Image upload failed: ${err.message}`);
     }
   };
 
+
   useEffect(() => {
-    const { businessName, introduction, streetAddress, zipCode, city, state } = formData;
+    const { businessName, introduction, streetAddress, zipCode, city, state, profilePicture } = formData;
     const isFormValid = businessName && introduction && streetAddress && zipCode && city && state;
     setIsNextDisabled(!isFormValid);
   }, [formData]);
@@ -213,19 +269,21 @@ export default function BusinessProfileForm() {
                     </Grid>
 
                     <Grid item xs={12} sm={6}>
-                      <Grid container spacing={2} alignItems="center" sx={{justifyContent:"right"}}>
+                      <Grid container spacing={2} alignItems="center" sx={{ justifyContent: "right" }}>
                         <Grid item>
                           <Avatar
-                            src={formData.profilePicture ? URL.createObjectURL(formData.profilePicture) : BusniessProfile}
+                            src={formData.profilePicture?.s3Url?.url || ""}
                             alt="Profile"
-                            sx={{ width: 56, height: 56, borderRadius:3, border:1, borderColor:"#d9d9d9" }}
+                            sx={{ width: 56, height: 56, borderRadius: 3, border: 1, borderColor: "#d9d9d9" }}
                           />
+
+
                         </Grid>
                         <Grid item>
                           <Button
                             variant="outlined"
                             component="label"
-                            sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb", textTransform: "none" }}
+                            sx={{ borderRadius: "10px", borderColor: "#d9d9d9", background: "#fbfbfb", textTransform: "none" }}
                           >
                             Upload Picture
                             <input type="file" hidden onChange={handleFileChange} />

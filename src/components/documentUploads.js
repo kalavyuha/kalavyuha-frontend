@@ -5,9 +5,9 @@ import { Upload as LucideUpload } from "lucide-react";
 
 const { Dragger } = AntdUpload;
 
-export default function FormWithDocumentUpload({ setFileListParent }) {
+export default function FormWithDocumentUpload({ setFileListParent, initialFiles  }) {
   const [highlightedSection, setHighlightedSection] = useState(null);
-  const [fileList, setFileList] = useState({});
+  const [fileList, setFileList] = useState(initialFiles || {});
 
   const documentTypes = [
     { name: "Pan Card (Owner)", notMoreThen: 1, required: true },
@@ -34,8 +34,10 @@ export default function FormWithDocumentUpload({ setFileListParent }) {
         message.error(`Only ${doc.notMoreThen} files allowed for ${doc.name}.`);
         return false;
       }
-      handleFileChange(doc, [...currentFileList, file]);
-      return false; 
+      
+      const uploadFile = new File([file], file.name, { type: file.type });
+      handleFileChange(doc, [...currentFileList, uploadFile]);
+      return false;
     },
     onRemove: (file) => {
       const newFileList = (fileList[doc.name] || []).filter((f) => f.uid !== file.uid);

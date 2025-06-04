@@ -32,39 +32,65 @@ const theme = createTheme({
 });
 
 
+
 export default function BusinessRoleSelection() {
-
   const navigate = useNavigate();
-
-  const storedFormData = localStorage.getItem('formData');
-  const previousData = storedFormData ? JSON.parse(storedFormData) : { businessRole: selected };
-  const { firstName, lastName, email, countryCode, phone } = previousData || {};
-
   const [selected, setSelected] = useState(null);
+  const location = useLocation(); 
+  const merchantAccountID = location.state?.MerchantAccountID;
+  // const merchantAccountID = 212121;
+
+  console.log(merchantAccountID)
   
+  const getStoredData = () => {
+    try {
+      const storedFormData = localStorage.getItem('formData');
+      return storedFormData ? JSON.parse(storedFormData) : {};
+    } catch (error) {
+      console.error('Error parsing stored data:', error);
+      return {};
+    }
+  };
+
+  const previousData = getStoredData();
+
   const options = [
     { id: 'Beauty', image: BeautyImg, title: 'Beauty', description: 'Be the Go-To Destination for Glamour!' },
     { id: 'Wellness', image: WellnessImg, title: 'Wellness', description: 'Become a Beacon of Health and Well-Being!' },
     { id: 'Fitness', image: FitnessImg, title: 'Fitness', description: 'Inspire Fitness Journeys—Build a Healthier Community!' },
-    { id: 'Health Care', image: HealthcareImg, title: 'Health Care', description: 'Establish Trust: Be Your Community’s Health Advocate!' },
+    { id: 'Health Care', image: HealthcareImg, title: 'Health Care', description: 'Establish Trust: Be Your Community\'s Health Advocate!' },
   ];
   
   useEffect(() => {
-    const savedRole = localStorage.getItem('businessRole');
-    if (savedRole) {
-      setSelected(JSON.parse(savedRole));
+    try {
+      const savedRole = localStorage.getItem('businessRole');
+      if (savedRole) {
+        setSelected(JSON.parse(savedRole));
+      }
+    } catch (error) {
+      console.error('Error parsing saved role:', error);
     }
   }, []);
   
   const handleSelect = (id) => {
     setSelected(id);
-    localStorage.setItem('businessRole', JSON.stringify(id));
+    try {
+      localStorage.setItem('businessRole', JSON.stringify(id));
+    } catch (error) {
+      console.error('Error saving role to localStorage:', error);
+    }
   };
   
   const handleNextInfoSection = () => {
-    if (selected) {
+    if (!selected) {
+      console.warn('No option selected');
+      return;
+    }
+
+    try {
       const formData = {
         ...previousData,
+        MerchantAccountID: merchantAccountID,
         businessRole: selected,
         isSignIn: true,
         businessInfoCompleted: false,
@@ -72,8 +98,8 @@ export default function BusinessRoleSelection() {
       };
       localStorage.setItem('formData', JSON.stringify(formData));
       navigate('/business-info-selection');
-    } else {
-      console.warn('No option selected');
+    } catch (error) {
+      console.error('Error saving form data:', error);
     }
   };
   

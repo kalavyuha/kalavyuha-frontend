@@ -9,9 +9,7 @@ import {
   IconButton
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-
-import Logo from "../../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png"
-import { MessagesSquare, Send, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
@@ -35,44 +33,83 @@ const theme = createTheme({
 
 export default function BusinessInfoSelection() {
   const navigate = useNavigate();
-  const storedData = localStorage.getItem('formData');
-  const previousData = storedData ? JSON.parse(storedData) : {};
-
-  const { firstName, lastName, email, countryCode, phone, businessRole } = previousData;
-
-
   const [selected, setSelected] = useState(null);
+
+  const getStoredData = () => {
+    try {
+      const storedData = localStorage.getItem('formData');
+      return storedData ? JSON.parse(storedData) : {};
+    } catch (error) {
+      console.error('Error parsing stored data:', error);
+      return {};
+    }
+  };
+
+  const previousData = getStoredData();
+  const { firstName, lastName, email, countryCode, phone, businessRole } = previousData;
 
   const options = [
     { id: 'no-website', icon: PendingActionsIcon, title: 'No Website?', description: 'Enter Your Details and Get Started.' },
     { id: 'have-website', icon: AutoModeIcon, title: 'Have a Website?', description: "Let's Fetch Your Details in Seconds!" },
   ];
 
-  // Load previous selection from localStorage
   useEffect(() => {
-    const savedSelection = localStorage.getItem('websiteOption');
-    if (savedSelection) {
-      setSelected(JSON.parse(savedSelection));
+    try {
+      const savedSelection = localStorage.getItem('websiteOption');
+      if (savedSelection) {
+        setSelected(JSON.parse(savedSelection));
+      }
+      
+      if (previousData.website) {
+        setSelected(previousData.website);
+      }
+    } catch (error) {
+      console.error('Error parsing saved selection:', error);
     }
-  }, []);
-  
+  }, [previousData.website]);
+
   const handleSelect = (id) => {
-    localStorage.setItem('websiteOption', JSON.stringify(id));
-    setSelected(id);
-  };
-  
-  
-  
-  const handleNext = () => {
-    if (selected === 'no-website') {
-      const formData = { ...previousData, website: selected }; 
-      navigate('/business-profile-form', { state: formData });
-    } else if (selected === 'have-website') {
-      message.error('Functionality Under Progress PLEASE GO BACK');
-      navigate('/under-development');
+    try {
+      setSelected(id);
+      
+      // localStorage
+      localStorage.setItem('websiteOption', JSON.stringify(id));
+      
+      const updatedFormData = {
+        ...previousData,
+        website: id
+      };
+      localStorage.setItem('formData', JSON.stringify(updatedFormData));
+    } catch (error) {
+      console.error('Error saving selection:', error);
     }
   };
-  
+
+  const handleNext = () => {
+    if (!selected) {
+      console.warn('No option selected');
+      return;
+    }
+
+    try {
+      const formData = {
+        ...previousData,
+        website: selected
+      };
+      localStorage.setItem('formData', JSON.stringify(formData));
+
+      if (selected === 'no-website') {
+        navigate('/business-profile-form', { state: formData });
+      } else if (selected === 'have-website') {
+        localStorage.removeItem("formData");
+        message.error('Functionality Under Progress PLEASE GO BACK');
+        navigate('/under-development');
+      }
+    } catch (error) {
+      console.error('Error during navigation:', error);
+    }
+  };
+
   const handleBackRoleSelect = () => {
     navigate('/business-role-selection', { state: previousData });
   };

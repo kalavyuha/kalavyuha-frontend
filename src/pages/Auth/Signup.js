@@ -52,7 +52,7 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
 
     const handleSubmit = async (values) => {
         setLoading(true)
-        const response = await apipost('api/v1/customer/signUp/create', {
+        const response = await apipost('api/v1/customer/signup', {
 
             Name: values.name,
             PhoneNumber: values.phoneNumber,
