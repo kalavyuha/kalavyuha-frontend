@@ -7,12 +7,12 @@ import { constant } from "../../constant";
 
 const getToken = () => {
     let userDetail = localStorage.getItem("userDetail");
-    let token = null;
+    let token = localStorage.getItem('token');
   
     if (userDetail) {
       try {
         userDetail = JSON.parse(userDetail);
-        token = userDetail?.Token;
+        token =token ? token : userDetail?.Token ;
       } catch (error) {
         console.error("Error parsing userDetail from localStorage:", error);
       }

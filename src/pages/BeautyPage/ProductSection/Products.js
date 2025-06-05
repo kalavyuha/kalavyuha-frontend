@@ -6,6 +6,7 @@ import EastIcon from '@mui/icons-material/East';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import ProductMainImg from '../../../assets/images/Overview_Images/productsMainImg.jpg'
 import Slider from 'react-slick';
+import ImageIcon from '../../../assets/images/Overview_Images/image.png'
 
 
 import "slick-carousel/slick/slick.css";
@@ -13,13 +14,12 @@ import "slick-carousel/slick/slick-theme.css";
 
 
 
-const Products = ({ images }) => {
-    
+const Products = ({ products,location }) => {
     const sliderRef = useRef(null);
 
     const settings = {
         dots: false,
-        infinite: images.length > 2,
+        infinite: products.length > 2,
         speed: 500,
         slidesToShow: 2,
         slidesToScroll: 1,
@@ -43,7 +43,7 @@ const Products = ({ images }) => {
 
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto', p: 2 }}>
-            
+
             <Typography
                 variant="h4"
                 component="h2"
@@ -157,6 +157,11 @@ const Products = ({ images }) => {
                     </Typography>
                     <Button
                         variant="contained"
+                         onClick={() => {
+                          const encodedDestination = encodeURIComponent(location);
+                          const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}&travelmode=driving`;
+                          window.open(mapsUrl, '_blank');
+                        }}
                         sx={{
                             bgcolor: 'black',
                             color: 'white',
@@ -185,8 +190,8 @@ const Products = ({ images }) => {
                         centerMode={false}
                         infinite={true}
                     >
-                        {images &&
-                            images.map((item, index) => (
+                        {products &&
+                            products.map((item, index) => (
                                 <div
                                     key={index}
                                     style={{
@@ -209,8 +214,12 @@ const Products = ({ images }) => {
                                     >
                                         <CardMedia
                                             component="img"
-                                            image={item}
+                                            image={item.ImageURL[0] || ImageIcon}
                                             alt={`Product ${index + 1}`}
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = ImageIcon;
+                                            }}
                                             sx={{
                                                 width: "150px",
                                                 height: "150px",

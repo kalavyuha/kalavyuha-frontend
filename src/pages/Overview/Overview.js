@@ -11,6 +11,7 @@ const Overview = () => {
     const previousData = useLocation();
     const [showMap,setShowMap]=useState(false);
     const [isLoading,setIsLoading]=useState(false);
+    const [buisnessType,setBuisnessType]=useState('');
 
 
     const IndexFilterData = previousData?.state?.data;
@@ -31,13 +32,13 @@ const Overview = () => {
     return (
         <>
             
-            <Navigation setShowMap={setShowMap} setIsLoading={setIsLoading} showMap={showMap} onDataChange={handleDataChange} searchData={searchBarData} /> 
+            <Navigation setShowMap={setShowMap} setIsLoading={setIsLoading} showMap={showMap} setBuisnessType={setBuisnessType} onDataChange={handleDataChange} searchData={searchBarData} /> 
            {showMap && <Container maxWidth="lg">
                 <MapComponent />
             </Container>}
             
             <Container maxWidth="lg">
-                <CardList data={data}  isLoading={isLoading}/> 
+                <CardList data={data} buisnessType={buisnessType} isLoading={isLoading}/> 
             </Container>
 
             <RecommendedSection/>

@@ -3,23 +3,24 @@ import  OfferCard  from "../../components/overviewOffersCards.js"
 import Skeleton from '@mui/material/Skeleton'
 import { useEffect, useState } from 'react';
 
+
 const offers = [
   {
     title: 'Sunday Special',
     description: 'Pick any 5 services just @1299!',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-NY1uM1fVhkzJixpq1IfQKJVLW5i0fa.png',
+    image: '',
     buttonText: 'View Details'
   },
   {
     title: 'Festival Discount',
     description: 'Flat 20% off on every services',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-NY1uM1fVhkzJixpq1IfQKJVLW5i0fa.png',
+    image: '',
     buttonText: 'Explore Now'
   },
   {
     title: 'Limited - Time Discounts',
     description: 'Up to 50% off on selected services',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-NY1uM1fVhkzJixpq1IfQKJVLW5i0fa.png',
+    image: '',
     buttonText: 'Explore Now'
   },
 ]

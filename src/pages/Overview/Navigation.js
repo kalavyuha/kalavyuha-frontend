@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Switch, Divider, } from "@mui/material";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Map, Search, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
@@ -9,12 +9,12 @@ import CustomButton from '../../components/customButton';
 
 
 
-export function Navigation({ onDataChange, setIsLoading, searchData, showMap, setShowMap }) {
+const Navigation=React.memo(({ onDataChange, setBuisnessType, setIsLoading, searchData, showMap, setShowMap }) =>{
     const [location, setLocation] = useState(searchData?.location || '');
     const [date, setDate] = useState('21-Nov-2023');
     const [serviceName, setServiceName] = useState(searchData?.serviceName || '');
     const [openFilterDialog, setOpenFilterDialog] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState(searchData?.category || 'Beauty');
+    const [selectedCategory, setSelectedCategory] = useState(searchData?.category);
     const [loading, setLoading] = useState(false);
     const [showSortByOptions, setShowSortByOptions] = useState(false);
 
@@ -27,6 +27,13 @@ export function Navigation({ onDataChange, setIsLoading, searchData, showMap, se
             },
         },
     });
+
+    useEffect(() => {
+        if (selectedCategory) {
+            setBuisnessType(selectedCategory);
+            updateSearchResult();
+        }
+    }, [selectedCategory])
 
     const popularServices = [
         "Women's Waxing - Legs",
@@ -136,11 +143,13 @@ export function Navigation({ onDataChange, setIsLoading, searchData, showMap, se
         setIsLoading(true)
         const result = await apiget(`api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${selectedCategory}`);
         if (result && result.status === 200) {
-            onDataChange(result?.data?.Data)
+            onDataChange(result?.data?.Data);
+            setBuisnessType(selectedCategory)
         }
         setIsLoading(false)
         setLoading(false)
     }
+
 
 
 
@@ -265,7 +274,7 @@ export function Navigation({ onDataChange, setIsLoading, searchData, showMap, se
                                                         padding: '13px',
                                                         borderRadius: '14px',
                                                         boxShadow: '1px 1px 5px rgba(0, 0, 0, 0.5)',
-                                                        zIndex: 10 
+                                                        zIndex: 10
                                                     }}
                                                 >
                                                     <Typography
@@ -481,6 +490,6 @@ export function Navigation({ onDataChange, setIsLoading, searchData, showMap, se
             </ThemeProvider>
         </Box >
     );
-};
+});
 
 export default Navigation;

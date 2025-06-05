@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Select, MenuItem } from '@mui/material';
-import { UserRound } from 'lucide-react'; 
+import { UserRound } from 'lucide-react';
+import { apiget } from '../service/api';
 
-const arr_list = [
-  { id: 'any', name: 'Any Professional' },
-  { id: 'mohit', name: 'Mohit Kumar' },
-  { id: 'john', name: 'John Doe' },
-  { id: 'jane', name: 'Jane Smith' },
-];
 
-const ServiceStaffSelect = ({selectedStaff}) => {
-  const [selectedValue, setSelectedValue] = useState('any'); 
+const ServiceStaffSelect = ({ selectedStaff,staffData}) => {
+  const [selectedValue, setSelectedValue] = useState('any');
+
+    const arr_list = [
+      { _id: 'any', StaffName: 'Any Professional' },
+      ...staffData
+    ];
+
 
   const handleChange = (event) => {
-    setSelectedValue(event.target.value); 
+    setSelectedValue(event.target.value);
     selectedStaff(event.target.value);
   };
 
   return (
     <Select
       fullWidth
-      value={selectedValue} 
+      value={selectedValue}
       onChange={handleChange}
       startAdornment={<UserRound sx={{ mr: 2 }} />}
       sx={{
@@ -49,18 +50,18 @@ const ServiceStaffSelect = ({selectedStaff}) => {
         },
       }}
     >
-      {arr_list.map((staff) => (
+      {arr_list && arr_list.map((staff) => (
         <MenuItem
-          key={staff.id} 
-          value={staff.id} 
+          key={staff._id}
+          value={staff._id}
           sx={{
             bgcolor: '#fff',
             '&:hover': { bgcolor: '#eaeef2' },
-            '&.Mui-selected': { bgcolor: '#1b4d69', color: '#fff' }, 
-            '&.Mui-selected:hover': { bgcolor: '#1b4d69', color: '#fff' }, 
+            '&.Mui-selected': { bgcolor: '#1b4d69', color: '#fff' },
+            '&.Mui-selected:hover': { bgcolor: '#1b4d69', color: '#fff' },
           }}
         >
-          {staff.name}
+          {staff.StaffName}
         </MenuItem>
       ))}
     </Select>

@@ -21,26 +21,19 @@ import Products from "./ProductSection/Products";
 import Services from "./Services/Service";
 import SearchBar from './SearchBar/SearchBar'
 import { apiget } from '../service/api'
-import { constant } from "../../constant";
+import { useMatchingSearchResult } from "../../Context/detailPageContext";
+
 
 
 //  Images
 
 //  proucts Images
 
-import Product1 from '../../assets/images/Overview_Images/product1.png'
-import Product2 from '../../assets/images/Overview_Images/product2.jpeg'
-import Product3 from '../../assets/images/Overview_Images/product3.jpeg'
-import Product4 from '../../assets/images/Overview_Images/product4.jpeg'
+
 import AboutUs from "./About/About";
 import ImageGallery from "./Gallery/Gallery";
 
-const images = [
-  Product1,
-  Product2,
-  Product3,
-  Product4
-]
+
 
 const timing = [
   { day: "Monday", time: "9:30 am - 10:00 pm" },
@@ -63,16 +56,18 @@ const facilities = [
 ];
 
 
-
-
-
-
 function BeautyMain() {
   const [buisnessInfo, setBuisnessInfo] = useState([]);
   const [buisnessProduct, setBuisnessProduct] = useState([]);
+  const [amenities, setAmenities] = useState({})
   const [services, setServices] = useState([]);
+  const [images, setimages] = useState([])
+  const [reviews, setReviews] = useState([])
   const [matchingServices, setMatchingServices] = useState({});
   const [loading, setLoading] = useState(false);
+  const [buisnessHours, setBuisnessHours] = useState([])
+  const [staff,setStaff]=useState([]);
+  const { isMatchingResult } = useMatchingSearchResult();
 
 
   const params = useParams();
@@ -82,34 +77,39 @@ function BeautyMain() {
   const fetchDetailData = async () => {
     setLoading(true)
     const result = await apiget(`api/v1/BussinessDetails/alldetails/${id}`);
-    if (result && result.status === 200) {
+    if (result && result?.data?.Status === 200) {
+      console.log(result)
       setBuisnessInfo(result?.data?.Data?.BusinessInfo);
       setServices(result?.data?.Data?.Services)
-      
- 
+      setimages(result?.data?.Data?.BussinessImages);
+      setBuisnessProduct(result?.data?.Data?.BussinessProducts)
+      setAmenities(result?.data?.Data?.BussinessFacilities)
+      setReviews(result?.data?.Data?.CustomerReview)
+      setBuisnessHours(result?.data?.Data?.BussinessHours)
+      setStaff(result?.data?.Data?.Staffs)
+
     }
     setLoading(false)
   }
 
   useEffect(() => {
-
     fetchDetailData();
-
   }, [])
 
 
   useEffect(() => {
     setMatchingServices(services && services[0] ? services[0] : {});
-   
   }, [services]);
 
   return (
     <>
-      <SearchBar onDataChange={''} buisnessInfo={buisnessInfo} />
-      <Container maxWidth="lg">
+      <SearchBar onDataChange={''} buisnessInfo={buisnessInfo} reviews={reviews?.totalReviews || 0} />
 
-        <ImageGallery />
-        <OffersCarousel />
+      <Container maxWidth="lg">
+        {images.length > 0 && <ImageGallery images={images} />}
+
+        <OffersCarousel buisnessId={buisnessInfo?.BussinessUserId} />
+
         <Box sx={{ padding: 2, mt: 2 }}>
           <Box
             sx={{
@@ -120,16 +120,13 @@ function BeautyMain() {
           >
             {loading ? (
               <>
-                {/* Title skeleton */}
                 <Skeleton variant="text" width={200} height={30} sx={{ mb: { xs: 2, sm: 'unset', md: 'unset' } }} />
 
-                {/* Service info skeleton */}
                 <Box>
                   <Skeleton variant="text" width={180} height={28} />
                   <Skeleton variant="text" width={140} height={24} />
                 </Box>
 
-                {/* Price and button skeleton */}
                 <Stack direction={{ xs: 'row', sm: 'row', md: 'row' }} alignItems={'center'} justifyContent={{ xs: 'space-between', sm: 'unset', md: 'unset' }} gap={3}>
                   <Box textAlign="right">
                     <Stack direction="row" spacing={1}>
@@ -142,7 +139,7 @@ function BeautyMain() {
                 </Stack>
               </>
             ) : (
-              <>
+              isMatchingResult && <>
                 <Typography variant="body1" mb={{ xs: 2, sm: 'unset', md: 'unset' }} fontSize={'16px'} fontWeight={600}>
                   {!matchingServices ? 'No' : ''} Matching search results
                 </Typography>
@@ -205,9 +202,13 @@ function BeautyMain() {
           </Box>
         </Box>
 
-        <Services services={services} buisness_Id={buisnessInfo?.BussinessUserId} loading={loading} />
-        <Products images={images} />
-        <AboutUs timing={timing} facilities={facilities} latitude={buisnessInfo?.Latitude} longitude={buisnessInfo?.Longitude}/>
+        <Services services={services} buisness_Id={buisnessInfo?.BussinessUserId} loading={loading} staffData={staff} />
+        {buisnessProduct.length > 0 && <Products products={buisnessProduct} location={buisnessInfo?.StreetAddress}  />}
+
+        <AboutUs timing={timing} facilities={amenities} latitude={buisnessInfo?.Latitude} longitude={buisnessInfo?.Longitude} description={buisnessInfo?.Introduction}
+          region={buisnessInfo?.Region} StreetAddress={buisnessInfo?.StreetAddress} buisnessName={buisnessInfo?.BusinessName}
+          timingData={buisnessHours}
+        />
 
         {/* <ServiceBooking /> */}
       </Container>
