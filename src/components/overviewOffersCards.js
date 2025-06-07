@@ -1,7 +1,11 @@
-import { Box, Typography, Button } from '@mui/material'
-import { ArrowRight } from 'lucide-react'
+import { Box, Typography, Button } from '@mui/material';
+import { ArrowRight } from 'lucide-react';
+import Imageicon from '../assets/images/Overview_Images/image.png';
+import { useState } from 'react';
 
-const OfferCard=({ title, description, image, buttonText }) =>{
+const OfferCard = ({ title, description, image, buttonText }) => {
+  const [imgSrc, setImgSrc] = useState(image || Imageicon);
+
   return (
     <Box
       sx={{
@@ -25,12 +29,12 @@ const OfferCard=({ title, description, image, buttonText }) =>{
             fontWeight: 600,
             color: '#1A1A1A',
             mb: 1,
-            mt:-0.5
+            mt: -0.5,
           }}
         >
           {title}
         </Typography>
-        
+
         <Typography
           variant="body1"
           sx={{
@@ -70,8 +74,9 @@ const OfferCard=({ title, description, image, buttonText }) =>{
       >
         <Box
           component="img"
-          src={image}
+          src={imgSrc}
           alt={title}
+          onError={() => setImgSrc(Imageicon)}
           sx={{
             width: '100%',
             height: '100%',
@@ -81,8 +86,7 @@ const OfferCard=({ title, description, image, buttonText }) =>{
         />
       </Box>
     </Box>
-  )
-}
+  );
+};
 
 export default OfferCard;
-

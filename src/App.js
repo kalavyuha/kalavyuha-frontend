@@ -8,7 +8,7 @@ import {
     useLocation
 } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
-
+import  { MatchingSearchResultProvider } from "./Context/detailPageContext";
 
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
@@ -107,8 +107,10 @@ const ScrollToTop = () => {
 function AppWrapper() {
     return (
         <Router>
+          <MatchingSearchResultProvider>
             <ScrollToTop />
             <App />
+            </MatchingSearchResultProvider>
         </Router>
     );
 }

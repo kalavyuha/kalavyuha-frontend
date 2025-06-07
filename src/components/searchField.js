@@ -42,12 +42,12 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
     const today = new Date();
     const [currentDate, setCurrentDate] = useState(today);
     const [selected, setSelected] = useState(null);
-    const [selectedQuick, setSelectedQuick] = useState('any');
-    const [selectedSlot, setSelectedSlot] = useState('any');
+    const [selectedQuick, setSelectedQuick] = useState('24 Hours');
+    const [selectedSlot, setSelectedSlot] = useState('24 Hours');
     const [availableTimes, setAvailableTimes] = useState([]);
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
-    const slots = ['any', 'morning', 'afternoon', 'evening'];
+    const slots = ['24 Hours', 'morning', 'afternoon', 'evening'];
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -120,15 +120,15 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                 <Box display="flex" gap={1} mb={2}>
                     {[
                         {
-                            label: 'Any date', key: 'any', action: () => {
-                                onSelectDate(null);
+                            label: 'Any date', key: '24 Hours', action: () => {
+                                // onSelectDate(null); // Removed this line to prevent closing
                                 setSelected(null);
-                                setSelectedQuick('any');
+                                setSelectedQuick('24 Hours');
                             }
                         },
                         {
                             label: 'Today', key: 'today', action: () => {
-                                onSelectDate(today);
+                                // onSelectDate(today); // Removed this line to prevent closing
                                 setSelected(today);
                                 setSelectedQuick('today');
                             }
@@ -137,7 +137,7 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                             label: 'Tomorrow', key: 'tomorrow', action: () => {
                                 const tmr = new Date();
                                 tmr.setDate(today.getDate() + 1);
-                                onSelectDate(tmr);
+                                // onSelectDate(tmr); // Removed this line to prevent closing
                                 setSelected(tmr);
                                 setSelectedQuick('tomorrow');
                             }
@@ -243,52 +243,65 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                         ))}
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Select
-                            value={startTime}
-                            onChange={(e) => setStartTime(e.target.value)}
-                            displayEmpty
-                            fullWidth
-                            size="small"
-                            sx={{
-                                px: 1,
-                                py: 0.5,
-                                fontSize: '14px',
-                                height: 36,
-                            }}
-                        >
-                            <MenuItem value="" disabled>Select Start Time</MenuItem>
-                            {availableTimes.map(time => (
-                                <MenuItem key={time} value={time}>{time}</MenuItem>
-                            ))}
-                        </Select>
+                    {/* Time Selection - Only show when not 24 Hours */}
+                    {selectedSlot !== '24 Hours' && (
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Select
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                displayEmpty
+                                fullWidth
+                                size="small"
+                                sx={{
+                                    px: 1,
+                                    py: 0.5,
+                                    fontSize: '14px',
+                                    height: 36,
+                                }}
+                            >
+                                <MenuItem value="" disabled>Select Start Time</MenuItem>
+                                {availableTimes.map(time => (
+                                    <MenuItem key={time} value={time}>{time}</MenuItem>
+                                ))}
+                            </Select>
 
-                        <Select
-                            value={endTime}
-                            onChange={(e) => setEndTime(e.target.value)}
-                            displayEmpty
-                            fullWidth
-                            size="small"
-                            sx={{
-                                px: 1,
-                                py: 0.5,
-                                fontSize: '14px',
-                                height: 36,
-                            }}
-                        >
-                            <MenuItem value="" disabled>Select End Time</MenuItem>
-                            {availableTimes.map(time => (
-                                <MenuItem key={time} value={time}>{time}</MenuItem>
-                            ))}
-                        </Select>
-                    </Box>
+                            <Select
+                                value={endTime}
+                                onChange={(e) => setEndTime(e.target.value)}
+                                displayEmpty
+                                fullWidth
+                                size="small"
+                                sx={{
+                                    px: 1,
+                                    py: 0.5,
+                                    fontSize: '14px',
+                                    height: 36,
+                                }}
+                            >
+                                <MenuItem value="" >Select End Time</MenuItem>
+                                {availableTimes.map(time => (
+                                    <MenuItem key={time} value={time}>{time}</MenuItem>
+                                ))}
+                            </Select>
+                        </Box>
+                    )}
 
                     {/* Done Button */}
                     <Box mt={2} display="flex" justifyContent="flex-end">
                         <Button
                             variant="contained"
                             size="small"
-                            onClick={onClose}
+                            onClick={() => {
+                                // Pass the selected date and time when done is clicked
+                                const selectedData = {
+                                    date: selected,
+                                    slot: selectedSlot,
+                                    startTime: selectedSlot !== '24 Hours' ? startTime : null,
+                                    endTime: selectedSlot !== '24 Hours' ? endTime : null
+                                };
+                                onSelectDate(selectedData);
+                                onClose();
+                            }}
                             sx={{
                                 backgroundColor: '#1B4E6C',
                                 color: '#fff',

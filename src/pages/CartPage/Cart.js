@@ -8,22 +8,32 @@ import {
   Paper,
   Divider,
   CircularProgress,
-  Skeleton
+  Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Chip
 } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import BoltIcon from '@mui/icons-material/Bolt';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import CloseIcon from '@mui/icons-material/Close';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import DiscountTicket from "../../assets/cart/discount-ticket.png";
-import MonthSelect from './CalenderData';
 import CartList from './CartList';
 import ServiceStaffSelect from './StaffMember';
 import { showSuccess, showError } from '../../components/toast';
 import { apipost, apipatch, apiget } from '../service/api';
+import Calendar from './CalenderData';
 
-const BookingInterface = () => {
-  const location = useLocation();
+const BookingInterface = React.memo(() => {
   const params = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const staffData = location?.state?.staff || [];
 
   const [cartItems, setCartItems] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -35,6 +45,87 @@ const BookingInterface = () => {
   const [cartId, setCartId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingCart, setLoadingCart] = useState(true);
+  const [promoCode, setPromoCode] = useState([]);
+  const [selectedPromoCode, setSelectedPromoCode] = useState(null);
+  const [promoModalOpen, setPromoModalOpen] = useState(false);
+
+  const fetchPromoCode = async () => {
+    
+    try {
+      if(!params.id) return;
+      const result = await apiget(`api/v1/PromoCode/list/${params.id}`);
+      
+      if (result && result?.data?.Status === 200) {
+        setPromoCode(result?.data?.Data)
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  useEffect(() => {
+    fetchPromoCode();
+  }, [])
+
+  // Function to check if promo code is applicable
+  const isPromoCodeApplicable = (promo) => {
+    // Check if subtotal meets minimum order value
+    if (subtotal < promo.min_order_value) {
+      return false;
+    }
+
+    // Check if current date is within valid period
+    const currentDate = new Date();
+    const validFrom = new Date(promo.valid_from);
+    const validTo = new Date(promo.valid_to);
+    
+    if (currentDate < validFrom || currentDate > validTo) {
+      return false;
+    }
+
+    // Check if any cart item's service ID is in applicable_services
+    const cartServiceIds = cartItems.map(item => parseInt(item._id));
+    const hasApplicableService = promo.applicable_services.some(serviceId => 
+      cartServiceIds.includes(serviceId)
+    );
+
+    return hasApplicableService;
+  };
+
+  // Function to calculate discount based on promo code
+  const calculateDiscount = (promo) => {
+    if (!promo || !isPromoCodeApplicable(promo)) {
+      return 0;
+    }
+
+    if (promo.discount_type === 'flat') {
+      return promo.discount_value;
+    } else if (promo.discount_type === 'percentage') {
+      return (subtotal * promo.discount_value) / 100;
+    }
+
+    return 0;
+  };
+
+  // Handle promo code selection
+  const handlePromoCodeSelect = (promo) => {
+    if (isPromoCodeApplicable(promo)) {
+      setSelectedPromoCode(promo);
+      const discountAmount = calculateDiscount(promo);
+      setDiscount(discountAmount);
+      setPromoModalOpen(false);
+      showSuccess(`Promo code ${promo.code} applied successfully!`);
+    } else {
+      showError('This promo code is not applicable for your current cart');
+    }
+  };
+
+  // Handle removing promo code
+  const handleRemovePromoCode = () => {
+    setSelectedPromoCode(null);
+    setDiscount(0);
+    showSuccess('Promo code removed');
+  };
 
   const generateDateOptions = () => {
     const options = [];
@@ -58,7 +149,6 @@ const BookingInterface = () => {
 
   const days = generateDateOptions();
 
-
   const timeSlots = [
     '10:30 AM',
     '11:00 AM',
@@ -71,13 +161,12 @@ const BookingInterface = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-
         const userDetail = JSON.parse(localStorage.getItem("userDetail"));
 
         if (userDetail && userDetail._id) {
           setUserId(userDetail);
 
-          // to  get cart from API
+          // to get cart from API
           const result = await apiget(`api/v1/addToCart/service/cart/${userDetail._id}`);
 
           if (result && result.status === 200 && result?.data && result?.data?.Data) {
@@ -121,7 +210,13 @@ const BookingInterface = () => {
   useEffect(() => {
     const total = cartItems.reduce((sum, item) => sum + Number(item.price), 0);
     setSubtotal(total);
-  }, [cartItems]);
+    
+    // Recalculate discount if promo code is selected
+    if (selectedPromoCode) {
+      const newDiscount = calculateDiscount(selectedPromoCode);
+      setDiscount(newDiscount);
+    }
+  }, [cartItems, selectedPromoCode]);
 
   // Handle removing items from cart
   const handleRemove = async (index) => {
@@ -161,7 +256,6 @@ const BookingInterface = () => {
 
   // Handle checkout and booking creation
   const handleCheckout = async () => {
-
     if (!selectedTime) {
       showError("Please select a time slot");
       return;
@@ -179,8 +273,6 @@ const BookingInterface = () => {
 
     if (!userId) {
       showError("Please login to your account");
-      // Redirect to login
-      // navigate('/login', { state: { redirectTo: location.pathname } });
       return;
     }
 
@@ -194,7 +286,6 @@ const BookingInterface = () => {
         showError("Invalid date selected");
         return;
       }
-
 
       const formattedDate = selectedDay.fullDate.toISOString().split('T')[0];
 
@@ -218,9 +309,9 @@ const BookingInterface = () => {
         finalPrice: subtotal - discount,
         staffId: selectedStaff.length > 0 ? selectedStaff : null,
         paymentStatus: "pending",
-        sendSms: true
+        sendSms: true,
+        promoCode: selectedPromoCode ? selectedPromoCode.code : null
       };
-
 
       // Call the booking API
       const result = await apipost('api/v1/booking/book/', payload);
@@ -230,15 +321,16 @@ const BookingInterface = () => {
 
         // Clear cart after successful booking
         if (cartId) {
-          // If we have a cart ID, we should empty the cart on the server
           await apipatch(`api/v1/addToCart/service/update/${cartId}`, {
-            services: [] // Empty the services array
+            services: []
           });
         }
 
-        // Clear local cart
+        // Clear local cart and promo code
         localStorage.removeItem('cartItems');
         setCartItems([]);
+        setSelectedPromoCode(null);
+        setDiscount(0);
 
         // Navigate to booking confirmation or history page
         navigate('/cart/success', {
@@ -259,6 +351,98 @@ const BookingInterface = () => {
     }
   };
 
+  // Promo Code Modal Component
+  const PromoCodeModal = () => (
+    <Dialog 
+      open={promoModalOpen} 
+      onClose={() => setPromoModalOpen(false)}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6">Select Promo Code</Typography>
+        <IconButton onClick={() => setPromoModalOpen(false)}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent>
+        {promoCode.length === 0 ? (
+          <Typography textAlign="center" color="gray" py={4}>
+            No promo codes available
+          </Typography>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {promoCode.map((promo) => {
+              const applicable = isPromoCodeApplicable(promo);
+              const discountAmount = calculateDiscount(promo);
+              
+              return (
+                <Paper
+                  key={promo._id}
+                  elevation={1}
+                  sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    cursor: applicable ? 'pointer' : 'not-allowed',
+                    opacity: applicable ? 1 : 0.6,
+                    border: selectedPromoCode?._id === promo._id ? '2px solid #1b4d69' : '1px solid #e0e0e0',
+                    '&:hover': {
+                      bgcolor: applicable ? '#f5f5f5' : 'inherit'
+                    }
+                  }}
+                  onClick={() => applicable && handlePromoCodeSelect(promo)}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <LocalOfferIcon sx={{ color: '#1b4d69', fontSize: 20 }} />
+                        <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 'bold' }}>
+                          {promo.code}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="body2" color="gray" sx={{ mb: 1 }}>
+                        {promo.discount_type === 'flat' 
+                          ? `Flat ₹${promo.discount_value} off` 
+                          : `${promo.discount_value}% off`
+                        }
+                      </Typography>
+                      
+                      <Typography variant="body2" color="gray" sx={{ mb: 1 }}>
+                        Min order: ₹{promo.min_order_value}
+                      </Typography>
+                      
+                      <Typography variant="body2" color="gray" sx={{ fontSize: 12 }}>
+                        Valid till: {new Date(promo.valid_to).toLocaleDateString()}
+                      </Typography>
+                      
+                      {applicable && (
+                        <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 'bold', mt: 1 }}>
+                          You'll save ₹{discountAmount}
+                        </Typography>
+                      )}
+                    </Box>
+                    
+                    <Box>
+                      {!applicable && (
+                        <Chip 
+                          size="small" 
+                          label="Not Applicable" 
+                          color="error" 
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                </Paper>
+              );
+            })}
+          </Box>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+
   // Empty Cart Component
   const EmptyCart = () => (
     <Paper
@@ -266,7 +450,7 @@ const BookingInterface = () => {
       sx={{
         px: 4,
         mb: 2,
-        py:15,
+        py: 15,
         bgcolor: '#f5f5f5',
         borderRadius: '16px',
         display: 'flex',
@@ -355,155 +539,168 @@ const BookingInterface = () => {
   }
 
   return (
+    <>
+      {cartItems.length > 0 ? (
+        <Box sx={{ p: 3, maxWidth: 1200, margin: '100px auto' }}>
+          <Grid container spacing={6}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" fontSize={16} sx={{ mb: 3 }}>Choose professional</Typography>
+              <Box sx={{ mb: 4 }}>
+                <ServiceStaffSelect staffData={staffData} selectedStaff={setSelectedStaff} />
+              </Box>
 
-    cartItems.length > 0 ? <Box sx={{ p: 3, maxWidth: 1200, margin: '100px auto' }}>
-      <Grid container spacing={6}>
-        <Grid item xs={12} md={4}>
-          <Typography variant="h6" fontSize={16} sx={{ mb: 3 }}>Choose professional</Typography>
-          <Box sx={{ mb: 4 }}>
-            <ServiceStaffSelect selectedStaff={setSelectedStaff} />
-          </Box>
+              <Calendar />
 
-          <Typography variant="h6" fontSize={16} sx={{ mb: 2 }}>Choose date and time</Typography>
-          <Paper elevation={0} sx={{ padding: "1.5rem 2rem", bgcolor: "#dce1e6", borderRadius: 3 }}>
-            <Box sx={{ mb: 2 }}>
-              <MonthSelect />
-            </Box>
-            <Box sx={{
-              display: 'flex',
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              '&::-webkit-scrollbar': { display: 'none' },
-            }}>
-              {days.map(({ day, date }) => (
-                <Box
-                  key={date}
-                  onClick={() => setSelectedDate(date)}
-                  sx={{
-                    minWidth: 40,
-                    height: 40,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '20%',
-                    bgcolor: selectedDate === date ? '#1b4d69' : 'transparent',
-                    color: selectedDate === date ? 'white' : 'inherit',
-                    cursor: 'pointer',
-                    mx: 0.5,
-                  }}
-                >
-                  <Typography variant="caption">{day}</Typography>
-                  <Typography variant="body2">{date}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-
-          <Paper elevation={0} sx={{ padding: "1.5rem 2rem", bgcolor: "#dce1e6", borderRadius: 3, mt: 2 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {timeSlots.map((time) => (
-                <Button
-                  key={time}
-                  variant={selectedTime === time ? 'contained' : 'none'}
-                  fullWidth
-                  sx={{
-                    justifyContent: "space-between",
-                    bgcolor: selectedTime === time ? "black" : "#c6cace",
-                    color: selectedTime === time ? "white" : "inherit",
-                    borderRadius: "7px",
-                    padding: "8px 16px"
-                  }}
-                  onClick={() => setSelectedTime(time)}
-                >
-                  {time}
-                  <BoltIcon sx={{ fontSize: 18, color: "#e66f2a" }} />
-                </Button>
-              ))}
-            </Box>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={8}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={6}>
-              <Typography variant="h6" fontSize={16} sx={{ mb: 3 }}>
-                {cartItems.length} {cartItems.length === 1 ? 'service' : 'services'} selected
-              </Typography>
-            </Grid>
-            <Grid item xs={6} textAlign="right">
-              <Typography variant="h6" onClick={() => navigate(-1)} fontSize={14} fontWeight="bold" sx={{ mb: 3, color: "#1b4d69", cursor: "pointer" }}>
-                Add other services
-              </Typography>
-            </Grid>
-          </Grid>
-
-
-          <CartList cartItems={cartItems} onRemove={handleRemove} />
-
-
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>Offers</Typography>
-              <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: '#dce1e6', borderRadius: '16px' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box component="img" src={DiscountTicket} alt="Promo" sx={{ width: 40, height: 20, pl: "0.28rem" }} />
-                    <Box sx={{ pl: "0.28rem" }}>
-                      <Typography fontSize={18}>Select offers/User Promo Code</Typography>
-                      <Typography variant="caption" color="#1b4d69" fontSize={10} fontWeight="bold">
-                        Get 20% special discount on FREEBEAUTY
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <ChevronRightIcon sx={{ pr: 1 }} />
+              <Paper elevation={0} sx={{ padding: "1.5rem 2rem", bgcolor: "#dce1e6", borderRadius: 3, mt: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {timeSlots.map((time) => (
+                    <Button
+                      key={time}
+                      variant={selectedTime === time ? 'contained' : 'none'}
+                      fullWidth
+                      sx={{
+                        justifyContent: "space-between",
+                        bgcolor: selectedTime === time ? "black" : "#c6cace",
+                        color: selectedTime === time ? "white" : "inherit",
+                        borderRadius: "7px",
+                        padding: "8px 16px"
+                      }}
+                      onClick={() => setSelectedTime(time)}
+                    >
+                      {time}
+                      <BoltIcon sx={{ fontSize: 18, color: "#e66f2a" }} />
+                    </Button>
+                  ))}
                 </Box>
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>Price Details</Typography>
-              <Paper elevation={0} sx={{ py: 2, px: 4, bgcolor: '#dce1e6', borderRadius: 4 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography color="gray">Sub Total</Typography>
-                  <Typography color="gray">₹{subtotal}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography color="gray">Discount</Typography>
-                  <Typography color="#ff716d"> ₹{discount}</Typography>
-                </Box>
-                <Divider sx={{ my: 2 }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography fontWeight="bold">Total</Typography>
-                  <Typography fontWeight="bold">₹{subtotal - discount}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      bgcolor: 'black',
-                      borderRadius: 2,
-                      '&:disabled': {
-                        bgcolor: 'gray',
-                        color: 'white',
-                        minWidth: '50px'
-                      }
+            <Grid item xs={12} md={8}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={6}>
+                  <Typography variant="h6" fontSize={16} sx={{ mb: 3 }}>
+                    {cartItems.length} {cartItems.length === 1 ? 'service' : 'services'} selected
+                  </Typography>
+                </Grid>
+                <Grid item xs={6} textAlign="right">
+                  <Typography variant="h6" onClick={() => navigate(-1)} fontSize={14} fontWeight="bold" sx={{ mb: 3, color: "#1b4d69", cursor: "pointer" }}>
+                    Add other services
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <CartList cartItems={cartItems} onRemove={handleRemove} />
+
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>Offers</Typography>
+                  
+                  {/* Selected Promo Code Display */}
+                  {selectedPromoCode && (
+                    <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: '#e8f5e8', borderRadius: '16px', border: '1px solid #4caf50' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <LocalOfferIcon sx={{ color: '#4caf50' }} />
+                          <Box>
+                            <Typography fontSize={16} fontWeight="bold" color="#4caf50">
+                              {selectedPromoCode.code} Applied
+                            </Typography>
+                            <Typography variant="caption" color="#4caf50" fontSize={12}>
+                              You saved ₹{discount}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Button
+                          size="small"
+                          onClick={handleRemovePromoCode}
+                          sx={{ color: '#d32f2f', minWidth: 'auto' }}
+                        >
+                          Remove
+                        </Button>
+                      </Box>
+                    </Paper>
+                  )}
+
+                  {/* Promo Code Selection */}
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      p: 2, 
+                      mb: 2, 
+                      bgcolor: '#dce1e6', 
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: '#d5dae0' }
                     }}
-                    onClick={handleCheckout}
-                    disabled={cartItems.length === 0 || !selectedTime || !selectedDate || isLoading}
+                    onClick={() => setPromoModalOpen(true)}
                   >
-                    {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Checkout'}
-                  </Button>
-                </Box>
-              </Paper>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box component="img" src={DiscountTicket} alt="Promo" sx={{ width: 40, height: 20, pl: "0.28rem" }} />
+                        <Box sx={{ pl: "0.28rem" }}>
+                          <Typography fontSize={18}>
+                            {selectedPromoCode ? 'Change Promo Code' : 'Select offers/Use Promo Code'}
+                          </Typography>
+                          <Typography variant="caption" color="#1b4d69" fontSize={10} fontWeight="bold">
+                            {promoCode.length > 0 
+                              ? `${promoCode.length} promo codes available`
+                              : 'Get special discounts'
+                            }
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <ChevronRightIcon sx={{ pr: 1 }} />
+                    </Box>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>Price Details</Typography>
+                  <Paper elevation={0} sx={{ py: 2, px: 4, bgcolor: '#dce1e6', borderRadius: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography color="gray">Sub Total</Typography>
+                      <Typography color="gray">₹{subtotal}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography color="gray">Discount</Typography>
+                      <Typography color="#ff716d">-₹{discount}</Typography>
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography fontWeight="bold">Total</Typography>
+                      <Typography fontWeight="bold">₹{subtotal - discount}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+                      <Button
+                        variant="contained"
+                        sx={{
+                          bgcolor: 'black',
+                          borderRadius: 2,
+                          '&:disabled': {
+                            bgcolor: 'gray',
+                            color: 'white',
+                            minWidth: '50px'
+                          }
+                        }}
+                        onClick={handleCheckout}
+                        disabled={cartItems.length === 0 || !selectedTime || !selectedDate || isLoading}
+                      >
+                        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Checkout'}
+                      </Button>
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
-      </Grid>
-    </Box> : <EmptyCart/>
-
+        </Box>
+      ) : (
+        <EmptyCart />
+      )}
+      
+      <PromoCodeModal />
+    </>
   );
-};
+});
 
 export default BookingInterface;

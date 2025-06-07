@@ -1,70 +1,47 @@
-import React, { useRef } from "react";
-import { Box, Typography, IconButton, Chip } from "@mui/material";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, Typography, IconButton, Chip, Skeleton } from "@mui/material";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import offerbgimg from '../../assets/images/Overview_Images/dealsofferPngimage.png'
+import { apiget } from "../service/api";
 
-// Sample deals data
-const deals = [
-    {
-        label: "Flat 10% OFF",
-        code: "USE CODE: MUFFT",
-    },
-    {
-
-        label: "20% Cashback",
-        code: "USE CODE: SAVE20",
-    },
-    {
-
-        label: "Free Shipping",
-        code: "ON ORDERS ABOVE ₹500",
-    },
-    {
-
-        label: "50% OFF",
-        code: "LIMITED OFFER",
-    },
-    {
-
-        label: "Buy 1 Get 1",
-        code: "USE CODE: BOGO",
-    },
-    {
-
-        label: "Flat 10% OFF",
-        code: "USE CODE: MUFFT",
-    },
-    {
-
-        label: "20% Cashback",
-        code: "USE CODE: SAVE20",
-    },
-    {
-
-        label: "Free Shipping",
-        code: "ON ORDERS ABOVE ₹500",
-    },
-    {
-
-        label: "50% OFF",
-        code: "LIMITED OFFER",
-    },
-    {
-
-        label: "Buy 1 Get 1",
-        code: "USE CODE: BOGO",
-    },
-];
-
-const DealsSlider = () => {
+const DealsSlider = ({ buisnessId }) => {
     const sliderRef = useRef(null);
+    const [deals, setDeals] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const scroll = (direction) => {
         if (sliderRef.current) {
-            const scrollAmount = 300; 
+            const scrollAmount = 300;
             sliderRef.current.scrollLeft += direction === "left" ? -scrollAmount : scrollAmount;
         }
     };
+
+    const fetchPromoCode = async () => {
+        try {
+            if (!buisnessId) return;
+            
+            setLoading(true);
+            const result = await apiget(`api/v1/PromoCode/list/${buisnessId}`);
+
+            if (result?.data?.Status === 200) {
+                setDeals(result?.data?.Data || []);
+            }
+        } catch (err) {
+            console.log(err);
+            setDeals([]);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchPromoCode();
+    }, [buisnessId]);
+
+    // Hide component if not loading and no deals
+    if (!loading && (!deals || deals.length === 0)) {
+        return null;
+    }
 
     return (
         <Box
@@ -74,7 +51,7 @@ const DealsSlider = () => {
                 p: 2,
                 borderRadius: 6,
                 maxWidth: "1300px",
-                margin: "0 auto",
+                margin: "30px auto",
             }}
         >
             <Box
@@ -86,27 +63,28 @@ const DealsSlider = () => {
                 }}
             >
                 <Typography variant="h6">Deals for you</Typography>
-             
-                <Box>
-                    <IconButton size="small" sx={{ color: "white" }} onClick={() => scroll("left")}>
-                        <KeyboardBackspaceIcon sx={{ fontSize: "28px" }} />
-                    </IconButton>
-                    <IconButton
-                        size="small"
-                        sx={{ color: "white" }}
-                        onClick={() => scroll("right")}
-                    >
-                        <KeyboardBackspaceIcon
-                            sx={{
-                                transform: "rotate(180deg)",
-                                fontSize: "28px",
-                            }}
-                        />
-                    </IconButton>
-                </Box>
+
+                {!loading && (
+                    <Box>
+                        <IconButton size="small" sx={{ color: "white" }} onClick={() => scroll("left")}>
+                            <KeyboardBackspaceIcon sx={{ fontSize: "28px" }} />
+                        </IconButton>
+                        <IconButton
+                            size="small"
+                            sx={{ color: "white" }}
+                            onClick={() => scroll("right")}
+                        >
+                            <KeyboardBackspaceIcon
+                                sx={{
+                                    transform: "rotate(180deg)",
+                                    fontSize: "28px",
+                                }}
+                            />
+                        </IconButton>
+                    </Box>
+                )}
             </Box>
 
-            
             <Box
                 ref={sliderRef}
                 sx={{
@@ -114,80 +92,123 @@ const DealsSlider = () => {
                     gap: 1,
                     overflowX: "auto",
                     pb: 1,
-                    scrollBehavior: "smooth", // Smooth scrolling effect
-                    "&::-webkit-scrollbar": { display: "none" }, // Hide scrollbar for Chrome
-                    scrollbarWidth: "none", // Hide scrollbar for Firefox
+                    scrollBehavior: "smooth",
+                    "&::-webkit-scrollbar": { display: "none" },
+                    scrollbarWidth: "none",
                 }}
             >
-                {deals.map((deal, index) => (
-                    <Chip
-                        key={index}
-                        icon={
-
-                            <div
-                                style={{
-                                    width: "45px",
-                                    height: "45px",
-                                    display:'flex',
-                                    alignItems:'center',
-                                    justifyContent:'center',
-                                    fontWeight:600,
-                                    backgroundColor: '#000',
-                                    color:'#fff',
-                                    WebkitMaskImage: `url(${offerbgimg})`,
-                                    maskImage: `url(${offerbgimg})`,
-                                    WebkitMaskSize: "cover",
-                                    maskSize: "cover",
-                                    WebkitMaskRepeat: "no-repeat",
-                                    maskRepeat: "no-repeat",
-                                    marginLeft:'0'
-                                }}
-                            >Off</div>
-                        }
-                        label={
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "flex-start",
-                                    marginLeft: "20px",
-                                    maxWidth: '100px',
-
-                                }}
-                            >
-                                <Typography variant="body2"
-                                    sx={{
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        width: '100%'
-                                    }}
-                                    fontWeight="bold">
-                                    {deal.label}
-                                </Typography>
-                                <Typography sx={{
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    width: '100%'
-                                }} variant="caption">{deal.code}</Typography>
-                            </Box>
-                        }
-                        sx={{
-                            bgcolor: "white",
-                            color: "black",
-                            width: "max-content",
-                            minWidth: "190px",
-                            height: "60px",
-                            "& .MuiChip-label": {
+                {loading ? (
+                    // Skeleton loading state
+                    Array.from({ length: 3 }).map((_, index) => (
+                        <Box
+                            key={index}
+                            sx={{
+                                bgcolor: "white",
+                                borderRadius: "16px",
+                                minWidth: "210px",
+                                height: "60px",
                                 display: "flex",
                                 alignItems: "center",
+                                padding: "8px 12px",
                                 gap: 1,
-                                padding: "10px 0",
-                            },
-                        }}
-                    />
-                ))}
+                                flexShrink: 0,
+                            }}
+                        >
+                            <Skeleton
+                                variant="circular"
+                                width={45}
+                                height={45}
+                                sx={{ bgcolor: "grey.300" }}
+                            />
+                            <Box sx={{ flex: 1 }}>
+                                <Skeleton
+                                    variant="text"
+                                    width="80%"
+                                    height={20}
+                                    sx={{ bgcolor: "grey.300" }}
+                                />
+                                <Skeleton
+                                    variant="text"
+                                    width="60%"
+                                    height={16}
+                                    sx={{ bgcolor: "grey.300" }}
+                                />
+                            </Box>
+                        </Box>
+                    ))
+                ) : (
+                    // Actual deals data
+                    deals.map((deal, index) => (
+                        <Chip
+                            key={index}
+                            icon={
+                                <div
+                                    style={{
+                                        width: "45px",
+                                        height: "45px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontWeight: 600,
+                                        backgroundColor: "#000",
+                                        color: "#fff",
+                                        WebkitMaskImage: `url(${offerbgimg})`,
+                                        maskImage: `url(${offerbgimg})`,
+                                        WebkitMaskSize: "cover",
+                                        maskSize: "cover",
+                                        WebkitMaskRepeat: "no-repeat",
+                                        maskRepeat: "no-repeat",
+                                        marginLeft: "5px",
+                                        marginRight: '7px',
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    OFF
+                                </div>
+                            }
+                            label={
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "flex-start",
+                                        maxWidth: "100px",
+                                        textTransform: "capitalize",
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                        {`${deal.discount_type} ₹${deal.discount_value} OFF`}
+                                    </Typography>
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: "grey",
+                                        }}
+                                    >
+                                        USE {deal.code}
+                                    </Typography>
+                                </Box>
+                            }
+                            sx={{
+                                bgcolor: "white",
+                                color: "black",
+                                width: "max-content",
+                                minWidth: "210px",
+                                height: "60px",
+                                justifyContent: "flex-start",
+                                "& .MuiChip-label": {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-start",
+                                    gap: 1,
+                                    padding: "10px 0",
+                                    width: "100%",
+                                },
+                            }}
+                        />
+                    ))
+                )}
             </Box>
         </Box>
     );
