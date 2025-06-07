@@ -82,7 +82,7 @@ function App() {
                     <Route exact path="/business-account" element={<CreateBusniessAccount />} />
                     <Route exact path="/otp-verification" element={<OTPVerification />} />
                     <Route exact path="/business-role-selection" element={<BusinessRoleSelection />} />
-                    <Route exact path="/business-info-selection" element={<BusinessInfoSelection />} />
+                    {/* <Route exact path="/business-info-selection" element={<BusinessInfoSelection />} /> */}
                     <Route exact path="/business-profile-form" element={<BusinessProfileForm />} />
                     <Route exact path="/business-team-presence" element={<TeamPresence />} />
                     <Route exact path="/business-service-info" element={<BusinessServiceInfo />} />

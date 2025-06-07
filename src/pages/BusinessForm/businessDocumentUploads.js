@@ -11,7 +11,6 @@ import { ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DocumentUpload from '../../components/documentUploads';
 import LeftPanel from './components/leftpanel'
-import { convertToBase64 } from './components/convert2base.js';
 import { createBusinessDetails} from './Apis/businessDetailsApi.js';
 import { createStaff} from './Apis/staffApi.js';
 import { createServices} from './Apis/servicesApi.js';

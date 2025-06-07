@@ -40,7 +40,6 @@ export default function BusinessRoleSelection() {
   const merchantAccountID = location.state?.MerchantAccountID;
   // const merchantAccountID = 212121;
 
-  console.log(merchantAccountID)
   
   const getStoredData = () => {
     try {
@@ -97,7 +96,7 @@ export default function BusinessRoleSelection() {
         teamInfoCompleted: false
       };
       localStorage.setItem('formData', JSON.stringify(formData));
-      navigate('/business-info-selection');
+      navigate('/business-profile-form');
     } catch (error) {
       console.error('Error saving form data:', error);
     }

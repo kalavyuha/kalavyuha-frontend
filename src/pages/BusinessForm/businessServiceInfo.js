@@ -7,7 +7,7 @@ import {
   Grid,
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { MessagesSquare, Send, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { message } from 'antd';
 
 import { useLocation, useNavigate } from 'react-router-dom';

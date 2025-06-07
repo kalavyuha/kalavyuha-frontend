@@ -9,13 +9,10 @@ import {
   Avatar
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Logo from "../../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png"
-import BusniessProfile from "../../assets/images/busniessAccount/busniessProfile.jpg"
-import { MessagesSquare, Send, ArrowLeft } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import MapComponent from './components/google.map';
 import LeftPanel from './components/leftpanel.js'; 
-import { convertToBase64 } from './components/convert2base.js';
 import { uploadImages } from './Apis/uploadAPI.js'
 
 
@@ -86,7 +83,7 @@ export default function BusinessProfileForm() {
       formData,
     };
     localStorage.setItem('formData', JSON.stringify(combinedData));
-    navigate('/business-info-selection', { state: combinedData });
+    navigate('/business-role-selection', { state: combinedData });
   };
 
   const handleNextTeamPresence = () => {
@@ -217,14 +214,6 @@ export default function BusinessProfileForm() {
               item 
               xs={12} 
               md={8} 
-              sx={{
-                alignContent: "center", 
-                height: '100vh', 
-                overflow: 'auto', 
-                py: 2,
-                scrollbarWidth: 'none',  
-                '&::-webkit-scrollbar': { display: 'none' } 
-              }}
             >
               <Box
                 sx={{
@@ -232,10 +221,16 @@ export default function BusinessProfileForm() {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                }}
+                  maxHeight: '91vh',
+                  padding: 2.5,
+                  margin: 2,
+                  overflow: 'auto', 
+                  scrollbarWidth: 'none',  
+                  '&::-webkit-scrollbar': { display: 'none' } 
+                  }}
               >
-                <Typography component="h1" variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#1b4d69", textAlign:"Center"}}>
-                  Introduce your {selectedId} <br></br> Services Profile
+                <Typography component="h1" variant="h5" sx={{ mb: 1, fontWeight: "bold", color: "#1b4d69", textAlign:"Center"}}>
+                  Introduce your {selectedId}  Services Profile
                 </Typography>
                 <Typography variant="subtitle1" sx={{ mb: 3 }}>
                   Let's get your business profile set up in less than 2 minutes.
@@ -258,7 +253,7 @@ export default function BusinessProfileForm() {
                         autoFocus
                         value={formData.businessName}
                         onChange={handleChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
+                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb", p:0 }}
                         InputProps={{
                           style: {
                             borderRadius: '10px',
