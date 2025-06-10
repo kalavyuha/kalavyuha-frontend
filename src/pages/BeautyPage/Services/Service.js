@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -236,7 +236,14 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   const [loadingCart, setLoadingCart] = useState(true);
   const [actionId, setActionId] = useState(null);
   const navigate = useNavigate();
+  const params = useParams();
+  const [visibleServices, setVisibleServices] = useState(5);
 
+  const handleSeeMore = () => {
+    setVisibleServices(prev => prev + 5);
+  };
+
+  const hasMoreServices = services && visibleServices < services.length;
 
 
   useEffect(() => {
@@ -326,14 +333,14 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
       const result = await apipost('api/v1/addToCart/service/add', {
         UserId: `${userId}`,
         BussinessId: buisness_Id,
-        selected_date: "",
-        selected_time: "",
-        services: [
+        SelectedDate: "",
+        SelectedTime: "",
+        Services: [
           {
-            service_id: `${service._id}`,
-            service_name: service.serviceName,
-            duration: service.duration,
-            price: service.price
+            ServiceId: `${service._id}`,
+            ServiceName: service.serviceName,
+            Duration: service.duration,
+            Price: service.price
           }
         ],
       });
@@ -367,7 +374,6 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   const removeFromCartAPI = async (service) => {
 
     if (cartId) {
-      // Get current services excluding the one to remove
       const updatedServices = cartItems
         .filter(item => item._id != service._id)
         .map(item => ({
@@ -378,7 +384,6 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
         }));
 
       if (updatedServices.length > 0) {
-        // Update cart with remaining services
         const result = await apipatch(`api/v1/addToCart/service/update/${cartId}`, {
           services: updatedServices,
         });
@@ -401,7 +406,6 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
   };
 
-  // Handle cart operations with localStorage
   const handleLocalStorageCart = (service) => {
     setCartItems(prevItems => {
       const existingItemIndex = prevItems.findIndex(
@@ -410,14 +414,11 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
       let updatedItems;
       if (existingItemIndex > -1) {
-        // Remove item if it exists
         updatedItems = prevItems.filter((_, index) => index !== existingItemIndex);
       } else {
-        // Add item if it doesn't exist
         updatedItems = [...prevItems, service];
       }
 
-      // Update localStorage
       localStorage.setItem('cartItems', JSON.stringify(updatedItems));
       return updatedItems;
     });
@@ -429,23 +430,21 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
       const localCart = JSON.parse(localStorage.getItem('cartItems') || '[]');
 
       if (localCart.length > 0) {
-        // Create a new cart with local items
         setActionId("")
         const result = await apipost('api/v1/addToCart/service/add', {
           UserId: userId,
           BussinessId: buisness_Id,
-          selected_date: "",
-          selected_time: "",
+          SelectedDate: "",
+          SelectedTime: "",
           services: localCart.map(item => ({
-            service_id: item._id,
-            service_name: item.serviceName,
-            duration: item.duration,
-            price: item.price
+            ServiceId: item._id,
+            ServiceName: item.serviceName,
+            Duration: item.duration,
+            Price: item.price
           })),
         });
 
         if (result && result.status === 200) {
-          // Clear localStorage cart after syncing
           localStorage.removeItem('cartItems');
           setCartId(result?.data?.Data);
           await fetchCartItems(userId);
@@ -458,8 +457,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   };
 
   const handleNavigateCart = () => {
-  navigate(`/cart`, { state: { staff: staffData} });
-};
+    navigate(`/cart`, { state: { staff: staffData, _id: params.id } });
+  };
 
 
   return (
@@ -489,8 +488,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
               </Grid>
             ))
           ) : (
-            // Show actual services when loaded
-            services && services.length > 0 && services.map((service, index) => {
+            // Show actual services when loaded - LIMITED TO visibleServices
+            services && services.length > 0 && services.slice(0, visibleServices).map((service, index) => {
               const isInCart = cartItems.some((item) => item._id == service._id);
 
               return (
@@ -506,7 +505,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
                     onAddToCart={handleAddToCart}
                     isInCart={isInCart}
                     loadingId={actionId}
-                    loading={false} // Individual card loading is false since we handle it at component level
+                    loading={false}
                   />
                 </Grid>
               );
@@ -514,7 +513,34 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
           )}
         </Grid>
 
-        {/* Show "No services found" message when not loading and no services */}
+        {/* See More Button */}
+        {!loading && hasMoreServices && (
+          <Box sx={{
+            
+            mt: 3,
+            mb: 2
+          }}>
+            <Button
+              variant="outlined"
+              onClick={handleSeeMore}
+              sx={{
+                borderColor: '2px solid #1b4d69',
+                color: '#1b4d69',
+                '&:hover': {
+                  backgroundColor: '#1b4d69',
+                  color: '#fff',
+                },
+                p: '5px 10px',
+                fontSize: '14px',
+                fontWeight: 600,
+                borderRadius: '8px'
+              }}
+            >
+              See More
+            </Button>
+          </Box>
+        )}
+
         {!loading && (!services || services.length === 0) && (
           <Box
             sx={{

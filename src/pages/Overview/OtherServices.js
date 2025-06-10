@@ -5,7 +5,7 @@ import RecommendedImgPath from '../../assets/images/recommended/recommended.png'
 import { useMediaQuery } from '@mui/material';
 import TypeOneCard from '../../components/cardtypeone';
 
-const ServicesRecommendations = () => {
+const ServicesRecommendations = ({Services=[]}) => {
     const salons = [
         {
             id: 1,
@@ -106,7 +106,7 @@ const ServicesRecommendations = () => {
                         scrollBehavior: 'smooth'
                     }}
                 >
-                    {salons.map((salon) => (
+                    {Services && Services.map((salon) => (
                         <TypeOneCard key={salon.id} salon={salon} isSmallScreen={isSmallScreen} />
                     ))}
                 </Box>

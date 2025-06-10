@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardMedia, Typography, Box } from '@mui/material';
+import ImageIcon from '../assets/images/Overview_Images/image.png'
 
-const TypeOneCard = ({ salon, isSmallScreen }) => {
+const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
+    const { Business, Service } = salon
     return (
         <Card
             sx={{
@@ -17,9 +19,15 @@ const TypeOneCard = ({ salon, isSmallScreen }) => {
                 <CardMedia
                     component="img"
                     height="175"
-                    image={salon.image}
-                    alt={salon.name}
-                    sx={{ borderRadius: "8px" }}
+                    image={Business.Image ? Business.Image : ImageIcon}
+                    alt={Business.Name || 'Business Image'}
+                    sx={{
+                        borderRadius: "8px",
+                        objectFit: "cover"
+                    }}
+                    onError={(e) => {
+                        e.target.src = ImageIcon;
+                    }}
                 />
                 <Box
                     sx={{
@@ -45,7 +53,7 @@ const TypeOneCard = ({ salon, isSmallScreen }) => {
                         color="text.secondary"
                         sx={{ fontSize: isSmallScreen ? '0.75rem' : '0.9rem' }}
                     >
-                        {salon.location}
+                        {Business.Address || ''}
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography
@@ -54,7 +62,7 @@ const TypeOneCard = ({ salon, isSmallScreen }) => {
                             fontWeight="bold"
                             sx={{ fontSize: isSmallScreen ? '0.9rem' : '1.15rem' }}
                         >
-                            {salon.name}
+                            {Business.Name || ''}
                         </Typography>
                         <Typography
                             sx={{
@@ -66,13 +74,13 @@ const TypeOneCard = ({ salon, isSmallScreen }) => {
                                 fontSize: isSmallScreen ? '0.65rem' : '0.8rem'
                             }}
                         >
-                            {salon.rating} ★
+                            {Business.Rating} ★
                         </Typography>
                     </Box>
                 </Box>
             </CardContent>
         </Card>
     );
-};
+});
 
 export default TypeOneCard;

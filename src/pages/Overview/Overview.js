@@ -1,27 +1,46 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container } from '@mui/material';
 import Navigation from './Navigation'
 import CardList from './Card'
 import MapComponent from './Map';
 import { useLocation, useNavigate } from 'react-router-dom';
 import RecommendedSection from './OtherServices';
+import { apiget } from '../service/api';
 
 const Overview = () => {
-    const [data, setData] = useState(null); 
+    const [data, setData] = useState(null);
     const previousData = useLocation();
-    const [showMap,setShowMap]=useState(false);
-    const [isLoading,setIsLoading]=useState(false);
-    const [buisnessType,setBuisnessType]=useState('');
+    const [showMap, setShowMap] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [buisnessType, setBuisnessType] = useState('');
+    const [popularServices, setPopularServices] = useState([]);
 
 
     const IndexFilterData = previousData?.state?.data;
-    const searchBarData=previousData?.state?.search
+    const searchBarData = previousData?.state?.search
 
 
     const handleDataChange = (newData) => {
         setData(newData);
     };
 
+    const fetchPopularServices = async () => {
+        try {
+            const result = await apiget(`api/v1/Service/popularServices/?max_distance_km=15&limit=5&MinPrice=50&SortBy=Price&user_latitude=28.466296&user_longitude=77.011864&new_businesses=true`);
+            if (result && result.data?.Status === 200) {
+                 console.log(result?.data?.Data)
+                setPopularServices(result?.data?.Data)
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    useEffect(() => {
+        fetchPopularServices()
+    }, [])
+
+   
 
     useEffect(() => {
         if (IndexFilterData) {
@@ -31,17 +50,17 @@ const Overview = () => {
 
     return (
         <>
-            
-            <Navigation setShowMap={setShowMap} setIsLoading={setIsLoading} showMap={showMap} setBuisnessType={setBuisnessType} onDataChange={handleDataChange} searchData={searchBarData} /> 
-           {showMap && <Container maxWidth="lg">
+
+            <Navigation setShowMap={setShowMap} setIsLoading={setIsLoading} showMap={showMap} setBuisnessType={setBuisnessType} onDataChange={handleDataChange} searchData={searchBarData} />
+            {showMap && <Container maxWidth="lg">
                 <MapComponent />
             </Container>}
-            
+
             <Container maxWidth="lg">
-                <CardList data={data} buisnessType={buisnessType} isLoading={isLoading}/> 
+                <CardList data={data} buisnessType={buisnessType} isLoading={isLoading} />
             </Container>
 
-            <RecommendedSection/>
+            <RecommendedSection Services={popularServices}/>
         </>
     );
 };

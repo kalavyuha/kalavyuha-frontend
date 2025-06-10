@@ -22,6 +22,7 @@ import Services from "./Services/Service";
 import SearchBar from './SearchBar/SearchBar'
 import { apiget } from '../service/api'
 import { useMatchingSearchResult } from "../../Context/detailPageContext";
+import Reviews from '../HomePage/Reviews'
 
 
 
@@ -78,7 +79,6 @@ function BeautyMain() {
     setLoading(true)
     const result = await apiget(`api/v1/BussinessDetails/alldetails/${id}`);
     if (result && result?.data?.Status === 200) {
-      console.log(result)
       setBuisnessInfo(result?.data?.Data?.BusinessInfo);
       setServices(result?.data?.Data?.Services)
       setimages(result?.data?.Data?.BussinessImages);
@@ -204,6 +204,9 @@ function BeautyMain() {
 
         <Services services={services} buisness_Id={buisnessInfo?.BussinessUserId} loading={loading} staffData={staff} />
         {buisnessProduct.length > 0 && <Products products={buisnessProduct} location={buisnessInfo?.StreetAddress}  />}
+
+
+<Reviews data={reviews} />
 
         <AboutUs timing={timing} facilities={amenities} latitude={buisnessInfo?.Latitude} longitude={buisnessInfo?.Longitude} description={buisnessInfo?.Introduction}
           region={buisnessInfo?.Region} StreetAddress={buisnessInfo?.StreetAddress} buisnessName={buisnessInfo?.BusinessName}
