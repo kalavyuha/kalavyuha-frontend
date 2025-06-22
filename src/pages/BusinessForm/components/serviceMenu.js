@@ -15,69 +15,88 @@ import {
   FormControl, 
   InputLabel, 
   OutlinedInput, 
-  ListItemText 
+  ListItemText,
+  Typography,
+  Collapse,
+  Checkbox,
+  TextareaAutosize
 } from '@mui/material';
-import { GripVertical, PlusCircle, Trash2 } from 'lucide-react';
+import { GripVertical, PlusCircle, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { message } from 'antd';
-import { uploadImages } from '../Apis/uploadAPI.js'
-
-const DurationSelect = ({ value, onChange }) => (
-  <Select
-    value={value}
-    onChange={onChange}
-    size="small"
-    sx={{
-      width: '100px',
-      height: '33px',
-      px: "8px",
-      borderRadius: "6px",
-      '& .MuiSelect-select': {
-        padding: '0',  
-        display: 'flex',  
-        alignItems: 'center',
-      },
-      '& .MuiOutlinedInput-notchedOutline': {
-        border: '1px solid #d9d9d9', 
-      },
-    }}
-  >
-    <MenuItem value="mints">mints</MenuItem>
-    <MenuItem value="hours">hours</MenuItem>
-    <MenuItem value="days">days</MenuItem>
-    <MenuItem value="months">months</MenuItem>
-  </Select>
-);
+import { uploadImages } from '../Apis/uploadAPI.js';
+import {StaffSelect, DurationSelect} from './dropDowns.js'
 
 const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembers }) => {
-  const [services, setServices] = useState(initialServices || [
-    { 
-      id: '1', 
-      name: 'Enter Service Name', 
-      price: '-', 
-      duration: '-', 
-      durationType: 'mints', 
-      staff: [], 
-      uploaded: false, 
-      image: null 
-    },
-  ]);
-  
-  useEffect(() => {
-    setServices(initialServices || []); 
-  }, [initialServices]);
 
+  const [categories, setCategories] = useState(() => {
+    // Initialize with default structure if no initial services provided
+    if (!initialServices || initialServices.length === 0) {
+      return [
+        {
+          id: 'cat-1',
+          name: 'General Services',
+          expanded: true,
+          services: [
+            { 
+              id: '1', 
+              name: '', 
+              description: '',
+              price: '', 
+              duration: '', 
+              durationType: 'mints', 
+              staff: [], 
+              uploaded: false, 
+              image: null 
+            }
+          ]
+        }
+      ];
+    }
+    
+    // Convert flat services array to categorized structure if needed
+    if (!initialServices[0]?.services) {
+      return [
+        {
+          id: 'cat-1',
+          name: 'General Services',
+          expanded: true,
+          services: initialServices.map(service => ({
+            ...service,
+            description: service.description || ''
+          }))
+        }
+      ];
+    }
+    
+    return initialServices.map(category => ({
+      ...category,
+      services: category.services.map(service => ({
+        ...service,
+        description: service.description || ''
+      }))
+    }));
+  });
+  
   const draggingItemRef = useRef();
   const draggingOverItemRef = useRef();
   const [openStaffDialog, setOpenStaffDialog] = useState(false);
-  const [selectedServiceIndex, setSelectedServiceIndex] = useState(null);
+  const [selectedService, setSelectedService] = useState({ index: null, categoryIndex: null });
   const [selectedStaff, setSelectedStaff] = useState([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
-const handleFileChange = async (event, index) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
+  // Notify parent when services change
+  useEffect(() => {
+    if (onServicesChange) {
+      onServicesChange(categories);
+    }
+  }, [categories, onServicesChange]);
 
-  const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  const handleFileChange = async (event, categoryIndex, serviceIndex) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       message.error('Only JPEG, PNG, or WebP images are allowed');
       return;
@@ -97,33 +116,38 @@ const handleFileChange = async (event, index) => {
       if (!imageUrl) {
         throw new Error('No image URL returned');
       }
-      const updatedServices = services.map((service, i) =>
-        i === index
-          ? {
-              ...service,
-              uploaded: true,
-              imageUrl: imageUrl, 
-            }
-          : service
-      );
-      setServices(updatedServices);
-      onServicesChange(updatedServices);
+      
+      const updatedCategories = [...categories];
+      updatedCategories[categoryIndex].services[serviceIndex] = {
+        ...updatedCategories[categoryIndex].services[serviceIndex],
+        uploaded: true,
+        imageUrl: imageUrl, 
+      };
+      
+      setCategories(updatedCategories);
     } catch (err) {
       console.error('Upload failed:', err);
       message.error(`Image upload failed: ${err.message}`);
     }
   };
 
-
-  const handleRemoveService = (index) => {
-    const updatedServices = services.filter((_, i) => i !== index);
-    setServices(updatedServices);
-    onServicesChange(updatedServices);
+  const handleRemoveService = (categoryIndex, serviceIndex) => {
+    const updatedCategories = [...categories];
+    updatedCategories[categoryIndex].services = updatedCategories[categoryIndex].services.filter(
+      (_, i) => i !== serviceIndex
+    );
+    
+    // Remove category if it's empty
+    if (updatedCategories[categoryIndex].services.length === 0) {
+      updatedCategories.splice(categoryIndex, 1);
+    }
+    
+    setCategories(updatedCategories);
   };
 
-  const handleOpenStaffDialog = (index) => {
-    setSelectedServiceIndex(index);
-    setSelectedStaff(services[index].staff);
+  const handleOpenStaffDialog = (categoryIndex, serviceIndex) => {
+    setSelectedService({ categoryIndex, serviceIndex });
+    setSelectedStaff(categories[categoryIndex].services[serviceIndex].staff);
     setOpenStaffDialog(true);
   };
 
@@ -133,16 +157,16 @@ const handleFileChange = async (event, index) => {
   };
 
   const handleSaveStaff = () => {
-    const updatedServices = services.map((service, index) =>
-      index === selectedServiceIndex ? { ...service, staff: selectedStaff } : service
-    );
-    setServices(updatedServices);
+    const { categoryIndex, serviceIndex } = selectedService;
+    const updatedCategories = [...categories];
+    updatedCategories[categoryIndex].services[serviceIndex].staff = selectedStaff;
+    setCategories(updatedCategories);
     setOpenStaffDialog(false);
-    onServicesChange(updatedServices); 
   };
 
-  const handleDragStart = (e, index) => {
-    draggingItemRef.current = index;
+  // Drag and drop handlers
+  const handleDragStart = (e, type, categoryIndex, serviceIndex = null) => {
+    draggingItemRef.current = { type, categoryIndex, serviceIndex };
     setTimeout(() => e.target.classList.add("dragging"), 0);
   };
 
@@ -150,32 +174,100 @@ const handleFileChange = async (event, index) => {
     e.target.classList.remove("dragging");
   };
 
-  const handleDragEnter = (e, index) => {
-    draggingOverItemRef.current = index;
-    const updatedServices = [...services];
-
-    const draggedItemContent = updatedServices.splice(draggingItemRef.current, 1)[0];
-    updatedServices.splice(draggingOverItemRef.current, 0, draggedItemContent);
-
-    draggingItemRef.current = draggingOverItemRef.current;
-    setServices(updatedServices);
-    onServicesChange(updatedServices);
+  const handleDragOver = (e) => {
+    e.preventDefault();
   };
 
-  const handleAddEmptyService = () => {
+  const handleDrop = (e, targetType, targetCategoryIndex, targetServiceIndex = null) => {
+    e.preventDefault();
+    
+    const source = draggingItemRef.current;
+    if (!source) return;
+
+    // Don't allow dropping on itself
+    if (
+      source.type === targetType && 
+      source.categoryIndex === targetCategoryIndex && 
+      source.serviceIndex === targetServiceIndex
+    ) {
+      return;
+    }
+
+    const updatedCategories = [...categories];
+
+    // Category reordering
+    if (source.type === 'category' && targetType === 'category') {
+      const [movedCategory] = updatedCategories.splice(source.categoryIndex, 1);
+      updatedCategories.splice(targetCategoryIndex, 0, movedCategory);
+    }
+    // Service reordering within same category
+    else if (source.type === 'service' && targetType === 'service' && 
+             source.categoryIndex === targetCategoryIndex) {
+      const services = updatedCategories[source.categoryIndex].services;
+      const [movedService] = services.splice(source.serviceIndex, 1);
+      services.splice(targetServiceIndex, 0, movedService);
+    }
+    // Moving service between categories
+    else if (source.type === 'service' && targetType === 'category') {
+      const sourceCategory = updatedCategories[source.categoryIndex];
+      const [movedService] = sourceCategory.services.splice(source.serviceIndex, 1);
+      
+      // Add to target category
+      updatedCategories[targetCategoryIndex].services.push(movedService);
+      
+      // Remove source category if empty
+      if (sourceCategory.services.length === 0) {
+        updatedCategories.splice(source.categoryIndex, 1);
+      }
+    }
+
+    setCategories(updatedCategories);
+  };
+
+  const handleAddEmptyService = (categoryIndex) => {
+    const updatedCategories = [...categories];
     const newService = {
-      id: (services.length + 1).toString(),
+      id: Date.now().toString(),
       name: '',
-      price: '-',
-      duration: '-',
-      durationType: 'mints',
-      staff: [],
-      uploaded: false,
+      description: '',
+      price: '', 
+      duration: '', 
+      durationType: 'mints', 
+      staff: [], 
+      uploaded: false, 
       image: null,
     };
-    const updatedServices = [...services, newService];
-    setServices(updatedServices);
-    onServicesChange(updatedServices); 
+    
+    updatedCategories[categoryIndex].services.push(newService);
+    setCategories(updatedCategories);
+  };
+
+  const handleAddNewCategory = () => {
+    if (!newCategoryName.trim()) {
+      message.warning('Please enter a category name');
+      return;
+    }
+    
+    const newCategory = {
+      id: Date.now().toString(),
+      name: newCategoryName,
+      expanded: true,
+      services: []
+    };
+    
+    setCategories([...categories, newCategory]);
+    setNewCategoryName('');
+  };
+
+  const handleToggleCategory = (categoryIndex) => {
+    const updatedCategories = [...categories];
+    updatedCategories[categoryIndex].expanded = !updatedCategories[categoryIndex].expanded;
+    setCategories(updatedCategories);
+  };
+
+  const handleRemoveCategory = (categoryIndex) => {
+    const updatedCategories = categories.filter((_, i) => i !== categoryIndex);
+    setCategories(updatedCategories);
   };
 
   const renderStaffNames = (staff) => {
@@ -193,258 +285,337 @@ const handleFileChange = async (event, index) => {
     <Box>
       <Box 
         sx={{ 
-          maxHeight: '400px', 
+          maxHeight: '500px', 
           overflowY: 'auto', 
+          width:'54vw',
           mb: 2, 
           p: 2,
           scrollbarWidth: 'none',  
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {services.map((service, index) => (
-          <Box
-            key={service.id}
-            className="item"
-            draggable
-            onDragStart={(e) => handleDragStart(e, index)}
-            onDragEnter={(e) => handleDragEnter(e, index)}
-            onDragEnd={handleDragEnd}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
+        {categories.map((category, categoryIndex) => (
+          <Box 
+            key={category.id}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, 'category', categoryIndex)}
+            sx={{ 
               mb: 2,
-              p: 1,
               borderRadius: '15px',
               border: '1px solid #d9d9d9',
               backgroundColor: '#ffffff',
-              '&.dragging': { backgroundColor: '#f2f2f2' },
-              '&:hover': { boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' },
+              overflow: 'hidden'
             }}
           >
-            <IconButton size="small" sx={{ mr: 1, cursor: 'move' }}>
-              <GripVertical />
-            </IconButton>
-
-            <IconButton 
-              size="small" 
-              sx={{ mr: 1 }}
-              onClick={() => handleRemoveService(index)}
-            >
-              <Trash2 size={18} color="#ff4444" />
-            </IconButton>
-
-            <TextField
-              value={service.name}
-              onChange={(e) => {
-                const updatedServices = services.map((s, i) => 
-                  i === index ? { ...s, name: e.target.value } : s
-                );
-                setServices(updatedServices);
-                onServicesChange(updatedServices);
-              }}
-              variant="outlined"
-              size="small"  
-              sx={{
-                flexGrow: 1,
-                mr: 1.5,
-                '& .MuiInputBase-root': {
-                  borderRadius: '6px',
-                  height: '33px',  
-                  fontSize: "14px"
-                },
-              }}
-            />
-
-            <TextField
-              value={service.price}
-              onChange={(e) => {
-                const updatedServices = services.map((s, i) => 
-                  i === index ? { ...s, price: e.target.value } : s
-                );
-                setServices(updatedServices);
-                onServicesChange(updatedServices);
-              }}
-              variant="outlined"
-              size="small"
-              sx={{
-                flexGrow: 1,
-                mr: 1.5,
-                width: '70px', 
-                '& .MuiInputBase-root': {
-                  height: '33px',  
-                  borderRadius: '6px',
-                  padding: '0 10px',
-                },
-                '& input': {
-                  fontWeight: "bold",
-                  padding: '0 0px',
-                },
-              }}
-              InputProps={{
-                startAdornment: <InputAdornment position="start" sx={{mr:0.2}}>₹</InputAdornment>,
-              }}
-            />
-
-            <TextField
-              value={service.duration}
-              onChange={(e) => {
-                const updatedServices = services.map((s, i) => 
-                  i === index ? { ...s, duration: e.target.value } : s
-                );
-                setServices(updatedServices);
-                onServicesChange(updatedServices);
-              }}
-              variant="outlined"
-              size="small"
-              sx={{
-                flexGrow: 1,
-                width: '70px',
-                mr: 1.5,
-                '& .MuiInputBase-root': {
-                  height: '33px',  
-                  borderRadius: '6px',
-                  padding: '0 10px',
-                },
-                '& input': {
-                  textAlign: 'center',
-                  fontWeight: "bold",
-                  padding: '0 0px',
-                },
-              }}
-            />
-
-            <DurationSelect
-              value={service.durationType}
-              onChange={(e) => {
-                const updatedServices = services.map((s, i) => 
-                  i === index ? { ...s, durationType: e.target.value } : s
-                );
-                setServices(updatedServices);
-                onServicesChange(updatedServices);
-              }}
-            />
-
+            {/* Category Header */}
             <Box
+              draggable
+              onDragStart={(e) => handleDragStart(e, 'category', categoryIndex)}
+              onDragEnd={handleDragEnd}
               sx={{
                 display: 'flex',
-                flexWrap: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                width: '110px',
-                ml: 1.5,
-                cursor: 'pointer',
+                alignItems: 'center',
+                p: 1,
+                backgroundColor: '#f5f5f5',
+                cursor: 'move',
+                '&.dragging': { opacity: 0.5 },
               }}
-              onClick={() => handleOpenStaffDialog(index)}
             >
-              <Chip 
-                label={renderStaffNames(service.staff)} 
+              <IconButton size="small" sx={{ mr: 1 }}>
+                <GripVertical />
+              </IconButton>
+
+              <IconButton 
                 size="small" 
+                onClick={() => handleToggleCategory(categoryIndex)}
+                sx={{ mr: 1 }}
+              >
+                {category.expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </IconButton>
+
+              <TextField
+                value={category.name}
+                onChange={(e) => {
+                  const updatedCategories = [...categories];
+                  updatedCategories[categoryIndex].name = e.target.value;
+                  setCategories(updatedCategories);
+                }}
+                placeholder="Category name"
+                variant="standard"
+                size="small"
                 sx={{ 
-                  width: "110px",
-                  px: "8px",
-                  height: "33px",
-                  border: "1px solid #d9d9d9", 
-                  borderRadius: "6px",
-                  fontWeight: "bold",
-                  background: "transparent",
-                  '&:hover': { background: "#f2f2f2" },
-                }} 
+                  flexGrow: 1,
+                  '& .MuiInput-root:before': { borderBottom: 'none' },
+                  '& .MuiInput-root:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+                  '& .MuiInput-root:after': { borderBottom: 'none' },
+                }}
+                InputProps={{
+                  sx: { 
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                  }
+                }}
               />
+
+              <IconButton 
+                size="small" 
+                onClick={() => handleRemoveCategory(categoryIndex)}
+                sx={{ mr: 1 }}
+              >
+                <Trash2 size={18} color="#ff4444" />
+              </IconButton>
+
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<PlusCircle size={16} />}
+                onClick={() => handleAddEmptyService(categoryIndex)}
+                sx={{ 
+                  textTransform: 'none',
+                  background: "#f2f2f2", 
+                  color: "#000",
+                  '&:hover': { background: "#e0e0e0" }
+                }}
+              >
+                <b>Add Service</b>
+              </Button>
             </Box>
 
-            <Button
-              variant="outlined"
-              component="label"
-              sx={{
-                borderRadius: '6px',
-                borderColor: '#d9d9d9',
-                background: service.uploaded ? '#1b4d69' : 'transparent',
-                color: service.uploaded ? '#fff' : '#000000',
-                textTransform: 'none',
-                width: '100px',
-                height: '33px',
-                mx: 1.5,
-                px: 7,
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                '&:hover': { background: "#f2f2f2", color: "#000" },
-              }}
-            >
-              {service.uploaded ? (
-                <>
-                  Uploaded
-                  <CheckCircleIcon sx={{ ml: 0.5, fontSize: '15px' }} />
-                </>
-              ) : (
-                'Upload'
-              )}
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, index)}
-              />
-            </Button>
+            {/* Services List */}
+            <Collapse in={category.expanded}>
+              <Box sx={{ p: 1 }}>
+                {category.services.map((service, serviceIndex) => (
+                  <Box
+                    key={service.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, 'service', categoryIndex, serviceIndex)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, 'service', categoryIndex, serviceIndex)}
+                    onDragEnd={handleDragEnd}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      mb: 2,
+                      p: 2,
+                      borderRadius: '10px',
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: '#ffffff',
+                      '&.dragging': { backgroundColor: '#f2f2f2' },
+                      '&:hover': { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' },
+                    }}
+                  >
+                    {/* First row - controls and basic info */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <IconButton size="small" sx={{ mr: 1, cursor: 'move' }}>
+                        <GripVertical />
+                      </IconButton>
+
+                      <IconButton 
+                        size="small" 
+                        sx={{ mr: 1 }}
+                        onClick={() => handleRemoveService(categoryIndex, serviceIndex)}
+                      >
+                        <Trash2 size={18} color="#ff4444" />
+                      </IconButton>
+
+                      <TextField
+                        label="Service Name"
+                        value={service.name}
+                        onChange={(e) => {
+                          const updatedCategories = [...categories];
+                          updatedCategories[categoryIndex].services[serviceIndex].name = e.target.value;
+                          setCategories(updatedCategories);
+                        }}
+                        variant="outlined"
+                        size="small"  
+                        sx={{
+                          flexGrow: 1,
+                          mr: 1.5,
+                          '& .MuiInputBase-root': {
+                            borderRadius: '6px',
+                            height: '40px',  
+                            fontSize: "14px",
+                            background: "#fbfbfb",
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: "#d9d9d9",
+                          },
+                        }}
+                      />
+
+                      <TextField
+                        label="Price"
+                        value={service.price}
+                        onChange={(e) => {
+                          const updatedCategories = [...categories];
+                          updatedCategories[categoryIndex].services[serviceIndex].price = e.target.value;
+                          setCategories(updatedCategories);
+                        }}
+                        variant="outlined"
+                        size="small"
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                          style: { background: "#fbfbfb" },
+                        }}
+                        sx={{
+                          width: '100px', 
+                          mr: 1.5,
+                          '& .MuiInputBase-root': {
+                            height: '40px',
+                            borderRadius: '6px',
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: "#d9d9d9",
+                          },
+                        }}
+                      />
+
+                      <TextField
+                        label="Duration"
+                        value={service.duration}
+                        onChange={(e) => {
+                          const updatedCategories = [...categories];
+                          updatedCategories[categoryIndex].services[serviceIndex].duration = e.target.value;
+                          setCategories(updatedCategories);
+                        }}
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          width: '80px',
+                          mr: 1.5,
+                          '& .MuiInputBase-root': {
+                            height: '33px',
+                            borderRadius: '6px',
+                          },
+                          '& input': {
+                            textAlign: 'center',
+                            fontWeight: "bold",
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '13px',
+                          },
+                        }}
+                      />
+
+                      <DurationSelect
+                        value={service.durationType}
+                        onChange={(e) => {
+                          const updatedCategories = [...categories];
+                          updatedCategories[categoryIndex].services[serviceIndex].durationType = e.target.value;
+                          setCategories(updatedCategories);
+                        }}
+
+                      />
+                    </Box>
+
+                    {/* Second row - description and image upload */}
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <StaffSelect
+                        value={service.staff}
+                        onChange={(e) => {
+                          const updatedCategories = [...categories];
+                          updatedCategories[categoryIndex].services[serviceIndex].staff = e.target.value;
+                          setCategories(updatedCategories);
+                        }}
+                        teamMembers={teamMembers}
+                      />
+
+                      <TextField
+                        value={service.description}
+                        onChange={(e) => {
+                          const updatedCategories = [...categories];
+                          updatedCategories[categoryIndex].services[serviceIndex].description = e.target.value;
+                          setCategories(updatedCategories);
+                        }}
+                        label="Service Description"
+                        variant="outlined"
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        multiline
+                        rows={2}
+                        sx={{
+                          flexGrow: 1,
+                          '& .MuiInputBase-root': {
+                            borderRadius: '6px',
+                          },
+                        }}
+                      />
+
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        sx={{
+                          borderRadius: '6px',
+                          borderColor: '#d9d9d9',
+                          background: service.uploaded ? '#1b4d69' : 'transparent',
+                          color: service.uploaded ? '#fff' : '#000000',
+                          textTransform: 'none',
+                          width: '120px',
+                          height: '64px',
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          '&:hover': { 
+                            background: service.uploaded ? '#1b4d69' : "#f2f2f2", 
+                            color: service.uploaded ? '#fff' : "#000" 
+                          },
+                        }}
+                      >
+                        {service.uploaded ? (
+                          <>
+                            <CheckCircleIcon sx={{ fontSize: '20px', mb: 0.5 }} />
+                            <Typography variant="caption">Image Uploaded</Typography>
+                          </>
+                        ) : (
+                          <>
+                            <PlusCircle size={20} style={{ marginBottom: '4px' }} />
+                            <Typography variant="caption">Upload Image</Typography>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, categoryIndex, serviceIndex)}
+                        />
+                      </Button>
+
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Collapse>
           </Box>
         ))}
       </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'right', mt: 2, px: 3 }}>
-         <Button
-            variant="contained"
-            startIcon={<PlusCircle />}
-            onClick={handleAddEmptyService}
-            sx={{ textTransform: 'none', width: '15%',background: "#f2f2f2", color:"#000", }}
-          >
-          <b>Add</b>
-          </Button>
+      {/* Add New Category */}
+      <Box sx={{ display: 'flex', gap: 2, mt: 2, px: 3 }}>
+        <TextField
+          value={newCategoryName}
+          onChange={(e) => setNewCategoryName(e.target.value)}
+          placeholder="Enter new category name"
+          size="small"
+          sx={{ flexGrow: 1 }}
+          InputProps={{
+            sx: { borderRadius: '6px' }
+          }}
+        />
+        <Button
+          variant="contained"
+          onClick={handleAddNewCategory}
+          sx={{ 
+            textTransform: 'none',
+            background: "#f2f2f2", 
+            color: "#000",
+            '&:hover': { background: "#e0e0e0" },
+            borderRadius: '6px'
+          }}
+        >
+          <b>Add Category</b>
+        </Button>
       </Box>
-
-      {/* Staff Assignment Dialog */}
-      <Dialog 
-        open={openStaffDialog} 
-        onClose={() => setOpenStaffDialog(false)} 
-        PaperProps={{ 
-          sx: { 
-            borderRadius: "15px", 
-          }
-        }}  
-      >
-        <DialogTitle>Assign Staff</DialogTitle>
-        <DialogContent sx={{ py: 0 }}>
-          <FormControl sx={{ m: 1, width: 300 }}>
-            <InputLabel>Staff</InputLabel>
-            <Select
-              multiple
-              value={selectedStaff}
-              onChange={handleStaffSelection}
-              input={<OutlinedInput label="Staff" />}
-              renderValue={(selected) => selected.join(", ")}
-            >
-              {(Array.isArray(teamMembers) && teamMembers.some(member => member.name)) ? (
-                teamMembers.map((member) => (
-                  member.name ? ( 
-                    <MenuItem key={member.name} value={member.name}>
-                      {/* <Checkbox checked={selectedStaff.indexOf(member.name) > -1} /> */}
-                      <ListItemText primary={member.name} />
-                    </MenuItem>
-                  ) : null
-                ))
-              ) : (
-                <MenuItem disabled value="">
-                  <ListItemText primary="No staff available" />
-                </MenuItem>
-              )}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ mr: 2, mb: 1 }}>
-          <Button onClick={() => setOpenStaffDialog(false)}><b>Cancel</b></Button>
-          <Button onClick={handleSaveStaff}><b>Save</b></Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

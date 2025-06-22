@@ -46,6 +46,9 @@ const OTPVerification = lazy(() => import("./pages/BusinessForm/otpVerification"
 const BusinessRoleSelection = lazy(() => import("./pages/BusinessForm/businessRoleSelection"));
 const BusinessInfoSelection = lazy(() => import("./pages/BusinessForm/businessInfoSelection"));
 const BusinessProfileForm = lazy(() => import("./pages/BusinessForm/businessProfile"));
+
+// const BusinessHoursSection = lazy(() => import("./pages/BusinessForm/businessHours"));
+
 const TeamPresence = lazy(() => import("./pages/BusinessForm/teamPresence"));
 const BusinessServiceInfo = lazy(() => import("./pages/BusinessForm/businessServiceInfo"));
 const BusinessDocumentUploads = lazy(() => import("./pages/BusinessForm/businessDocumentUploads"));
@@ -83,6 +86,7 @@ function App() {
                     <Route exact path="/otp-verification" element={<OTPVerification />} />
                     <Route exact path="/business-role-selection" element={<BusinessRoleSelection />} />
                     {/* <Route exact path="/business-info-selection" element={<BusinessInfoSelection />} /> */}
+                    {/* <Route exact path="/business-working-hours" element={<BusinessHoursSection />} /> */}
                     <Route exact path="/business-profile-form" element={<BusinessProfileForm />} />
                     <Route exact path="/business-team-presence" element={<TeamPresence />} />
                     <Route exact path="/business-service-info" element={<BusinessServiceInfo />} />

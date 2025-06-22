@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Modal } from "@mui/material";
 import { Upload as AntdUpload, message } from "antd";
-import { Upload as LucideUpload } from "lucide-react";
+import { Upload as LucideUpload, X, Eye } from "lucide-react";
 
 const { Dragger } = AntdUpload;
 
-export default function FormWithDocumentUpload({ setFileListParent, initialFiles  }) {
+export default function FormWithDocumentUpload({ setFileListParent, initialFiles }) {
   const [highlightedSection, setHighlightedSection] = useState(null);
   const [fileList, setFileList] = useState(initialFiles || {});
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const documentTypes = [
     { name: "Pan Card (Owner)", notMoreThen: 1, required: true },
@@ -22,6 +24,15 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
     const updatedFileList = { ...fileList, [doc.name]: fileListNew };
     setFileList(updatedFileList);
     setFileListParent(updatedFileList);
+  };
+
+  const handlePreview = async (file) => {
+    if (file.type.startsWith('image/')) {
+      setPreviewImage(URL.createObjectURL(file));
+      setPreviewVisible(true);
+    } else {
+      message.info('Preview available only for image files');
+    }
   };
 
   const uploadProps = (doc) => ({
@@ -44,11 +55,75 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
       handleFileChange(doc, newFileList);
     },
     showUploadList: {
-      showPreviewIcon: false,
+      showPreviewIcon: true,
       showRemoveIcon: true,
       showDownloadIcon: false,
     },
   });
+
+  const renderUploadedFiles = (doc) => {
+    const files = fileList[doc.name] || [];
+    
+    return (
+      <div style={{ marginTop: "8px" }}>
+        {files.map((file, index) => (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "8px",
+              border: "1px solid #e2e6ea",
+              borderRadius: "4px",
+              marginBottom: "8px",
+              background: "#fafafa"
+            }}
+          >
+            <div style={{ flex: 1, overflow: "hidden" }}>
+              <div style={{ fontSize: "12px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {file.name}
+              </div>
+              <div style={{ fontSize: "10px", color: "#8eabbb" }}>
+                {(file.size / 1024).toFixed(2)} KB
+              </div>
+            </div>
+            
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => handlePreview(file)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#8eabbb",
+                  display: "flex",
+                  alignItems: "center"
+                }}
+              >
+                <Eye size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  const newFileList = files.filter((_, i) => i !== index);
+                  handleFileChange(doc, newFileList);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#ff4d4f",
+                  display: "flex",
+                  alignItems: "center"
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <Box sx={{ mt: 1, maxWidth: 600, width: "100%", mx: 4 }}>
@@ -63,7 +138,7 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
               )}
             </h3>
             <Dragger
-              {...uploadProps(doc)}
+              // {...uploadProps(doc)}
               className="border-2 border-dashed rounded-md"
               onMouseEnter={() => setHighlightedSection(doc.name)}
               onMouseLeave={() => setHighlightedSection(null)}
@@ -78,9 +153,43 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
                 Click to upload or drag and drop
               </p>
             </Dragger>
+
+            {fileList[doc.name]?.length > 0 && renderUploadedFiles(doc)}
           </Grid>
         ))}
       </Grid>
+
+      <Modal
+        open={previewVisible}
+        onClose={() => setPreviewVisible(false)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <div style={{ background: "white", padding: "16px", maxWidth: "90vw", maxHeight: "90vh" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+            <button
+              onClick={() => setPreviewVisible(false)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#8eabbb"
+              }}
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <img
+            src={previewImage}
+            alt="Preview"
+            style={{ maxWidth: "100%", maxHeight: "80vh", display: "block" }}
+          />
+        </div>
+      </Modal>
+      
     </Box>
   );
 }

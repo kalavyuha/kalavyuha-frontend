@@ -1,13 +1,22 @@
 import { useState } from "react";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import L from "leaflet";
 import { IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Button, Grid } from "@mui/material";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
+import "leaflet/dist/leaflet.css";
+
+// Fix for default marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const containerStyle = {
   width: "100%",
   height: "9rem",
-  borderRadius:12,
-  
+  borderRadius: 12,
 };
 
 const center = {
@@ -15,28 +24,28 @@ const center = {
   lng: 77.2090, 
 };
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyBowYOiTMa2mRH_7QzPZ_ovUjA14w2NlgQ"; 
+const MapEvents = ({ addMarker }) => {
+  useMapEvents({
+    click(e) {
+      addMarker(e.latlng);
+    },
+  });
+  return null;
+};
 
 const MapComponent = ({ onSelectLocation }) => {
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ["places"],
-  });
-
   const [markerPosition, setMarkerPosition] = useState(null);
   const [mapCenter, setMapCenter] = useState(center);
   const [open, setOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [selectedCoords, setSelectedCoords] = useState({ lat: null, lng: null });
 
-  // Handle map click
-  const handleMapClick = (event) => {
-    const lat = event.latLng.lat();
-    const lng = event.latLng.lng();
+  const addMarker = async (latlng) => {
+    const lat = latlng.lat;
+    const lng = latlng.lng;
     updateLocation(lat, lng);
   };
 
-  // Get live location
   const handleUseMyLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -55,24 +64,27 @@ const MapComponent = ({ onSelectLocation }) => {
     }
   };
 
-  // Update map center, marker, and address
-  const updateLocation = (lat, lng) => {
+  const updateLocation = async (lat, lng) => {
     setMarkerPosition({ lat, lng });
     setMapCenter({ lat, lng });
     setSelectedCoords({ lat, lng });
 
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-      if (status === "OK" && results[0]) {
-        setSelectedAddress(results[0].formatted_address);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+      );
+      const data = await response.json();
+      if (data.display_name) {
+        setSelectedAddress(data.display_name);
         setOpen(true);
       } else {
-        console.error("Geocode failed:", status);
+        console.error("No address found");
       }
-    });
+    } catch (error) {
+      console.error("Reverse geocoding failed:", error);
+    }
   };
 
-  // Confirm selected location
   const handleAddLocation = () => {
     onSelectLocation({
       address: selectedAddress,
@@ -82,25 +94,30 @@ const MapComponent = ({ onSelectLocation }) => {
     setOpen(false);
   };
 
-  // Reselect location
   const handleReselect = () => {
     setMarkerPosition(null);
     setOpen(false);
   };
 
-  if (!isLoaded) return <p>Loading Map...</p>;
-
   return (
     <Grid container justifyContent="center" sx={{ pl: 2, my: 1, position: "relative" }}>
       <div style={containerStyle}>
-        <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "100%" }}
-          center={mapCenter}
+        <MapContainer
+          center={[mapCenter.lat, mapCenter.lng]}
           zoom={12}
-          onClick={handleMapClick}
+          style={{ width: "100%", height: "100%", borderRadius: "12px" }}
         >
-          {markerPosition && <Marker position={markerPosition} />}
-        </GoogleMap>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          <MapEvents addMarker={addMarker} />
+          {markerPosition && (
+            <Marker position={[markerPosition.lat, markerPosition.lng]}>
+              <Popup>{selectedAddress || "Selected location"}</Popup>
+            </Marker>
+          )}
+        </MapContainer>
 
         {/* Floating GPS Button in Bottom-Right */}
         <IconButton
@@ -110,7 +127,7 @@ const MapComponent = ({ onSelectLocation }) => {
             bottom: 10,
             right: 10,
             zIndex: 1000,
-            backgroundColor: "rgba(255, 255, 255, 0.9)", // Semi-transparent white
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
             boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
             "&:hover": { backgroundColor: "rgba(255, 255, 255, 1)" },
           }}

@@ -81,7 +81,7 @@ export default function BusinessDocumentUploads() {
         return;
       }
 
-      // // 1. Submit busniessDetails
+      // 1. Submit busniessDetails
       const businessPayload = {
         BussinessUserId: Number(previousData.MerchantAccountID),
         BussinessType: previousData.businessRole,
@@ -136,30 +136,51 @@ export default function BusinessDocumentUploads() {
           'months': 'mo',
           'mints': 'm' 
         };
-        return suffixMap[type] ? `${duration}${suffixMap[type]}` : duration;
+  
+        if (!duration || isNaN(duration)) {
+          console.warn(`Invalid duration: ${duration}`);
+          return '0m';
+        }
+        
+        return suffixMap[type] ? `${duration}${suffixMap[type]}` : `${duration}m`;
       };
 
-      const servicePayload = previousData.services.map(service => ({
-        BussinessId: businessId,
-        ServiceName: service.name,
-        Price: parseFloat(service.price),
-        Duration: formatDuration(service.duration, service.durationType),
-        AssignedStaffs: service.staff
-          .map(staffName => staffMap.get(staffName))
-          .filter(id => id !== undefined),
-        ServiceImage: service.imageUrl || null,
-        isDiscount: false,
-        DiscountPercentage: null
-      }));
+      const prepareServicePayload = (servicesData, businessId, staffMap, createdBy) => {
+        return {
+          BussinessId: businessId,
+          CreatedBy: createdBy,
+          Categories: servicesData.map(category => ({
+            Id: category.id || null,
+            Name: category.name,
+            Expanded: category.expanded ?? true,
+            Services: category.services.map(service => ({
+              Name: service.name.trim(),
+              Description: service.description || '',
+              Price: parseFloat(service.price) || 0,
+              Duration: formatDuration(service.duration, service.durationType),
+              DurationType: service.durationType || 'mints',
+              Staff: service.staff.map(staffName => staffMap.get(staffName)).filter(Boolean),
+              Image: service.imageUrl || null,
+              Uploaded: service.uploaded || false,
+              IsDiscount: service.isDiscount || false,
+              DiscountProvider: service.DiscountProvider || null,
+              DiscountPercentage: service.DiscountPercentage || null,
+            }))
+          }))
+        };
+      };
 
-      console.log(servicePayload)
+
       try {
+        const servicePayload = prepareServicePayload(previousData.services, businessId, staffMap, 458);
+        console.log("Service Payload:", servicePayload);
         const response = await createServices(servicePayload, authToken);
-        console.log("Services Response:", response);
+        console.log("API Response:", response);
       } catch (error) {
-        console.error("Error creating services:", error);
+        console.error("Service creation failed:", error);
         throw error;
       }
+
 
       // 4. Documents Uploads
       await uploadDocuments(businessId, fileList, authToken);

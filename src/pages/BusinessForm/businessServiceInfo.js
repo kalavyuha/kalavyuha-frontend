@@ -25,6 +25,7 @@ const theme = createTheme({
   },
 });
 
+
 export default function BusinessServiceInfo() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,20 +43,25 @@ export default function BusinessServiceInfo() {
   const previousData = location.state || getInitialData(); 
   const { firstName, lastName, email, countryCode, phone, teamSize, teamMembers } = previousData || {};
 
-  const defaultService = [{
-    id: '1',
-    name: 'Enter Service Name',
-    price: '-',
-    duration: '-',
-    durationType: 'mins',
-    staff: [],
-    uploaded: false,
-    checked: false,
-    image: null
+  const defaultServices = [{
+    id: 'cat-1',
+    name: 'Category Name',
+    expanded: true,
+    services: [{
+      id: Date.now().toString(),
+      name: '',
+      description: '',
+      price: '',
+      duration: '',
+      durationType: 'mins',
+      staff: [],
+      uploaded: false,
+      image: null
+    }]
   }];
 
   const [services, setServices] = useState(
-    previousData.services?.length > 0 ? previousData.services : defaultService
+    previousData.services?.length > 0 ? previousData.services : defaultServices
   );
 
   useEffect(() => {
@@ -63,10 +69,7 @@ export default function BusinessServiceInfo() {
       try {
         const combinedData = {
           ...previousData,
-          services: services.map(service => ({
-            ...service,
-            image: service.image instanceof File ? null : service.image
-          }))
+          services: services
         };
         localStorage.setItem('formData', JSON.stringify(combinedData));
       } catch (error) {
@@ -77,35 +80,48 @@ export default function BusinessServiceInfo() {
   }, [services, previousData]);
 
   const handleBackTeamPresence = () => {
-    const combinedData = { ...previousData, services };
-    localStorage.setItem('formData', JSON.stringify(combinedData));
-    navigate('/business-team-presence', { state: combinedData });
+    navigate('/business-team-presence', { state: { ...previousData, services } });
   };
 
   const handleNextDocumentUpload = () => {
-    const validServices = services.filter(service => 
-      service.name.trim() !== '' && 
-      service.name.trim() !== 'Enter Service Name'
-    );
-    
-    if (validServices.length < 5) {
-      message.error("Please add at least 5 valid services (with non-empty names).");
+    const validServicesCount = services.reduce((count, category) => {
+      return count + category.services.filter(service => 
+        service.name.trim() !== ''
+      ).length;
+    }, 0);
+
+    if (validServicesCount < 2) {
+      message.error("Please add at least 2 valid services (with non-empty names) across all categories.");
       return;
     }
+    const formData = {
+      ...previousData,
+      services: services.map(category => ({
+        id: category.id,
+        name: category.name,
+        expanded: category.expanded,
+        services: category.services.map(service => ({
+          id: service.id,
+          name: service.name.trim(),
+          description: service.description,
+          price: service.price,
+          duration: service.duration,
+          durationType: service.durationType,
+          staff: service.staff,
+          uploaded: service.uploaded,
+          image: service.image instanceof File ? null : service.image
+        }))
+      }))
+    };
 
-    const combinedData = { ...previousData, services };
-    console.log(combinedData)
-    localStorage.setItem('formData', JSON.stringify(combinedData));
-    navigate('/business-document-uploads', { state: combinedData });
+    localStorage.setItem('formData', JSON.stringify(formData));
+    navigate('/business-document-uploads', { state: formData });
   };
 
-  const handleServicesChange = (updatedServices) => {
-    console.log("updatedServices;",updatedServices)
-    setServices(updatedServices);
-  };
+  const handleServicesChange = (updatedCategories) => {
+    setServices(updatedCategories);
+  }
 
-
-  
   return (
     <ThemeProvider theme={theme}>
       <Box
@@ -189,7 +205,7 @@ export default function BusinessServiceInfo() {
                               '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' },
                             }}
                             onClick={handleNextDocumentUpload}
-                            disabled={services.length < 5}
+                            disabled={services.reduce((total, cat) => total + cat.services.length, 0) < 2}
                           >
                             Next step
                           </Button>
