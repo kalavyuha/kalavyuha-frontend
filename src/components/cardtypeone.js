@@ -19,8 +19,8 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                 <CardMedia
                     component="img"
                     height="175"
-                    image={Business.Image ? Business.Image : ImageIcon}
-                    alt={Business.Name || 'Business Image'}
+                    image={Business?.Image ? Business?.Image : ImageIcon}
+                    alt={Business?.Name || 'Business Image'}
                     sx={{
                         borderRadius: "8px",
                         objectFit: "cover"
@@ -53,7 +53,7 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                         color="text.secondary"
                         sx={{ fontSize: isSmallScreen ? '0.75rem' : '0.9rem' }}
                     >
-                        {Business.Address || ''}
+                        {Business?.Address || ''}
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography
@@ -62,7 +62,7 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                             fontWeight="bold"
                             sx={{ fontSize: isSmallScreen ? '0.9rem' : '1.15rem' }}
                         >
-                            {Business.Name || ''}
+                            {Business?.Name || ''}
                         </Typography>
                         <Typography
                             sx={{
@@ -74,7 +74,7 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                                 fontSize: isSmallScreen ? '0.65rem' : '0.8rem'
                             }}
                         >
-                            {Business.Rating} ★
+                            {Business?.Rating} ★
                         </Typography>
                     </Box>
                 </Box>

@@ -150,13 +150,6 @@ const BookingInterface = React.memo(() => {
 
   const days = generateDateOptions();
 
-  const timeSlots = [
-    '10:30 AM',
-    '11:00 AM',
-    '11:30 AM',
-    '12:00 PM',
-    '12:30 PM'
-  ];
 
   // Fetch cart items 
   useEffect(() => {
@@ -178,8 +171,8 @@ const BookingInterface = React.memo(() => {
             const apiCartItems = cartData.services.map(service => ({
               _id: service.service_id,
               serviceName: service.service_name,
-              duration: service.duration,
-              price: service.price
+              Duration: service.duration,
+              Price: service.price
             }));
 
             setCartItems(apiCartItems);
@@ -282,9 +275,11 @@ const BookingInterface = React.memo(() => {
     try {
       // Get the selected day object
       const selectedDay = days.find(day => day.date === selectedDate);
+console.log(selectedDate)
+console.log(days)
 
       if (!selectedDay) {
-        showError("Invalid date selected");
+        showError("Invalid day selected");
         return;
       }
 
@@ -292,25 +287,25 @@ const BookingInterface = React.memo(() => {
 
       // Transform cart items to match API expected format
       const services = cartItems.map(item => ({
-        service_id: item._id,
-        service_name: item.serviceName,
-        duration: item.duration,
-        price: Number(item.price)
+        ServiceId: item._id,
+        ServiceName: item.serviceName,
+        Duration: item.duration,
+        Price: Number(item.price)
       }));
 
       // Build the request payload
       const payload = {
-        UserId: userId._id,
+        CustomerId: userId._id,
         BussinessId: buisnes_id || "default-business-id",
-        selected_date: formattedDate,
-        selected_time: selectedTime,
-        cart_items: services,
-        totalPrice: subtotal,
+        SelectedDate: formattedDate,
+        SelectedTime: selectedTime,
+        Services: services,
+        TotalPrice: subtotal,
         discount: discount,
         finalPrice: subtotal - discount,
-        staffId: selectedStaff.length > 0 ? selectedStaff : null,
-        paymentStatus: "pending",
-        sendSms: true,
+        AssignedStaffs: selectedStaff.length > 0 ? selectedStaff : null,
+        PaymentStatus: "pending",
+        SendSms: true,
         promoCode: selectedPromoCode ? selectedPromoCode.code : null
       };
 

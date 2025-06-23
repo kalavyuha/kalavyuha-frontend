@@ -140,6 +140,7 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
         if (result && result.status === 200) {
             onDataChange(result?.data?.Data);
             setBuisnessType(selectedCategory)
+            console.log(result?.data?.Data)
         }
         setIsLoading(false)
         setLoading(false)
