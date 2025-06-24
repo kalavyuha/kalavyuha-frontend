@@ -47,7 +47,7 @@ const LoginPage = ({ setLoginOpen, setSignupOpen,setUserAction }) => {
         try {
             setLoading(true);
 
-            const response = await apipost('api/v1/customer/login', {
+            const response = await apipost('api/v1/customer/login/', {
                 PhoneNumber: values.phoneNumber,
                 Password: '7415823695',
             });

@@ -55,7 +55,7 @@ const MonthSelect = ({ value, onChange }) => {
   );
 };
 
-const Calendar = () => {
+const Calendar = ({ selectedSlotDate }) => {
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [selectedDate, setSelectedDate] = useState(null);
   const [days, setDays] = useState([]);
@@ -63,35 +63,32 @@ const Calendar = () => {
   const generateCalendarDays = (monthName) => {
     const currentYear = new Date().getFullYear();
     const monthIndex = months.indexOf(monthName);
-    
-    // Get first day of the month
+
     const firstDay = new Date(currentYear, monthIndex, 1);
-    
-    // Get last day of the month
+
     const lastDay = new Date(currentYear, monthIndex + 1, 0);
-    
+
     const daysInMonth = lastDay.getDate();
-    
+
     const calendarDays = [];
-    
-    // Add all days of the month
+
     for (let date = 1; date <= daysInMonth; date++) {
       const dayDate = new Date(currentYear, monthIndex, date);
       const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
-      
+
       calendarDays.push({
-        day: dayName.substring(0, 2), // First 2 letters like "Th", "Fr", "Sa"
+        day: dayName.substring(0, 2), 
         date: date
       });
     }
-    
+
     return calendarDays;
   };
 
   useEffect(() => {
     const calendarDays = generateCalendarDays(selectedMonth);
     setDays(calendarDays);
-    setSelectedDate(null); // Reset selected date when month changes
+    setSelectedDate(null); 
   }, [selectedMonth]);
 
   const handleMonthChange = (event) => {
@@ -103,13 +100,13 @@ const Calendar = () => {
       <Typography variant="h6" fontSize={16} sx={{ mb: 2 }}>
         Choose date and time
       </Typography>
-      
+
       <Paper elevation={0} sx={{ padding: "1.5rem 2rem", bgcolor: "#dce1e6", borderRadius: 3 }}>
         <Box sx={{ mb: 2 }}>
           <MonthSelect value={selectedMonth} onChange={handleMonthChange} />
         </Box>
+
         
-        {/* Horizontal scrollable days - exactly like your original */}
         <Box sx={{
           display: 'flex',
           overflowX: 'auto',
@@ -120,7 +117,10 @@ const Calendar = () => {
           {days.map(({ day, date }) => (
             <Box
               key={date}
-              onClick={() => setSelectedDate(date)}
+              onClick={() => {
+                selectedSlotDate(date)
+                setSelectedDate(date)
+              }}
               sx={{
                 minWidth: 40,
                 height: 40,
@@ -143,14 +143,6 @@ const Calendar = () => {
             </Box>
           ))}
         </Box>
-
-        {selectedDate && (
-          <Box sx={{ mt: 2, p: 1, bgcolor: 'rgba(255,255,255,0.3)', borderRadius: 1 }}>
-            <Typography variant="body2">
-              Selected: {selectedMonth} {selectedDate}, {new Date().getFullYear()}
-            </Typography>
-          </Box>
-        )}
       </Paper>
     </Box>
   );

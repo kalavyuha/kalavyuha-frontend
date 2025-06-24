@@ -9,7 +9,7 @@ import CustomButton from '../../components/customButton';
 
 
 
-const Navigation=React.memo(({ onDataChange, setBuisnessType, setIsLoading, searchData, showMap, setShowMap }) =>{
+const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, searchData, showMap, setShowMap }) => {
     const [location, setLocation] = useState(searchData?.location || '');
     const [date, setDate] = useState('21-Nov-2023');
     const [serviceName, setServiceName] = useState(searchData?.serviceName || '');
@@ -17,6 +17,7 @@ const Navigation=React.memo(({ onDataChange, setBuisnessType, setIsLoading, sear
     const [selectedCategory, setSelectedCategory] = useState(searchData?.category);
     const [loading, setLoading] = useState(false);
     const [showSortByOptions, setShowSortByOptions] = useState(false);
+    const [popularServices, setPopularServices] = useState([]);
 
 
 
@@ -35,13 +36,7 @@ const Navigation=React.memo(({ onDataChange, setBuisnessType, setIsLoading, sear
         }
     }, [selectedCategory])
 
-    const popularServices = [
-        "Women's Waxing - Legs",
-        "Hair removal with thread technique",
-        "Women's Waxing - Arms & Armpits",
-        "Women's Waxing - Arms & Armpits",
-        "Women's Waxing - Arms & Armpits"
-    ];
+
 
     const category = [
         "Beauty",
@@ -145,12 +140,26 @@ const Navigation=React.memo(({ onDataChange, setBuisnessType, setIsLoading, sear
         if (result && result.status === 200) {
             onDataChange(result?.data?.Data);
             setBuisnessType(selectedCategory)
+            console.log(result?.data?.Data)
         }
         setIsLoading(false)
         setLoading(false)
     }
 
+    const fetchPopularServices = async () => {
+        try {
+            const result = await apiget(`api/v1/Service/popularServices/?max_distance_km=15&limit=5&MinPrice=50&SortBy=Price&user_latitude=28.466296&user_longitude=77.011864&new_businesses=true`);
+            if (result && result.data?.Status === 200) {
+                setPopularServices(result?.data?.Data)
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
 
+    useEffect(() => {
+        fetchPopularServices();
+    }, [])
 
 
     return (
@@ -204,19 +213,22 @@ const Navigation=React.memo(({ onDataChange, setBuisnessType, setIsLoading, sear
                         </Typography>
 
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {popularServices.map((service, index) => (
-                                <Chip
-                                    key={index}
-                                    label={service}
-                                    variant="outlined"
-                                    icon={<Search size="15px" style={{ color: '#1b4d69', paddingRight: "2px" }} />}
-                                    onClick={() => setServiceName(service)}
-                                    sx={{
-                                        borderRadius: '8px',
-                                        px: 1,
-                                    }}
-                                />
-                            ))}
+                            {popularServices && popularServices.map((service, index) => {
+                                const { Service } = service;
+                                return (
+                                    <Chip
+                                        key={index}
+                                        label={Service?.Name}
+                                        variant="outlined"
+                                        icon={<Search size="15px" style={{ color: '#1b4d69', paddingRight: "2px" }} />}
+                                        onClick={() => setServiceName(Service?.Name)}
+                                        sx={{
+                                            borderRadius: '8px',
+                                            px: 1,
+                                        }}
+                                    />
+                                )
+                            })}
                         </Box>
                     </Box>
                     <Box sx={{ mt: '20px' }}>

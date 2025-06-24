@@ -19,7 +19,7 @@ const DealsSlider = ({ buisnessId }) => {
     const fetchPromoCode = async () => {
         try {
             if (!buisnessId) return;
-            
+
             setLoading(true);
             const result = await apiget(`api/v1/PromoCode/list/${buisnessId}`);
 
@@ -42,6 +42,17 @@ const DealsSlider = ({ buisnessId }) => {
     if (!loading && (!deals || deals.length === 0)) {
         return null;
     }
+
+    const gradients = [
+        "linear-gradient(135deg, #ff416c, #ff4b2b)",
+        "linear-gradient(135deg, #00c6ff, #0072ff)",
+        "linear-gradient(135deg, #11998e, #38ef7d)",
+        "linear-gradient(135deg, #8e2de2, #4a00e0)",
+        "linear-gradient(135deg, #f7971e, #ffd200)",
+        "linear-gradient(135deg, #43e97b, #38f9d7)",
+        "linear-gradient(135deg, #fc5c7d, #6a82fb)",
+    ];
+
 
     return (
         <Box
@@ -137,77 +148,80 @@ const DealsSlider = ({ buisnessId }) => {
                         </Box>
                     ))
                 ) : (
-                    // Actual deals data
-                    deals.map((deal, index) => (
-                        <Chip
-                            key={index}
-                            icon={
-                                <div
-                                    style={{
-                                        width: "45px",
-                                        height: "45px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontWeight: 600,
-                                        backgroundColor: "#000",
-                                        color: "#fff",
-                                        WebkitMaskImage: `url(${offerbgimg})`,
-                                        maskImage: `url(${offerbgimg})`,
-                                        WebkitMaskSize: "cover",
-                                        maskSize: "cover",
-                                        WebkitMaskRepeat: "no-repeat",
-                                        maskRepeat: "no-repeat",
-                                        marginLeft: "5px",
-                                        marginRight: '7px',
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    OFF
-                                </div>
-                            }
-                            label={
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "flex-start",
-                                        maxWidth: "100px",
-                                        textTransform: "capitalize",
-                                    }}
-                                >
-                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                                        {`${deal.discount_type} ₹${deal.discount_value} OFF`}
-                                    </Typography>
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            fontWeight: 700,
-                                            color: "grey",
+
+                    deals.map((deal, index) => {
+                        const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+                        return (
+                            <Chip
+                                key={index}
+                                icon={
+                                    <div
+                                        style={{
+                                            width: "45px",
+                                            height: "45px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontWeight: 600,
+                                            backgroundImage: randomGradient,
+                                            color: "#fff",
+                                            WebkitMaskImage: `url(${offerbgimg})`,
+                                            maskImage: `url(${offerbgimg})`,
+                                            WebkitMaskSize: "cover",
+                                            maskSize: "cover",
+                                            WebkitMaskRepeat: "no-repeat",
+                                            maskRepeat: "no-repeat",
+                                            marginLeft: "5px",
+                                            marginRight: "7px",
+                                            flexShrink: 0,
                                         }}
                                     >
-                                        USE {deal.code}
-                                    </Typography>
-                                </Box>
-                            }
-                            sx={{
-                                bgcolor: "white",
-                                color: "black",
-                                width: "max-content",
-                                minWidth: "210px",
-                                height: "60px",
-                                justifyContent: "flex-start",
-                                "& .MuiChip-label": {
-                                    display: "flex",
-                                    alignItems: "center",
+                                        OFF
+                                    </div>
+                                }
+                                label={
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "flex-start",
+                                            maxWidth: "100px",
+                                            textTransform: "capitalize",
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                            {`${deal.discount_type} ₹${deal.discount_value} OFF`}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                fontWeight: 700,
+                                                color: "grey",
+                                            }}
+                                        >
+                                            USE {deal.code}
+                                        </Typography>
+                                    </Box>
+                                }
+                                sx={{
+                                    bgcolor: "white",
+                                    color: "black",
+                                    width: "max-content",
+                                    minWidth: "210px",
+                                    height: "60px",
                                     justifyContent: "flex-start",
-                                    gap: 1,
-                                    padding: "10px 0",
-                                    width: "100%",
-                                },
-                            }}
-                        />
-                    ))
+                                    "& .MuiChip-label": {
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "flex-start",
+                                        gap: 1,
+                                        padding: "10px 0",
+                                        width: "100%",
+                                    },
+                                }}
+                            />
+                        )
+                    })
                 )}
             </Box>
         </Box>

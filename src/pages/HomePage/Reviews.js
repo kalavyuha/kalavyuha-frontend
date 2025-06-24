@@ -70,7 +70,7 @@ const GoogleImage = styled('img')({
   marginRight: 4
 });
 
-export default function ReviewsSection() {
+ const ReviewsSection=React.memo(({ data = [] }) =>{
   const [expandedReview, setExpandedReview] = useState(null);
   const scrollContainerRef = useRef(null);
   // const [stopScrolling, setStopScrolling] = useState(false);
@@ -85,7 +85,7 @@ export default function ReviewsSection() {
     if (!scrollContainer) return;
 
     let scrollInterval;
-    
+
     const startScrolling = () => {
       scrollInterval = setInterval(() => {
         if (isHovered || scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
@@ -101,17 +101,18 @@ export default function ReviewsSection() {
     return () => clearInterval(scrollInterval);
   }, [isHovered]);
 
+  const finalReviewList = data ? data?.reviews : reviews;
 
   return (
-    <Container maxWidth="lg" sx={{ px: { xs: 4, sm:8, md: 8, lg:4 }, pb: 4 }} >
+    <Container maxWidth="lg" sx={{ px: { xs: 4, sm: 8, md: 8, lg: 4 }, pb: 4, mt: 6 }} >
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-        <Stack direction="row" spacing={1} alignItems={{ xs: 'end', sm: 'center' } }>
+        <Stack direction="row" spacing={1} alignItems={{ xs: 'end', sm: 'center' }}>
           <Typography
             variant="h4"
             component="h2"
             sx={{
               color: 'black',
-              fontSize: { xs: 'h5.fontSize', sm: 'h4.fontSize' }
+              fontSize: { xs: '28px' }
             }}
           >
             Recent Reviews
@@ -137,13 +138,13 @@ export default function ReviewsSection() {
               component="div"
               sx={{ display: 'flex', alignItems: 'baseline', fontSize: { xs: 'h5.fontSize', sm: 'h4.fontSize' } }}
             >
-              4.8
+              4.5
               <Typography variant="h5" component="span" color="text.secondary" sx={{ ml: 0.5 }}>
                 /5
               </Typography>
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: 'body2.fontSize', sm: 'body1.fontSize' } }}>
-              1,005 reviews
+              {data?.totalReviews}
             </Typography>
           </Box>
         </Grid>
@@ -165,50 +166,50 @@ export default function ReviewsSection() {
               whiteSpace: 'nowrap',
             }}
           >
-            {reviews.map((review) => {
-              const isExpanded = expandedReview === review.id;
+            {finalReviewList && finalReviewList.map((review) => {
+              const isExpanded = expandedReview === review.id || review?.ReviewId ;
               return (
-                <div key={review.id} style={{ minWidth:  { xs: '14rem', sm:'18rem', md:'26rem' }, borderRadius: '20px', border: "2px solid black", padding: "5px", mr:2 }}>
+                <div key={review.id} style={{ minWidth: { xs: '14rem', sm: '18rem', md: '26rem' }, borderRadius: '20px', border: "2px solid black", padding: "5px", mr: 2 }}>
                   <CardContent >
-                    <Stack direction="row" spacing={2} sx={{mb:2}}>
-                      <Avatar src={review.avatar} alt={review.name} sx={{ borderRadius: "8px" }} />
+                    <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                      <Avatar src={review.avatar} alt={review.name|| review?.CustomerName ||''} sx={{ borderRadius: "8px" }} />
                       <Box>
-                        <Typography variant="subtitle1" fontWeight="medium">{review.name}</Typography>
+                        <Typography variant="subtitle1" fontWeight="medium">{review.name|| review?.CustomerName ||''}</Typography>
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <Rating value={review.rating} readOnly size="small" sx={{ '& .MuiRating-iconFilled': { color: '#1b4d69' } }} />
-                          <Typography variant="caption" color="text.secondary">{review.timeAgo}</Typography>
+                          <Rating value={review.rating ||review?.Rating} readOnly size="small" sx={{ '& .MuiRating-iconFilled': { color: '#1b4d69' } }} />
+                          <Typography variant="caption" color="text.secondary">{review.timeAgo || ''}</Typography>
                         </Stack>
                       </Box>
                     </Stack>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
-                      sx={{ 
-                        display: '-webkit-box', 
-                        WebkitBoxOrient: 'vertical', 
-                        WebkitLineClamp: isExpanded ? 'none' : 3, 
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: isExpanded ? 'none' : 3,
                         overflow: 'hidden',
                         maxHeight: isExpanded ? 'none' : '4.5em',
                         whiteSpace: 'pre-wrap',
                         wordBreak: 'break-word'
                       }}
                     >
-                      {review.content}
+                      {review.content ||review?.ReviewText ||''}
                     </Typography>
 
-                    {review.content.length > 80 && (
-                      <Link 
-                        href="#" 
-                        onClick={(e) => { 
-                          e.preventDefault(); 
-                          handleReadMore(review.id); 
-                        }} 
-                        sx={{ 
-                          display: 'block', 
-                          mt: 1, 
-                          color: '#1b4d69', 
-                          textDecoration: 'none', 
-                          '&:hover': { textDecoration: 'underline' } 
+                    {review.content && review.content.length > 80 && (
+                      <Link
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleReadMore(review.id);
+                        }}
+                        sx={{
+                          display: 'block',
+                          mt: 1,
+                          color: '#1b4d69',
+                          textDecoration: 'none',
+                          '&:hover': { textDecoration: 'underline' }
                         }}
                       >
                         {isExpanded ? 'Read less' : 'Read more'}
@@ -222,21 +223,8 @@ export default function ReviewsSection() {
         </Grid>
       </Grid>
 
-      {/* <Button
-        variant="contained"
-        sx={{
-          mt: 2,
-          bgcolor: '#cdddec',
-          fontWeight: 'bold',
-          color: '#1b4d69',
-          '&:hover': {
-            bgcolor: 'white'
-          },
-          display: { xs: 'inline-block', sm: 'none' } // Show on small screens
-        }}
-      >
-        See all
-      </Button> */}
+      
     </Container>
   );
-}
+})
+export default ReviewsSection;

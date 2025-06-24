@@ -23,9 +23,9 @@ import { apiget, apipost, apidelete } from '../../service/api';
 import { useMatchingSearchResult } from '../../../Context/detailPageContext';
 import { showError, showSuccess } from '../../../components/toast';
 
-const userId = 76368169;  
+const userId = 76368169;
 
-const SearchBar = ({ buisnessInfo, reviews,}) => {
+const SearchBar = ({ buisnessInfo, reviews, }) => {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState('');
@@ -35,7 +35,7 @@ const SearchBar = ({ buisnessInfo, reviews,}) => {
   const categories = ['All', 'Beauty', 'Wellness', 'Fitness'];
   const [isOpen, setIsOpen] = useState(false);
   const [statusText, setStatusText] = useState("");
-  
+
   // Favorites state
   const [favourites, setFavourites] = useState([]);
   const [updatingFavourite, setUpdatingFavourite] = useState(false);
@@ -119,7 +119,7 @@ const SearchBar = ({ buisnessInfo, reviews,}) => {
   // Handle favorite toggle
   const handleFavouriteToggle = () => {
     if (!buisnessInfo?._id) return;
-    
+
     if (isFavorite && currentFavorite) {
       removeFavourite(currentFavorite._id, buisnessInfo._id);
     } else {
@@ -157,12 +157,14 @@ const SearchBar = ({ buisnessInfo, reviews,}) => {
     favouriteServices();
   }, []);
 
+  
+
   const updateSearchResult = async () => {
     setLoading(true);
     const result = await apiget(`api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${selectedCategory}`);
-    if (result && result.status === 200) {
-      console.log(result?.data?.Data);
-    }
+    // if (result && result.status === 200) {
+    //   console.log('');
+    // }
     setLoading(false);
   };
 
@@ -291,32 +293,32 @@ const SearchBar = ({ buisnessInfo, reviews,}) => {
                         fontSize: "14px",
                       }}
                     >
-                     {buisnessInfo?.AverageRating}
+                      {buisnessInfo?.AverageRating}
                     </Typography>
                   </Box>}
 
-                  {/* {reviews.length > 0 && */}
-                   <Box>
-                    <Typography
-                      sx={{
-                        fontSize: "18px",
-                      }}
-                    >
-                      Best
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        color: "black",
-                        fontSize: "12px",
-                        width: "100px",
-                      }}
-                    >
-                      See all {reviews} reviews
-                      <ChevronRight height={20} width={20} style={{ marginLeft: "14px" }} />
-                    </Box>
-                  </Box>
+                  {reviews!== 0 &&
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontSize: "18px",
+                        }}
+                      >
+                        Best
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          color: "black",
+                          fontSize: "12px",
+                          width: "100px",
+                        }}
+                      >
+                        See all {reviews} reviews
+                        <ChevronRight height={20} width={20} style={{ marginLeft: "14px" }} />
+                      </Box>
+                    </Box>}
                 </Box>
 
               </Grid>
@@ -394,9 +396,9 @@ const SearchBar = ({ buisnessInfo, reviews,}) => {
                 <Button
                   variant="contained"
                   startIcon={
-                    isFavorite ? 
-                    <FavoriteOutlinedIcon /> : 
-                    <FavoriteBorderIcon />
+                    isFavorite ?
+                      <FavoriteOutlinedIcon /> :
+                      <FavoriteBorderIcon />
                   }
                   onClick={handleFavouriteToggle}
                   disabled={updatingFavourite || !buisnessInfo?._id}
@@ -407,7 +409,7 @@ const SearchBar = ({ buisnessInfo, reviews,}) => {
                     padding: "4px 16px",
                     color: isFavorite ? '#fff' : '#143a50',
                     fontWeight: "bold",
-                    width:'108px',
+                    width: '108px',
                     opacity: updatingFavourite ? 0.6 : 1,
                     "&:hover": {
                       backgroundColor: "#143a50",

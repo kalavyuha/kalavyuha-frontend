@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Box, Typography, Card, Grid, IconButton, CardMedia, Button } from '@mui/material';
+import React, { useRef, useState } from 'react';
+import { Box, Typography, Card, Grid, IconButton, CardMedia, Button, Chip } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ShareIcon from '@mui/icons-material/Share';
 import EastIcon from '@mui/icons-material/East';
@@ -8,18 +8,30 @@ import ProductMainImg from '../../../assets/images/Overview_Images/productsMainI
 import Slider from 'react-slick';
 import ImageIcon from '../../../assets/images/Overview_Images/image.png'
 
-
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-
-
-const Products = ({ products,location }) => {
+const Products = ({ products, location }) => {
     const sliderRef = useRef(null);
+
+    // State for main image index (changes with arrow clicks)
+    const [mainImageIndex, setMainImageIndex] = useState(0);
+    const [selectedProductIndex, setSelectedProductIndex] = useState(0);
+
+    // Get main image based on mainImageIndex
+    const getMainImage = () => {
+        if (products && products.length > 0 && products[mainImageIndex]) {
+            return products[mainImageIndex].ImageURL?.[0] || ImageIcon;
+        }
+        return ImageIcon;
+    };
+
+    // Get current selected product for details display
+    const selectedProduct = products && products.length > 0 ? products[selectedProductIndex] : null;
 
     const settings = {
         dots: false,
-        infinite: products.length > 2,
+        infinite: products && products.length > 2,
         speed: 500,
         slidesToShow: 2,
         slidesToScroll: 1,
@@ -39,11 +51,28 @@ const Products = ({ products,location }) => {
 
     const handleNext = () => {
         sliderRef.current.slickNext();
+        // Change main image on arrow click
+        if (products && products.length > 0) {
+            setMainImageIndex((prevIndex) =>
+                prevIndex === products.length - 1 ? 0 : prevIndex + 1
+            );
+        }
     };
+
+   
+    const handleImageClick = (product, index) => {
+        setSelectedProductIndex(index);
+      
+    };
+
+    // Calculate discounted price
+    // const calculateDiscountedPrice = (price, discountPercentage) => {
+    //     if (!price || !discountPercentage) return price;
+    //     return Math.round(price - (price * discountPercentage / 100));
+    // };
 
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto', p: 2 }}>
-
             <Typography
                 variant="h4"
                 component="h2"
@@ -53,16 +82,15 @@ const Products = ({ products,location }) => {
                 Recommended Care Products
             </Typography>
 
-
             <Card
                 sx={{
                     position: 'relative',
                     borderRadius: 2,
-                    // overflow: 'hidden',
                     mb: 3,
                     boxShadow: 3,
                     width: { xs: '100%', sm: '80%', md: '80%' },
                     margin: '0 auto',
+                    cursor: 'pointer',
                 }}
             >
                 <Box
@@ -84,7 +112,6 @@ const Products = ({ products,location }) => {
                         top: -4,
                         left: 8,
                         zIndex: 9999,
-
                     }}
                 >
                     <BookmarkAddIcon sx={{ color: '#fff', fontSize: '28px' }} />
@@ -92,25 +119,18 @@ const Products = ({ products,location }) => {
 
                 <CardMedia
                     component="img"
-                    image={ProductMainImg}
-                    alt="OI Shampoo"
-                    sx={{ height: { xs: 200, sm: 350 } }}
+                    image={getMainImage()}
+                    alt="Product Image"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = ImageIcon;
+                    }}
+                    sx={{
+                        height: { xs: 200, sm: 350 },
+                        objectFit: 'cover'
+                    }}
                 />
 
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 16,
-                        right: 16,
-                        color: 'white',
-                        textShadow: '1px 1px 5px rgba(0,0,0,0.8)',
-                        zIndex: 2,
-                    }}
-                >
-                    <Typography variant="h6" fontWeight="bold">
-                        MRP: ₹1499
-                    </Typography>
-                </Box>
 
                 <Box
                     sx={{
@@ -145,22 +165,66 @@ const Products = ({ products,location }) => {
                 </Box>
             </Card>
 
-
-
             <Grid container width={{ xs: '100%', sm: '80%', md: '80%' }} height={'max-content'} margin={'0 auto'} spacing={2} alignItems="center">
                 <Grid item xs={12} sm={6}>
+                    {/* Product Details */}
+                    {selectedProduct && (
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+                                {selectedProduct.Name || 'Premium Care Product'}
+                            </Typography>
+
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    mb: 2,
+                                   
+                                }}
+                            >
+                                {selectedProduct?.DiscountedPrice < selectedProduct?.Price ? (
+                                    <>
+                                        <Typography
+                                            variant="body1"
+                                            sx={{ textDecoration: 'line-through', color: 'text.disabled' }}
+                                        >
+                                            ₹{selectedProduct?.Price}
+                                        </Typography>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            color="grey"
+                                        >
+                                            ₹{selectedProduct?.DiscountedPrice}
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                        color="grey"
+                                    >
+                                        ₹{selectedProduct?.Price || 'N/A'}
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Box>
+                    )}
+
                     <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                        This product is designed to reduce hair loss and promote hair regrowth effectively....{' '}
+                        {selectedProduct?.Description || 'This product is designed to reduce hair loss and promote hair regrowth effectively....'}{' '}
                         <Typography component="span" color="primary" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
                             more.
                         </Typography>
                     </Typography>
+
                     <Button
                         variant="contained"
-                         onClick={() => {
-                          const encodedDestination = encodeURIComponent(location);
-                          const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}&travelmode=driving`;
-                          window.open(mapsUrl, '_blank');
+                        onClick={() => {
+                            const encodedDestination = encodeURIComponent(location);
+                            const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}&travelmode=driving`;
+                            window.open(mapsUrl, '_blank');
                         }}
                         sx={{
                             bgcolor: 'black',
@@ -173,8 +237,6 @@ const Products = ({ products,location }) => {
                         VISIT SHOP
                     </Button>
                 </Grid>
-
-
 
                 <Grid item xs={12} sm={6} display="flex" alignItems="center">
                     <Slider
@@ -203,6 +265,7 @@ const Products = ({ products,location }) => {
                                     }}
                                 >
                                     <Card
+                                        onClick={() => handleImageClick(item, index)}
                                         sx={{
                                             borderRadius: 2,
                                             overflow: "hidden",
@@ -210,11 +273,13 @@ const Products = ({ products,location }) => {
                                             width: "150px",
                                             height: "150px",
                                             marginRight: "50px",
+                                            cursor: 'pointer',
+                                           
                                         }}
                                     >
                                         <CardMedia
                                             component="img"
-                                            image={item.ImageURL[0] || ImageIcon}
+                                            image={item.ImageURL?.[0] || ImageIcon}
                                             alt={`Product ${index + 1}`}
                                             onError={(e) => {
                                                 e.target.onerror = null;
@@ -230,6 +295,7 @@ const Products = ({ products,location }) => {
                                 </div>
                             ))}
                     </Slider>
+
                     <IconButton
                         onClick={handleNext}
                         sx={{
@@ -244,12 +310,9 @@ const Products = ({ products,location }) => {
                         <EastIcon />
                     </IconButton>
                 </Grid>
-
             </Grid>
-
-        </Box >
+        </Box>
     );
 };
 
 export default Products;
-

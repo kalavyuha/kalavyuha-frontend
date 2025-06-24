@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -27,13 +27,14 @@ import ServiceStaffSelect from './StaffMember';
 import { showSuccess, showError } from '../../components/toast';
 import { apipost, apipatch, apiget } from '../service/api';
 import Calendar from './CalenderData';
+import AvailableTimesComponent from './TimeSlots';
 
 const BookingInterface = React.memo(() => {
-  const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
   const staffData = location?.state?.staff || [];
+  const buisnes_id = location?.state?._id || [];
 
   const [cartItems, setCartItems] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -50,11 +51,11 @@ const BookingInterface = React.memo(() => {
   const [promoModalOpen, setPromoModalOpen] = useState(false);
 
   const fetchPromoCode = async () => {
-    
+
     try {
-      if(!params.id) return;
-      const result = await apiget(`api/v1/PromoCode/list/${params.id}`);
-      
+      if (!buisnes_id) return;
+      const result = await apiget(`api/v1/PromoCode/list/${buisnes_id}`);
+
       if (result && result?.data?.Status === 200) {
         setPromoCode(result?.data?.Data)
       }
@@ -78,14 +79,14 @@ const BookingInterface = React.memo(() => {
     const currentDate = new Date();
     const validFrom = new Date(promo.valid_from);
     const validTo = new Date(promo.valid_to);
-    
+
     if (currentDate < validFrom || currentDate > validTo) {
       return false;
     }
 
     // Check if any cart item's service ID is in applicable_services
     const cartServiceIds = cartItems.map(item => parseInt(item._id));
-    const hasApplicableService = promo.applicable_services.some(serviceId => 
+    const hasApplicableService = promo.applicable_services.some(serviceId =>
       cartServiceIds.includes(serviceId)
     );
 
@@ -149,13 +150,6 @@ const BookingInterface = React.memo(() => {
 
   const days = generateDateOptions();
 
-  const timeSlots = [
-    '10:30 AM',
-    '11:00 AM',
-    '11:30 AM',
-    '12:00 PM',
-    '12:30 PM'
-  ];
 
   // Fetch cart items 
   useEffect(() => {
@@ -177,8 +171,8 @@ const BookingInterface = React.memo(() => {
             const apiCartItems = cartData.services.map(service => ({
               _id: service.service_id,
               serviceName: service.service_name,
-              duration: service.duration,
-              price: service.price
+              Duration: service.duration,
+              Price: service.price
             }));
 
             setCartItems(apiCartItems);
@@ -210,7 +204,7 @@ const BookingInterface = React.memo(() => {
   useEffect(() => {
     const total = cartItems.reduce((sum, item) => sum + Number(item.price), 0);
     setSubtotal(total);
-    
+
     // Recalculate discount if promo code is selected
     if (selectedPromoCode) {
       const newDiscount = calculateDiscount(selectedPromoCode);
@@ -281,9 +275,11 @@ const BookingInterface = React.memo(() => {
     try {
       // Get the selected day object
       const selectedDay = days.find(day => day.date === selectedDate);
+console.log(selectedDate)
+console.log(days)
 
       if (!selectedDay) {
-        showError("Invalid date selected");
+        showError("Invalid day selected");
         return;
       }
 
@@ -291,25 +287,25 @@ const BookingInterface = React.memo(() => {
 
       // Transform cart items to match API expected format
       const services = cartItems.map(item => ({
-        service_id: item._id,
-        service_name: item.serviceName,
-        duration: item.duration,
-        price: Number(item.price)
+        ServiceId: item._id,
+        ServiceName: item.serviceName,
+        Duration: item.duration,
+        Price: Number(item.price)
       }));
 
       // Build the request payload
       const payload = {
-        UserId: userId._id,
-        BussinessId: params.id || "default-business-id",
-        selected_date: formattedDate,
-        selected_time: selectedTime,
-        cart_items: services,
-        totalPrice: subtotal,
+        CustomerId: userId._id,
+        BussinessId: buisnes_id || "default-business-id",
+        SelectedDate: formattedDate,
+        SelectedTime: selectedTime,
+        Services: services,
+        TotalPrice: subtotal,
         discount: discount,
         finalPrice: subtotal - discount,
-        staffId: selectedStaff.length > 0 ? selectedStaff : null,
-        paymentStatus: "pending",
-        sendSms: true,
+        AssignedStaffs: selectedStaff.length > 0 ? selectedStaff : null,
+        PaymentStatus: "pending",
+        SendSms: true,
         promoCode: selectedPromoCode ? selectedPromoCode.code : null
       };
 
@@ -353,8 +349,8 @@ const BookingInterface = React.memo(() => {
 
   // Promo Code Modal Component
   const PromoCodeModal = () => (
-    <Dialog 
-      open={promoModalOpen} 
+    <Dialog
+      open={promoModalOpen}
       onClose={() => setPromoModalOpen(false)}
       maxWidth="sm"
       fullWidth
@@ -375,7 +371,7 @@ const BookingInterface = React.memo(() => {
             {promoCode.map((promo) => {
               const applicable = isPromoCodeApplicable(promo);
               const discountAmount = calculateDiscount(promo);
-              
+
               return (
                 <Paper
                   key={promo._id}
@@ -400,35 +396,35 @@ const BookingInterface = React.memo(() => {
                           {promo.code}
                         </Typography>
                       </Box>
-                      
+
                       <Typography variant="body2" color="gray" sx={{ mb: 1 }}>
-                        {promo.discount_type === 'flat' 
-                          ? `Flat ₹${promo.discount_value} off` 
+                        {promo.discount_type === 'flat'
+                          ? `Flat ₹${promo.discount_value} off`
                           : `${promo.discount_value}% off`
                         }
                       </Typography>
-                      
+
                       <Typography variant="body2" color="gray" sx={{ mb: 1 }}>
                         Min order: ₹{promo.min_order_value}
                       </Typography>
-                      
+
                       <Typography variant="body2" color="gray" sx={{ fontSize: 12 }}>
                         Valid till: {new Date(promo.valid_to).toLocaleDateString()}
                       </Typography>
-                      
+
                       {applicable && (
                         <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 'bold', mt: 1 }}>
                           You'll save ₹{discountAmount}
                         </Typography>
                       )}
                     </Box>
-                    
+
                     <Box>
                       {!applicable && (
-                        <Chip 
-                          size="small" 
-                          label="Not Applicable" 
-                          color="error" 
+                        <Chip
+                          size="small"
+                          label="Not Applicable"
+                          color="error"
                           variant="outlined"
                         />
                       )}
@@ -549,30 +545,8 @@ const BookingInterface = React.memo(() => {
                 <ServiceStaffSelect staffData={staffData} selectedStaff={setSelectedStaff} />
               </Box>
 
-              <Calendar />
-
-              <Paper elevation={0} sx={{ padding: "1.5rem 2rem", bgcolor: "#dce1e6", borderRadius: 3, mt: 2 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {timeSlots.map((time) => (
-                    <Button
-                      key={time}
-                      variant={selectedTime === time ? 'contained' : 'none'}
-                      fullWidth
-                      sx={{
-                        justifyContent: "space-between",
-                        bgcolor: selectedTime === time ? "black" : "#c6cace",
-                        color: selectedTime === time ? "white" : "inherit",
-                        borderRadius: "7px",
-                        padding: "8px 16px"
-                      }}
-                      onClick={() => setSelectedTime(time)}
-                    >
-                      {time}
-                      <BoltIcon sx={{ fontSize: 18, color: "#e66f2a" }} />
-                    </Button>
-                  ))}
-                </Box>
-              </Paper>
+              <Calendar selectedSlotDate={setSelectedDate} />
+              <AvailableTimesComponent selectedSlot={setSelectedTime} />
             </Grid>
 
             <Grid item xs={12} md={8}>
@@ -594,7 +568,7 @@ const BookingInterface = React.memo(() => {
               <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
                   <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>Offers</Typography>
-                  
+
                   {/* Selected Promo Code Display */}
                   {selectedPromoCode && (
                     <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: '#e8f5e8', borderRadius: '16px', border: '1px solid #4caf50' }}>
@@ -622,12 +596,12 @@ const BookingInterface = React.memo(() => {
                   )}
 
                   {/* Promo Code Selection */}
-                  <Paper 
-                    elevation={0} 
-                    sx={{ 
-                      p: 2, 
-                      mb: 2, 
-                      bgcolor: '#dce1e6', 
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      mb: 2,
+                      bgcolor: '#dce1e6',
                       borderRadius: '16px',
                       cursor: 'pointer',
                       '&:hover': { bgcolor: '#d5dae0' }
@@ -642,7 +616,7 @@ const BookingInterface = React.memo(() => {
                             {selectedPromoCode ? 'Change Promo Code' : 'Select offers/Use Promo Code'}
                           </Typography>
                           <Typography variant="caption" color="#1b4d69" fontSize={10} fontWeight="bold">
-                            {promoCode.length > 0 
+                            {promoCode.length > 0
                               ? `${promoCode.length} promo codes available`
                               : 'Get special discounts'
                             }
@@ -697,7 +671,7 @@ const BookingInterface = React.memo(() => {
       ) : (
         <EmptyCart />
       )}
-      
+
       <PromoCodeModal />
     </>
   );
