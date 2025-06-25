@@ -44,6 +44,9 @@
     "eject": "react-scripts eject",
 
     "predeploy": "npm run build",
+
+    "lint": "eslint ./src",
+    "build:ignore-warnings": "CI=false npm run build",
     "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
