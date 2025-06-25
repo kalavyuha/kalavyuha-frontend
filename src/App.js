@@ -72,15 +72,15 @@ function App() {
     <React.StrictMode>
       {shouldShowNavbar && <Navbar />}
       <Suspense fallback={<MaterialLoadingFallback />}>
-        <Routes>
+        <Routes basename="/kalavyuha-frontend">
           <Route exact path="/" element={<Home />} />
           <Route exact path="/overview" element={<Overview />} />
           <Route path="/detail/:id" element={<BeautyMain />} />
           <Route path="/cart" element={<CartMain />} />
           <Route path="/cart/success" element={<SuccessCart />} />
-          <Route exact path="/business-page" element={<BusniessPage />} />
 
           {/* Business form routes */}
+          <Route exact path="/business-page" element={<BusniessPage />} />
           <Route exact path="/business-account" element={<CreateBusniessAccount />} />
           <Route exact path="/otp-verification" element={<OTPVerification />} />
           <Route exact path="/business-role-selection" element={<BusinessRoleSelection />} />
@@ -108,7 +108,7 @@ const ScrollToTop = () => {
 
 function AppWrapper() {
   return (
-    <Router>
+    <Router basename="/kalavyuha-frontend">
       <SearchBarProvider>
         <MatchingSearchResultProvider>
           <ScrollToTop />

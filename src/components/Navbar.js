@@ -203,9 +203,9 @@ export default function Navbar() {
           />
           <Typography variant="body2" sx={{ fontWeight: 'bold', lineHeight: 1, color: '#1b4d69', fontSize: "14px" }}>
             Kalavyuha <br />{' '}
-            <Typography component="span" sx={{ fontWeight: 'bold', fontSize: '12px', color: '#000' }}>
+            {/* <Typography component="span" sx={{ fontWeight: 'bold', fontSize: '12px', color: '#000' }}>
               Business
-            </Typography>
+            </Typography> */}
           </Typography>
         </Box>
 
@@ -310,7 +310,7 @@ export default function Navbar() {
         <DownloadButton fullWidth sx={{ fontWeight: '548!important', fontSize: '0.9rem !important', fontFamily: 'inherit', }}>
           List Your Business
         </DownloadButton>
-      </Box>
+     </Box>
     </Box>
   );
 
@@ -345,9 +345,17 @@ export default function Navbar() {
                 <NavButton startIcon={<Download />}>
                   Download
                 </NavButton>
-                <NavButton startIcon={<Store />}>
-                  Store
-                </NavButton>
+
+                <a
+                  href="/business-page"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <NavButton startIcon={<Store />}>
+                    Store
+                  </NavButton>
+                </a>
               </Box>
 
               <IconButton size="small" color="#000" sx={{ pointerEvents: 'none', '&:hover': { background: "none" } }}>
