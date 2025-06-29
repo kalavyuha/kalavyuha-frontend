@@ -16,7 +16,8 @@ import {
   ListItemText,
   Collapse,
 } from '@mui/material';
-import { fontSize, fontWeight, styled } from '@mui/system';
+import { Link } from 'react-router-dom';
+import { styled } from '@mui/system';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -25,8 +26,6 @@ import {
   Download,
   MoreVert,
   Notifications,
-  Settings,
-
   Store,
 } from '@mui/icons-material'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
@@ -346,16 +345,11 @@ export default function Navbar() {
                   Download
                 </NavButton>
 
-                <a
-                  href="/business-page"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ textDecoration: 'none' }}
-                >
+                <Link to="/business-page" style={{ textDecoration: 'none' }}>
                   <NavButton startIcon={<Store />}>
                     Store
                   </NavButton>
-                </a>
+                </Link>
               </Box>
 
               <IconButton size="small" color="#000" sx={{ pointerEvents: 'none', '&:hover': { background: "none" } }}>
