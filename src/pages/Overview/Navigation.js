@@ -11,7 +11,9 @@ import CustomButton from '../../components/customButton';
 
 const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, searchData, showMap, setShowMap }) => {
     const [location, setLocation] = useState(searchData?.location || '');
-    const [date, setDate] = useState('21-Nov-2023');
+    const [date, setDate] = useState(searchData?.date || '');
+    const [time, setTime] = useState(searchData?.time || '');
+    const [selectedDateData, setSelectedDateData] = useState(searchData?.selectedDateData || null);
     const [serviceName, setServiceName] = useState(searchData?.serviceName || '');
     const [openFilterDialog, setOpenFilterDialog] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(searchData?.category);
@@ -35,6 +37,18 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
             updateSearchResult();
         }
     }, [selectedCategory])
+
+    // Update local state when searchData changes
+    useEffect(() => {
+        if (searchData) {
+            setLocation(searchData?.location || '');
+            setDate(searchData?.date || '');
+            setTime(searchData?.time || '');
+            setSelectedDateData(searchData?.selectedDateData || null);
+            setServiceName(searchData?.serviceName || '');
+            setSelectedCategory(searchData?.category);
+        }
+    }, [searchData])
 
 
 
@@ -136,7 +150,39 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
     const updateSearchResult = async () => {
         setLoading(true)
         setIsLoading(true)
-        const result = await apiget(`api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${selectedCategory}`);
+        
+        // Log the date and time data being used
+        console.log('Navigation - Date:', date);
+        console.log('Navigation - Time:', time);
+        console.log('Navigation - Selected Date Data:', selectedDateData);
+        
+        // Build query parameters including date and time if available
+        let queryParams = `ServiceName=${serviceName}&Location=${location}&BussinessType=${selectedCategory}`;
+        
+        if (date) {
+            queryParams += `&Date=${date}`;
+        }
+        
+        if (time) {
+            queryParams += `&Time=${time}`;
+        }
+        
+        // If we have detailed date data, we can add more specific parameters
+        if (selectedDateData) {
+            if (selectedDateData.slot && selectedDateData.slot !== '24 Hours') {
+                queryParams += `&TimeSlot=${selectedDateData.slot}`;
+            }
+            if (selectedDateData.startTime) {
+                queryParams += `&StartTime=${encodeURIComponent(selectedDateData.startTime)}`;
+            }
+            if (selectedDateData.endTime) {
+                queryParams += `&EndTime=${encodeURIComponent(selectedDateData.endTime)}`;
+            }
+        }
+        
+        console.log('Navigation - API Query:', queryParams);
+        
+        const result = await apiget(`api/v1/BussinessDetails/filter/?${queryParams}`);
         if (result && result.status === 200) {
             onDataChange(result?.data?.Data);
             setBuisnessType(selectedCategory)
@@ -182,7 +228,17 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
             <Container maxWidth="lg">
                 <Box sx={{ bgcolor: 'white', borderRadius: 5, boxShadow: 3, p: 2 }}>
 
-                    <SearchField serviceName={serviceName} setServiceName={setServiceName} location={location} setLocation={setLocation} handleFetchData={updateSearchResult} loading={loading} />
+                    <SearchField 
+                        serviceName={serviceName} 
+                        setServiceName={setServiceName} 
+                        location={location} 
+                        setLocation={setLocation} 
+                        handleFetchData={updateSearchResult} 
+                        loading={loading}
+                        initialDate={date}
+                        initialTime={time}
+                        initialSelectedDateData={selectedDateData}
+                    />
 
                     {/* need to remove  */}
                     <Box mt={1} display={'flex'} gap={1} flexWrap={'wrap'}>

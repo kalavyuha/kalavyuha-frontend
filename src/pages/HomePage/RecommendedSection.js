@@ -1,57 +1,59 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardMedia, Typography, Box, IconButton, Button, Container } from '@mui/material';
 import { NavigateBefore, NavigateNext, LocationOn } from '@mui/icons-material';
 import RecommendedImgPath from '../../assets/images/recommended/recommended.png';
 import { useMediaQuery } from '@mui/material';
 import TypeOneCard from '../../components/cardtypeone';
 
-const ServicesRecommendations = () => {
-    const salons = [
-        {
-            id: 1,
-            name: 'Shree Sai Nath Saloon',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-        {
-            id: 2,
-            name: 'Meraki Unisex Salon',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-        {
-            id: 3,
-            name: 'Wellbeings Salon',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-        {
-            id: 4,
-            name: 'Karishma Hair Cuts',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-    ];
+const ServicesRecommendations = ({ category = 'Beauty' }) => {
+    const [salons, setSalons] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(
+                    `http://localhost:8000/api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=78.9897978&longitude=28.6767965&page=1`,
+                    {
+                        headers: {
+                            'Authorization': 'Bearer VIRoHdqUAtpklgKg',
+                            // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                const data = await response.json();
+                
+                // Map the API response to match the TypeOneCard component structure
+                const mappedData = data.Data?.items?.map((item, index) => ({
+                    id: item._id || index + 1,
+                    Business: {
+                        Name: item.BusinessName || 'Unknown Business',
+                        Address: item.Region || `${item.Nearby}, ${item.Region}` || 'Location',
+                        Rating: item.Rating || 4.8,
+                        Image: item.ProfileImage || RecommendedImgPath,
+                        Distance: item.Distance ? `${item.Distance} Km` : '0.0 Km'
+                    },
+                    Service: {
+                        Type: item.BussinessType || 'Service',
+                        DiscountedPrice: 50, // Default price as not provided in API
+                        OriginalPrice: 50 // Default price as not provided in API
+                    }
+                })) || [];
+                
+                setSalons(mappedData);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Fallback to empty array on error
+                setSalons([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [category]);
 
     const carouselRef = useRef(null);
     const [scrollPosition, setScrollPosition] = useState(0);
@@ -89,7 +91,7 @@ const ServicesRecommendations = () => {
                         component="h2"
                         sx={{ fontSize: { xs: '1.5rem', sm: '2rem' }, mb: 2 }}
                     >
-                        Top-rated Services Near You
+                        Recommended for you - {category}
                     </Typography>
                 </Box>
 
@@ -106,9 +108,15 @@ const ServicesRecommendations = () => {
                         scrollBehavior: 'smooth'
                     }}
                 >
-                    {salons.map((salon) => (
-                        <TypeOneCard key={salon.id} salon={salon} isSmallScreen={isSmallScreen} />
-                    ))}
+                    {loading ? (
+                        <Typography>Loading...</Typography>
+                    ) : salons.length > 0 ? (
+                        salons.map((salon) => (
+                            <TypeOneCard key={salon.id} salon={salon} isSmallScreen={isSmallScreen} />
+                        ))
+                    ) : (
+                        <Typography>No services found for {category}</Typography>
+                    )}
                 </Box>
 
                 <Box

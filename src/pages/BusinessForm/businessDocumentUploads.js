@@ -188,7 +188,7 @@ export default function BusinessDocumentUploads() {
 
       localStorage.removeItem("documentUploads");
       localStorage.removeItem("formData");
-      navigate('/business-page');
+      window.open('/kalavyuha-frontend/business-page', '_blank');
     } catch (error) {
       console.error('Error during submission:', error);
       localStorage.setItem('documentUploads', JSON.stringify(fileList));

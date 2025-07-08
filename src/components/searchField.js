@@ -38,7 +38,7 @@ const generateCalendar = (year, month) => {
     return days;
 };
 
-const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
+const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate, initialData }) => {
     const today = new Date();
     const [currentDate, setCurrentDate] = useState(today);
     const [selected, setSelected] = useState(null);
@@ -48,6 +48,25 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const slots = ['24 Hours', 'morning', 'afternoon', 'evening'];
+
+    // Initialize with passed data
+    useEffect(() => {
+        if (initialData) {
+            if (initialData.date) {
+                setSelected(new Date(initialData.date));
+                setCurrentDate(new Date(initialData.date));
+            }
+            if (initialData.slot) {
+                setSelectedSlot(initialData.slot);
+            }
+            if (initialData.startTime) {
+                setStartTime(initialData.startTime);
+            }
+            if (initialData.endTime) {
+                setEndTime(initialData.endTime);
+            }
+        }
+    }, [initialData]);
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -324,8 +343,9 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
 };
 
 
-const SearchField = ({ serviceName,location,setLocation,setServiceName, handleFetchData, loading }) => {
+const SearchField = ({ serviceName, location, setLocation, setServiceName, handleFetchData, loading, initialDate, initialTime, initialSelectedDateData }) => {
     const [selectedDate, setSelectedDate] = useState('');
+    const [selectedDateData, setSelectedDateData] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
 
     // Update service name state when prop changes
@@ -333,13 +353,48 @@ const SearchField = ({ serviceName,location,setLocation,setServiceName, handleFe
         setServiceName(serviceName || '');
     }, [serviceName]);
 
+    // Initialize date and time from props
+    useEffect(() => {
+        if (initialSelectedDateData) {
+            setSelectedDateData(initialSelectedDateData);
+            if (initialSelectedDateData.date) {
+                setSelectedDate(format(new Date(initialSelectedDateData.date), 'dd-MMM-yyyy'));
+            }
+        } else if (initialDate) {
+            setSelectedDate(format(new Date(initialDate), 'dd-MMM-yyyy'));
+        }
+    }, [initialDate, initialTime, initialSelectedDateData]);
+
     const handleDateClick = (e) => {
         setAnchorEl(anchorEl ? null : e.currentTarget);
     };
 
-    const handleDateSelect = (date) => {
+    const handleDateSelect = (dateData) => {
         setAnchorEl(null);
-        setSelectedDate(date ? format(date, 'dd-MMM-yyyy') : '');
+        setSelectedDateData(dateData);
+        if (dateData?.date) {
+            setSelectedDate(format(new Date(dateData.date), 'dd-MMM-yyyy'));
+        } else {
+            setSelectedDate('');
+        }
+    };
+
+    // Format display value for date/time field
+    const getDateTimeDisplayValue = () => {
+        if (selectedDateData) {
+            let display = '';
+            if (selectedDateData.date) {
+                display = format(new Date(selectedDateData.date), 'dd-MMM-yyyy');
+            }
+            if (selectedDateData.slot && selectedDateData.slot !== '24 Hours') {
+                display += ` • ${selectedDateData.slot}`;
+            }
+            if (selectedDateData.startTime && selectedDateData.endTime) {
+                display += ` (${selectedDateData.startTime}-${selectedDateData.endTime})`;
+            }
+            return display || 'Date/Time';
+        }
+        return selectedDate || 'Date/Time';
     };
 
     
@@ -367,7 +422,7 @@ const SearchField = ({ serviceName,location,setLocation,setServiceName, handleFe
                         placeholder: 'Date/Time',
                         icon: <CalendarMonthIcon sx={{ color: 'white', fontSize: 18 }} />,
                         md: 3,
-                        value: selectedDate,
+                        value: getDateTimeDisplayValue(),
                         onClick: handleDateClick,
                         isDateField: true,
                     },
@@ -448,6 +503,7 @@ const SearchField = ({ serviceName,location,setLocation,setServiceName, handleFe
                 anchorEl={anchorEl}
                 onClose={() => setAnchorEl(null)}
                 onSelectDate={handleDateSelect}
+                initialData={selectedDateData}
             />
         </Box>
     );

@@ -134,14 +134,14 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
                 sx={{
                     padding: '18px', 
                     borderRadius: '2px',
-                    border: '2px solid #fff', 
+                    // border: '2px solid #fff', 
                     width: { xs: '85%', sm: '350px', md: '350px' }, 
-                    backgroundColor: 'rgba(0,0,0,0.5)', 
+                    // backgroundColor: 'rgba(0,0,0,0.5)', 
                     position: 'relative',
 
                 }}
             >
-                <Box
+                {/* <Box
                     sx={{
                         ...commonBoxStyle,
                         top: '-5px',
@@ -168,7 +168,7 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
                         bottom: '-5px',
                         right: '-5px',
                     }}
-                />
+                /> */}
 
 
                 <Box

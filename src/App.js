@@ -12,6 +12,7 @@ import { MatchingSearchResultProvider } from "./Context/detailPageContext";
 
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
+import CookiePopup from "./components/Cookies";
 import { SearchBarProvider } from "./Context/searchBarContext";
 
 
@@ -38,6 +39,7 @@ const Overview = lazy(() => import("./pages/Overview/Overview"));
 const CartMain = lazy(() => import("./pages/CartPage/Cart"));
 const SuccessCart = lazy(() => import("./pages/CartPage/SuccessCart"));
 const BusniessPage = lazy(() => import("./pages/BusniessPage/busniess"));
+const Support = lazy(() => import("./pages/SupportPage/Support"));  //-----ADDED SUPPORT PAGE
 
 // Lazy load business form pages
 const CreateBusniessAccount = lazy(() => import("./pages/BusinessForm/createAccount"));
@@ -66,7 +68,21 @@ function App() {
     "/business-document-uploads"
   ];
 
+  const hideFooterRoutes = [
+    "/business-page",
+    "/business-account",
+    "/otp-verification",
+    "/business-role-selection",
+    "/business-info-selection",
+    "/business-profile-form",
+    "/business-team-presence",
+    "/business-service-info",
+    "/business-document-uploads",
+    "/cart"
+  ];
+
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
+  const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
   return (
     <React.StrictMode>
@@ -78,6 +94,7 @@ function App() {
           <Route path="/detail/:id" element={<BeautyMain />} />
           <Route path="/cart" element={<CartMain />} />
           <Route path="/cart/success" element={<SuccessCart />} />
+          <Route path="/support" element={<Support />} />
 
           {/* Business form routes */}
           <Route exact path="/business-page" element={<BusniessPage />} />
@@ -91,7 +108,8 @@ function App() {
           <Route exact path="/business-document-uploads" element={<BusinessDocumentUploads />} />
         </Routes>
       </Suspense>
-      {shouldShowNavbar && <Footer />}
+      {shouldShowNavbar && shouldShowFooter && <Footer />}
+      <CookiePopup />
     </React.StrictMode>
   );
 }

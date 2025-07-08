@@ -180,7 +180,8 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
         sx={{
           background: 'linear-gradient(to bottom, #467d9b, #002c5c)',
           position: 'absolute',
-          height: '35vh',
+          // height: '35vh',
+          height: '16rem', //----CHANGES DONE BY RAKSHIT
           width: '100%',
           zIndex: -1,
           top: 0,

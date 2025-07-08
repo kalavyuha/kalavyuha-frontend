@@ -31,7 +31,7 @@ const BookingAppLanding = () => {
       }}
     >
 
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 0, md: 8, lg: 0 } }}>
         <Box sx={{ textAlign: "center", mb: 4 }}>
           <Typography variant="h4" component="h2" sx={{  mb: 1, fontSize: { xs: "h5.fontSize", sm: "h4.fontSize"} }}>
             Kalavyuha, the all-in-one

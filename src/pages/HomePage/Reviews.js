@@ -10,7 +10,8 @@ import {
   Stack,
   Link,
   Grid,
-  Button
+  Button,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -70,11 +71,96 @@ const GoogleImage = styled('img')({
   marginRight: 4
 });
 
- const ReviewsSection=React.memo(({ data = [] }) =>{
+ const ReviewsSection=React.memo(({ data = [], businessId = "99349543", customerId = "11126042" }) =>{
   const [expandedReview, setExpandedReview] = useState(null);
   const scrollContainerRef = useRef(null);
-  // const [stopScrolling, setStopScrolling] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [apiReviews, setApiReviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Function to format time ago
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now - date;
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+    const diffInMonths = Math.floor(diffInDays / 30);
+
+    if (diffInHours < 24) {
+      return `${diffInHours} hours ago`;
+    } else if (diffInDays < 30) {
+      return `${diffInDays} days ago`;
+    } else {
+      return `${diffInMonths} months ago`;
+    }
+  };
+
+  // Function to fetch reviews from API
+  const fetchReviews = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/v1/Reviews/get/?businessId=${businessId}&customerId=${customerId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer VIRoHdqUAtpklgKg'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const apiData = await response.json();
+      console.log('API Response:', apiData); // Debug log
+      
+      // Transform API data to match component structure
+      // The API response has a Data array containing the reviews
+      const reviewsData = apiData.Data || [];
+      console.log('Reviews Data:', reviewsData); // Debug log
+      const transformedReviews = Array.isArray(reviewsData) ? reviewsData.map(review => ({
+        id: review._id,
+        ReviewId: review._id,
+        CustomerName: review.CustomerName,
+        name: review.CustomerName,
+        Rating: review.Rating,
+        rating: review.Rating,
+        ReviewText: review.ReviewText,
+        content: review.ReviewText,
+        avatar: RecommendedImgPath, // Using default avatar since API doesn't provide one
+        timeAgo: formatTimeAgo(review.CreatedOn),
+        CreatedOn: review.CreatedOn,
+        IsActive: review.IsActive
+      })) : [];
+      
+      setApiReviews(transformedReviews);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate average rating from API data
+  const calculateAverageRating = () => {
+    if (apiReviews.length === 0) return 4.5; // Default rating
+    const totalRating = apiReviews.reduce((sum, review) => sum + review.Rating, 0);
+    return (totalRating / apiReviews.length).toFixed(1);
+  };
+
+  // Fetch reviews when component mounts or businessId/customerId changes
+  useEffect(() => {
+    if (businessId && customerId) {
+      fetchReviews();
+    }
+  }, [businessId, customerId]);
 
   const handleReadMore = (id) => {
     setExpandedReview((prev) => (prev === id ? null : id));
@@ -101,7 +187,7 @@ const GoogleImage = styled('img')({
     return () => clearInterval(scrollInterval);
   }, [isHovered]);
 
-  const finalReviewList = data ? data?.reviews : reviews;
+  const finalReviewList = apiReviews.length > 0 ? apiReviews : (data ? data?.reviews : reviews);
 
   return (
     <Container maxWidth="lg" sx={{ px: { xs: 4, sm: 8, md: 8, lg: 4 }, pb: 4, mt: 6 }} >
@@ -138,19 +224,28 @@ const GoogleImage = styled('img')({
               component="div"
               sx={{ display: 'flex', alignItems: 'baseline', fontSize: { xs: 'h5.fontSize', sm: 'h4.fontSize' } }}
             >
-              4.5
+              {calculateAverageRating()}
               <Typography variant="h5" component="span" color="text.secondary" sx={{ ml: 0.5 }}>
                 /5
               </Typography>
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: 'body2.fontSize', sm: 'body1.fontSize' } }}>
-              {data?.totalReviews}
+              {apiReviews.length > 0 ? `${apiReviews.length} reviews` : (data?.totalReviews || `${reviews.length} reviews`)}
             </Typography>
           </Box>
         </Grid>
 
         {/* Reviews Section */}
         <Grid item xs={12} md={10}>
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" sx={{ minHeight: 200 }}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Box display="flex" justifyContent="center" alignItems="center" sx={{ minHeight: 200 }}>
+              <Typography color="error">Error loading reviews: {error}</Typography>
+            </Box>
+          ) : (
           <div
             ref={scrollContainerRef}
             onMouseEnter={() => setIsHovered(true)}
@@ -220,6 +315,7 @@ const GoogleImage = styled('img')({
               );
             })}
           </div>
+          )}
         </Grid>
       </Grid>
 

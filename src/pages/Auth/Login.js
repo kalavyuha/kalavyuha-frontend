@@ -145,16 +145,16 @@ const LoginPage = ({ setLoginOpen, setSignupOpen,setUserAction }) => {
                 sx={{
                     padding: '16px',
                     borderRadius: '2px',
-                    border: '2px solid #fff',
+                    // border: '2px solid #fff',
                     width: { xs: '90%', sm: '550px' },
-                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    // backgroundColor: 'rgba(0,0,0,0.5)',
                     position: 'relative',
                 }}
             >
-                <Box sx={{ ...commonBoxStyle, top: '-5px', left: '-5px' }} />
+                {/* <Box sx={{ ...commonBoxStyle, top: '-5px', left: '-5px' }} />
                 <Box sx={{ ...commonBoxStyle, top: '-5px', right: '-5px' }} />
                 <Box sx={{ ...commonBoxStyle, bottom: '-5px', left: '-5px' }} />
-                <Box sx={{ ...commonBoxStyle, bottom: '-5px', right: '-5px' }} />
+                <Box sx={{ ...commonBoxStyle, bottom: '-5px', right: '-5px' }} /> */}
                 <Box
                     sx={{
                         backgroundColor: 'white',

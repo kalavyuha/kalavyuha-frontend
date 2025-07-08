@@ -93,6 +93,13 @@ const BusniessPage = () => {
           </Container>
       </Container>
 
+      {/* section eight Footer */}
+      <Container style={{maxWidth: "none"}} sx={{ mt: 5 }}>
+          <Container maxWidth="lg">
+            <Footer/>
+          </Container>
+      </Container>
+
 
     </Box>
   );

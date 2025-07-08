@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -55,6 +56,8 @@ const FeatureItem = ({ icon, text }) => (
 );
 
 const KalavyuhaBusinessPage = () => {
+  const navigate = useNavigate();
+
   return (
     <Container maxWidth="lg" sx={{ px: { xs: 4, sm:8, md: 8, lg:4 }, pb:6 }}>
       <Typography  
@@ -88,6 +91,7 @@ const KalavyuhaBusinessPage = () => {
               <Typography variant="h5" component="h2" fontWeight="bold" mb={3}>
                 Join and get more bookings.
               </Typography>
+              
               <Button
                 variant="contained"
                 sx={{
@@ -99,6 +103,7 @@ const KalavyuhaBusinessPage = () => {
                     backgroundColor: "grey.800",
                   },
                 }}
+                onClick={() => window.open('/kalavyuha-frontend/business-page', '_blank')}
               >
                 LIST YOUR BUSINESS
               </Button>

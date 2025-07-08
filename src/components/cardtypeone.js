@@ -1,9 +1,23 @@
 import React from 'react';
 import { Card, CardContent, CardMedia, Typography, Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import ImageIcon from '../assets/images/Overview_Images/image.png'
 
 const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
-    const { Business, Service } = salon
+    const { Business, Service, id } = salon;
+    const navigate = useNavigate();
+
+    const handleCardClick = () => {
+        // console.log('Card clicked, salon object:', salon);
+        // console.log('Salon ID:', id);
+        if (id) {
+            // console.log('Navigating to:', `/detail/${id}`);
+            navigate(`/detail/${id}`);
+        } else {
+            // console.log('No salon ID found');
+        }
+    };
+
     return (
         <Card
             sx={{
@@ -12,8 +26,15 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                 borderRadius: 1,
                 position: 'relative',
                 background: "transparent",
-                boxShadow: 'none'
+                boxShadow: 'none',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease-in-out',
+                '&:hover': {
+                    transform: 'translateY(-2px)',
+                    // boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }
             }}
+            onClick={handleCardClick}
         >
             <Box sx={{ position: 'relative' }}>
                 <CardMedia
@@ -53,7 +74,7 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                         color="text.secondary"
                         sx={{ fontSize: isSmallScreen ? '0.75rem' : '0.9rem' }}
                     >
-                        {Business?.Address || ''}
+                        {Business?.Address || 'TEST'}
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography
@@ -62,7 +83,7 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                             fontWeight="bold"
                             sx={{ fontSize: isSmallScreen ? '0.9rem' : '1.15rem' }}
                         >
-                            {Business?.Name || ''}
+                            {Business?.Name || 'TEST'}
                         </Typography>
                         <Typography
                             sx={{
@@ -74,7 +95,7 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                                 fontSize: isSmallScreen ? '0.65rem' : '0.8rem'
                             }}
                         >
-                            {Business?.Rating} ★
+                            {Business?.Rating || "4.5"} ★
                         </Typography>
                     </Box>
                 </Box>

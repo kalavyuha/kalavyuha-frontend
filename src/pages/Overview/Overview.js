@@ -19,6 +19,16 @@ const Overview = () => {
     const IndexFilterData = previousData?.state?.data;
     const searchBarData = previousData?.state?.search
 
+    // Log the search data to see what's being passed
+    useEffect(() => {
+        if (searchBarData) {
+            console.log('Search data received in Overview:', searchBarData);
+            console.log('Date:', searchBarData?.date);
+            console.log('Time:', searchBarData?.time);
+            console.log('Selected Date Data:', searchBarData?.selectedDateData);
+        }
+    }, [searchBarData])
+
 
     const handleDataChange = (newData) => {
         setData(newData);

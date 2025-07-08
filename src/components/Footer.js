@@ -58,7 +58,7 @@ const Footer = () => {
     { name: 'Top picks', url: '/top-picks' },
     { name: 'Plan & Sign up', url: '/signup' },
     { name: 'Enterprise', url: '/enterprise' },
-    { name: 'Help & Support', url: '/support' },
+    { name: 'Help & Support', url: '/kalavyuha-frontend/support' },
   ];
 
   const legalLinks = [
