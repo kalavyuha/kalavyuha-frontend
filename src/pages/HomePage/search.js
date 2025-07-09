@@ -372,27 +372,52 @@ export default function SearchUI() {
     { value: 'anytime', label: 'Anytime' }
   ];
 
+  // Close dropdowns when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (serviceAnchorEl && !serviceAnchorEl.contains(event.target)) {
+        setShowServiceSuggestions(false)
+        setServiceAnchorEl(null)
+      }
+      if (locationAnchorEl && !locationAnchorEl.contains(event.target)) {
+        setShowLocationSuggestions(false)
+        setLocationAnchorEl(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [serviceAnchorEl, locationAnchorEl])
+
   const handleChange = (event, newValue) => {
     setValue(newValue)
     setCategory(["Beauty", "Fitness", "Wellness"][newValue])
   }
 
   const handleSearchChange = (event) => {
-    setServiceName(event.target.value)
-    setShowServiceSuggestions(true)
+    const value = event.target.value
+    setServiceName(value)
+    if (value.trim()) {
+      setShowServiceSuggestions(true)
+    } else {
+      setShowServiceSuggestions(false)
+    }
   }
 
   const handleServiceFocus = (event) => {
     setServiceAnchorEl(event.currentTarget)
-    setShowServiceSuggestions(true)
+    if (serviceName.trim()) {
+      setShowServiceSuggestions(true)
+    }
   }
 
   const handleServiceBlur = () => {
     // Delay hiding to allow for clicks on suggestions
     setTimeout(() => {
       setShowServiceSuggestions(false)
-      setServiceAnchorEl(null)
-    }, 200)
+    }, 150)
   }
 
   const handleServiceSelect = (selectedService) => {
@@ -402,21 +427,27 @@ export default function SearchUI() {
   }
 
   const handleLocationChange = (event) => {
-    setLocation(event.target.value)
-    setShowLocationSuggestions(true)
+    const value = event.target.value
+    setLocation(value)
+    if (value.trim()) {
+      setShowLocationSuggestions(true)
+    } else {
+      setShowLocationSuggestions(false)
+    }
   }
 
   const handleLocationFocus = (event) => {
     setLocationAnchorEl(event.currentTarget)
-    setShowLocationSuggestions(true)
+    if (location.trim()) {
+      setShowLocationSuggestions(true)
+    }
   }
 
   const handleLocationBlur = () => {
     // Delay hiding to allow for clicks on suggestions
     setTimeout(() => {
       setShowLocationSuggestions(false)
-      setLocationAnchorEl(null)
-    }, 200)
+    }, 150)
   }
 
   const handleLocationSelect = (selectedLocation) => {
@@ -434,7 +465,35 @@ export default function SearchUI() {
   }
 
   const handleDateClick = (e) => {
-    setAnchorEl(anchorEl ? null : e.currentTarget);
+    const newAnchorEl = anchorEl ? null : e.currentTarget;
+    setAnchorEl(newAnchorEl);
+    
+    // If opening the calendar, scroll to ensure it's visible
+    if (newAnchorEl) {
+      // Store the element reference before the timeout
+      const element = e.currentTarget;
+      
+      setTimeout(() => {
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          
+          // Calculate if calendar would be visible (calendar height is approximately 400px)
+          const calendarHeight = 450; // Approximate height including padding
+          const spaceBelow = viewportHeight - rect.bottom;
+          
+          if (spaceBelow < calendarHeight) {
+            // Calculate how much to scroll to make calendar fully visible
+            const scrollAmount = calendarHeight - spaceBelow + 20; // 20px buffer
+            
+            window.scrollBy({
+              top: scrollAmount,
+              behavior: 'smooth'
+            });
+          }
+        }
+      }, 100); // Small delay to ensure the popper is rendered
+    }
   };
 
   const handleDateSelect = (dateData) => {
@@ -558,43 +617,70 @@ export default function SearchUI() {
               />
               
               {/* Service Suggestions Dropdown for Mobile */}
-              <Popper 
-                open={showServiceSuggestions && Boolean(serviceAnchorEl)} 
-                anchorEl={serviceAnchorEl} 
-                placement="bottom-start"
-                style={{ zIndex: 1300, width: serviceAnchorEl?.offsetWidth }}
-              >
-                <Paper elevation={3} sx={{ maxHeight: 200, overflow: 'auto' }}>
-                  <List dense>
-                    {serviceSuggestions
-                      .filter(suggestion => 
-                        suggestion.toLowerCase().includes(serviceName.toLowerCase())
-                      )
-                      .map((suggestion, index) => (
-                        <ListItem key={index} disablePadding>
-                          <ListItemButton 
-                            onClick={() => handleServiceSelect(suggestion)}
-                            sx={{
-                              '&:hover': {
-                                backgroundColor: '#f5f5f5'
-                              }
-                            }}
-                          >
-                            <ListItemText 
-                              primary={suggestion}
+              {showServiceSuggestions && serviceName.trim() && serviceAnchorEl && (
+                <Popper 
+                  open={true}
+                  anchorEl={serviceAnchorEl} 
+                  placement="bottom-start"
+                  style={{ zIndex: 9999 }}
+                  modifiers={[
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 4],
+                      },
+                    },
+                    {
+                      name: 'preventOverflow',
+                      options: {
+                        boundary: 'viewport',
+                      },
+                    },
+                  ]}
+                >
+                  <Paper 
+                    elevation={3} 
+                    sx={{ 
+                      maxHeight: 200, 
+                      overflow: 'auto',
+                      minWidth: serviceAnchorEl.offsetWidth || 200,
+                      border: '1px solid #e0e0e0'
+                    }}
+                  >
+                    <List dense>
+                      {serviceSuggestions
+                        .filter(suggestion => 
+                          suggestion.toLowerCase().includes(serviceName.toLowerCase())
+                        )
+                        .map((suggestion, index) => (
+                          <ListItem key={index} disablePadding>
+                            <ListItemButton 
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                handleServiceSelect(suggestion)
+                              }}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '14px'
+                                '&:hover': {
+                                  backgroundColor: '#f5f5f5'
                                 }
                               }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ))
-                    }
-                  </List>
-                </Paper>
-              </Popper>
+                            >
+                              <ListItemText 
+                                primary={suggestion}
+                                sx={{
+                                  '& .MuiListItemText-primary': {
+                                    fontSize: '14px'
+                                  }
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ))
+                      }
+                    </List>
+                  </Paper>
+                </Popper>
+              )}
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -628,43 +714,70 @@ export default function SearchUI() {
               />
               
               {/* Location Suggestions Dropdown for Mobile */}
-              <Popper 
-                open={showLocationSuggestions && Boolean(locationAnchorEl)} 
-                anchorEl={locationAnchorEl} 
-                placement="bottom-start"
-                style={{ zIndex: 1300, width: locationAnchorEl?.offsetWidth }}
-              >
-                <Paper elevation={3} sx={{ maxHeight: 200, overflow: 'auto' }}>
-                  <List dense>
-                    {locationSuggestions
-                      .filter(suggestion => 
-                        suggestion.toLowerCase().includes(location.toLowerCase())
-                      )
-                      .map((suggestion, index) => (
-                        <ListItem key={index} disablePadding>
-                          <ListItemButton 
-                            onClick={() => handleLocationSelect(suggestion)}
-                            sx={{
-                              '&:hover': {
-                                backgroundColor: '#f5f5f5'
-                              }
-                            }}
-                          >
-                            <ListItemText 
-                              primary={suggestion}
+              {showLocationSuggestions && location.trim() && locationAnchorEl && (
+                <Popper 
+                  open={true}
+                  anchorEl={locationAnchorEl} 
+                  placement="bottom-start"
+                  style={{ zIndex: 9999 }}
+                  modifiers={[
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 4],
+                      },
+                    },
+                    {
+                      name: 'preventOverflow',
+                      options: {
+                        boundary: 'viewport',
+                      },
+                    },
+                  ]}
+                >
+                  <Paper 
+                    elevation={3} 
+                    sx={{ 
+                      maxHeight: 200, 
+                      overflow: 'auto',
+                      minWidth: locationAnchorEl.offsetWidth || 200,
+                      border: '1px solid #e0e0e0'
+                    }}
+                  >
+                    <List dense>
+                      {locationSuggestions
+                        .filter(suggestion => 
+                          suggestion.toLowerCase().includes(location.toLowerCase())
+                        )
+                        .map((suggestion, index) => (
+                          <ListItem key={index} disablePadding>
+                            <ListItemButton 
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                handleLocationSelect(suggestion)
+                              }}
                               sx={{
-                                '& .MuiListItemText-primary': {
-                                  fontSize: '14px'
+                                '&:hover': {
+                                  backgroundColor: '#f5f5f5'
                                 }
                               }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ))
-                    }
-                  </List>
-                </Paper>
-              </Popper>
+                            >
+                              <ListItemText 
+                                primary={suggestion}
+                                sx={{
+                                  '& .MuiListItemText-primary': {
+                                    fontSize: '14px'
+                                  }
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ))
+                      }
+                    </List>
+                  </Paper>
+                </Popper>
+              )}
             </Grid>
           </Grid>
 
@@ -865,43 +978,70 @@ export default function SearchUI() {
           />
           
           {/* Service Suggestions Dropdown for Desktop */}
-          <Popper 
-            open={showServiceSuggestions && Boolean(serviceAnchorEl)} 
-            anchorEl={serviceAnchorEl} 
-            placement="bottom-start"
-            style={{ zIndex: 1300, width: serviceAnchorEl?.offsetWidth }}
-          >
-            <Paper elevation={3} sx={{ maxHeight: 200, overflow: 'auto' }}>
-              <List dense>
-                {serviceSuggestions
-                  .filter(suggestion => 
-                    suggestion.toLowerCase().includes(serviceName.toLowerCase())
-                  )
-                  .map((suggestion, index) => (
-                    <ListItem key={index} disablePadding>
-                      <ListItemButton 
-                        onClick={() => handleServiceSelect(suggestion)}
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: '#f5f5f5'
-                          }
-                        }}
-                      >
-                        <ListItemText 
-                          primary={suggestion}
+          {showServiceSuggestions && serviceName.trim() && serviceAnchorEl && (
+            <Popper 
+              open={true}
+              anchorEl={serviceAnchorEl} 
+              placement="bottom-start"
+              style={{ zIndex: 9999 }}
+              modifiers={[
+                {
+                  name: 'offset',
+                  options: {
+                    offset: [0, 4],
+                  },
+                },
+                {
+                  name: 'preventOverflow',
+                  options: {
+                    boundary: 'viewport',
+                  },
+                },
+              ]}
+            >
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  maxHeight: 200, 
+                  overflow: 'auto',
+                  minWidth: serviceAnchorEl.offsetWidth || 200,
+                  border: '1px solid #e0e0e0'
+                }}
+              >
+                <List dense>
+                  {serviceSuggestions
+                    .filter(suggestion => 
+                      suggestion.toLowerCase().includes(serviceName.toLowerCase())
+                    )
+                    .map((suggestion, index) => (
+                      <ListItem key={index} disablePadding>
+                        <ListItemButton 
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            handleServiceSelect(suggestion)
+                          }}
                           sx={{
-                            '& .MuiListItemText-primary': {
-                              fontSize: '14px'
+                            '&:hover': {
+                              backgroundColor: '#f5f5f5'
                             }
                           }}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  ))
-                }
-              </List>
-            </Paper>
-          </Popper>
+                        >
+                          <ListItemText 
+                            primary={suggestion}
+                            sx={{
+                              '& .MuiListItemText-primary': {
+                                fontSize: '14px'
+                              }
+                            }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))
+                  }
+                </List>
+              </Paper>
+            </Popper>
+          )}
         </Box>
 
         <Divider orientation="vertical" flexItem sx={{ mr: 2 }} />
@@ -924,43 +1064,70 @@ export default function SearchUI() {
           />
           
           {/* Location Suggestions Dropdown for Desktop */}
-          <Popper 
-            open={showLocationSuggestions && Boolean(locationAnchorEl)} 
-            anchorEl={locationAnchorEl} 
-            placement="bottom-start"
-            style={{ zIndex: 1300, width: locationAnchorEl?.offsetWidth }}
-          >
-            <Paper elevation={3} sx={{ maxHeight: 200, overflow: 'auto' }}>
-              <List dense>
-                {locationSuggestions
-                  .filter(suggestion => 
-                    suggestion.toLowerCase().includes(location.toLowerCase())
-                  )
-                  .map((suggestion, index) => (
-                    <ListItem key={index} disablePadding>
-                      <ListItemButton 
-                        onClick={() => handleLocationSelect(suggestion)}
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: '#f5f5f5'
-                          }
-                        }}
-                      >
-                        <ListItemText 
-                          primary={suggestion}
+          {showLocationSuggestions && location.trim() && locationAnchorEl && (
+            <Popper 
+              open={true}
+              anchorEl={locationAnchorEl} 
+              placement="bottom-start"
+              style={{ zIndex: 9999 }}
+              modifiers={[
+                {
+                  name: 'offset',
+                  options: {
+                    offset: [0, 4],
+                  },
+                },
+                {
+                  name: 'preventOverflow',
+                  options: {
+                    boundary: 'viewport',
+                  },
+                },
+              ]}
+            >
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  maxHeight: 200, 
+                  overflow: 'auto',
+                  minWidth: locationAnchorEl.offsetWidth || 200,
+                  border: '1px solid #e0e0e0'
+                }}
+              >
+                <List dense>
+                  {locationSuggestions
+                    .filter(suggestion => 
+                      suggestion.toLowerCase().includes(location.toLowerCase())
+                    )
+                    .map((suggestion, index) => (
+                      <ListItem key={index} disablePadding>
+                        <ListItemButton 
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            handleLocationSelect(suggestion)
+                          }}
                           sx={{
-                            '& .MuiListItemText-primary': {
-                              fontSize: '14px'
+                            '&:hover': {
+                              backgroundColor: '#f5f5f5'
                             }
                           }}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  ))
-                }
-              </List>
-            </Paper>
-          </Popper>
+                        >
+                          <ListItemText 
+                            primary={suggestion}
+                            sx={{
+                              '& .MuiListItemText-primary': {
+                                fontSize: '14px'
+                              }
+                            }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))
+                  }
+                </List>
+              </Paper>
+            </Popper>
+          )}
         </Box>
 
         <Divider orientation="vertical" flexItem sx={{ mr: 2 }} />

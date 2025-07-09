@@ -53,14 +53,14 @@ const Support = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, backgroundColor: "#fff" }}>
+    <Box sx={{ flexGrow: 1, backgroundColor: "#eaeef2" }}>
       {/* Email Us Section */}
       <Box
         sx={{
           margin: "auto",
           paddingX: { xs: 2, sm: 3, md: 4 },
           // overflow: "hidden",
-          minHeight: "45rem",
+          minHeight: "20rem",
           alignItems: "center",
           display: "flex",
           flexDirection: "column",

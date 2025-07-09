@@ -322,7 +322,7 @@ const AboutUs = ({
                                     sx={{
                                         padding: "0",
                                         width: "100%",
-                                        height: { xs: "40vw", sm: "20vw", lg: "15vw" },
+                                        height: { xs: "15vw", sm: "15vw", lg: "15vw" }, //-----CHANGED HEIGHT
                                     }}
                                 >
                                     <iframe
@@ -347,7 +347,8 @@ const AboutUs = ({
                                     alignItems: "center",
                                     justifyContent: "center",
                                     height: { xs: "max-content", sm: "20vw", lg: "15vw" },
-                                    padding: { xs: '7px', sm: 'unset', md: 'unset' }
+                                    // height: { xs: "15vw", sm: "15vw", lg: "15vw" },
+                                    padding: { xs: '5px', sm: 'unset', md: 'unset' }
                                 }}
                             >
                                 <Box display="flex" alignItems="flex-start">

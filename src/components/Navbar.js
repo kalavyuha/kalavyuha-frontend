@@ -396,7 +396,7 @@ export default function Navbar() {
                 <NavButton startIcon={<Download />}>Download</NavButton>
 
                 <a href="/kalavyuha-frontend/business-page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                  <NavButton startIcon={<Store />}>Store</NavButton>
+                  <NavButton startIcon={<Store />}>List Your Business</NavButton>
                 </a>
               </Box>
 

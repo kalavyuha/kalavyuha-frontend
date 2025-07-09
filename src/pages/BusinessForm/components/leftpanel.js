@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Box, Typography, Button, LinearProgress} from '@mui/material';
 import { MessagesSquare, Send, ChevronUp, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../../../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png';
 
 const LeftPanel = ({
@@ -13,6 +14,7 @@ const LeftPanel = ({
   businessRoleForm = '',
   formData = {},
 }) => {
+  const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -60,6 +62,10 @@ const LeftPanel = ({
     }
   };
 
+  const handleNavigateToSupport = () => {
+    navigate('/support');
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', bgcolor: '#e2e6ea', minHeight: '91vh', margin: 2, borderRadius: '16px', padding: 2.5 }}>
       <Typography variant="h6" sx={{ mb: 2, color: '#1b4d69', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
@@ -70,8 +76,20 @@ const LeftPanel = ({
       <Typography variant="h6" sx={{ mb: 0, fontWeight: 'bold' }}>Chat with us</Typography>
       <Typography variant="body2" sx={{ mb: 2 }}>Speak to our friendly team via live chat.</Typography>
 
-      <Button startIcon={<MessagesSquare />} sx={{ mb: 1, textTransform: 'capitalize', color: 'black', fontWeight: 'bold' }}>Start live chat</Button>
-      <Button startIcon={<Send />} sx={{ textTransform: 'capitalize', color: 'black', fontWeight: 'bold' }}>Shoot us an email</Button>
+      <Button 
+        startIcon={<MessagesSquare />} 
+        onClick={handleNavigateToSupport}
+        sx={{ mb: 1, textTransform: 'capitalize', color: 'black', fontWeight: 'bold' }}
+      >
+        Start live chat
+      </Button>
+      <Button 
+        startIcon={<Send />} 
+        onClick={handleNavigateToSupport}
+        sx={{ textTransform: 'capitalize', color: 'black', fontWeight: 'bold' }}
+      >
+        Shoot us an email
+      </Button>
         
       
        {/* Progress Section */}

@@ -78,6 +78,7 @@ export default function OTPVerification() {
                 body: JSON.stringify({
                     PhoneNumber: `${countryCode}${previousData.state.phone}`, 
                     OTP: enteredOtp, 
+                    UserType: "merchant",
                 }),
             });
             const data = await response.json();

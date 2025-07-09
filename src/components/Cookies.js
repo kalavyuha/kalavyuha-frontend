@@ -77,10 +77,18 @@ const CookiePopup = () => {
             maxWidth: 500,
             borderRadius: 3,
             boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-            '@media (max-width: 600px)': {
-              left: 10,
-              right: 10,
-              bottom: 10,
+            '@media (max-width: 768px)': {
+              left: 8,
+              right: 8,
+              bottom: 8,
+              maxWidth: 'none',
+              borderRadius: 2,
+            },
+            '@media (max-width: 480px)': {
+              left: 4,
+              right: 4,
+              bottom: 4,
+              borderRadius: 1,
             }
           }
         }}
@@ -91,27 +99,40 @@ const CookiePopup = () => {
           }
         }}
       >
-        <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-            <Box sx={{ mr: 2, flexShrink: 0 }}>
+        <DialogContent sx={{ 
+          p: { xs: 2, sm: 3 },
+          pb: { xs: 1, sm: 2 }
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            mb: { xs: 1.5, sm: 2 },
+            flexDirection: { xs: 'row', sm: 'row' }
+          }}>
+            <Box sx={{ 
+              mr: { xs: 1.5, sm: 2 }, 
+              flexShrink: 0,
+              mt: { xs: 0.5, sm: 0 }
+            }}>
               <img 
                 src={logo} 
                 alt="Kalavyuha" 
                 style={{ 
-                  width: '38px', 
-                  height: '38px',
+                  width: window.innerWidth < 480 ? '32px' : '38px', 
+                  height: window.innerWidth < 480 ? '32px' : '38px',
                   objectFit: 'contain'
                 }}
               />
             </Box>
-            <Box sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography 
                 variant="h6" 
                 component="h2" 
                 sx={{ 
                   fontWeight: 600,
                   color: '#333',
-                  mb: 1
+                  mb: { xs: 0.5, sm: 1 },
+                  fontSize: { xs: '1.1rem', sm: '1.25rem' }
                 }}
               >
                 Kalavyuha
@@ -121,7 +142,8 @@ const CookiePopup = () => {
                 color="text.secondary"
                 sx={{ 
                   lineHeight: 1.5,
-                  fontSize: '0.875rem'
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                  wordBreak: 'break-word'
                 }}
               >
                 We use our own and third-party cookies to personalize content and ads, to provide media features and to analyse our traffic. We also share information about your use of our site with our social media, advertising and analytics partners.
@@ -131,7 +153,8 @@ const CookiePopup = () => {
               onClick={handleClose}
               sx={{ 
                 color: '#666',
-                ml: 1,
+                ml: { xs: 0.5, sm: 1 },
+                p: { xs: 0.5, sm: 1 },
                 '&:hover': { color: '#333' }
               }}
               size="small"
@@ -141,10 +164,13 @@ const CookiePopup = () => {
           </Box>
         </DialogContent>
         
-        <DialogActions sx={{ p: 3, pt: 0 }}>
+        <DialogActions sx={{ 
+          p: { xs: 2, sm: 3 }, 
+          pt: { xs: 1, sm: 0 }
+        }}>
           <Stack 
             direction={{ xs: 'column', sm: 'row' }} 
-            spacing={2} 
+            spacing={{ xs: 1.5, sm: 2 }}
             sx={{ width: '100%' }}
           >
             <Button
@@ -160,7 +186,10 @@ const CookiePopup = () => {
                 },
                 textTransform: 'none',
                 fontWeight: 500,
-                flex: { xs: 1, sm: 'auto' }
+                flex: { xs: 1, sm: 'auto' },
+                fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                py: { xs: 1, sm: 1.5 },
+                minHeight: { xs: '40px', sm: '44px' }
               }}
             >
               Cookie Settings
@@ -176,7 +205,10 @@ const CookiePopup = () => {
                 },
                 textTransform: 'none',
                 fontWeight: 500,
-                flex: { xs: 1, sm: 'auto' }
+                flex: { xs: 1, sm: 'auto' },
+                fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                py: { xs: 1, sm: 1.5 },
+                minHeight: { xs: '40px', sm: '44px' }
               }}
             >
               Accept All
@@ -191,67 +223,144 @@ const CookiePopup = () => {
         onClose={handleSettingsClose}
         maxWidth="sm"
         fullWidth
+        fullScreen={window.innerWidth < 600}
         PaperProps={{
           sx: {
-            borderRadius: 3,
-            maxHeight: '80vh'
+            borderRadius: { xs: 0, sm: 3 },
+            maxHeight: { xs: '100vh', sm: '80vh' },
+            margin: { xs: 0, sm: 2 }
           }
         }}
       >
-        <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <DialogContent sx={{ 
+          p: { xs: 2, sm: 3 },
+          overflowY: 'auto'
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            mb: { xs: 2, sm: 3 },
+            position: { xs: 'sticky', sm: 'static' },
+            top: { xs: 0, sm: 'auto' },
+            backgroundColor: { xs: 'background.paper', sm: 'transparent' },
+            zIndex: { xs: 1, sm: 'auto' },
+            pb: { xs: 1, sm: 0 },
+            borderBottom: { xs: '1px solid #eee', sm: 'none' }
+          }}>
             <img 
               src={logo} 
               alt="Kalavyuha" 
               style={{ 
-                width: '40px', 
-                height: '40px',
+                width: window.innerWidth < 480 ? '32px' : '40px', 
+                height: window.innerWidth < 480 ? '32px' : '40px',
                 objectFit: 'contain',
                 marginRight: '12px'
               }}
             />
-            <Typography variant="h5" fontWeight={600}>
+            <Typography 
+              variant="h5" 
+              fontWeight={600}
+              sx={{
+                fontSize: { xs: '1.3rem', sm: '1.5rem' }
+              }}
+            >
               Cookie Settings
             </Typography>
           </Box>
           
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+              }}
+            >
               Essential Cookies
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              paragraph
+              sx={{
+                fontSize: { xs: '0.85rem', sm: '0.875rem' },
+                lineHeight: { xs: 1.4, sm: 1.5 }
+              }}
+            >
               These cookies are necessary for the website to function and cannot be switched off. They are usually only set in response to actions made by you which amount to a request for services.
             </Typography>
-            <Typography variant="body2" color="success.main" fontWeight={500}>
+            <Typography 
+              variant="body2" 
+              color="success.main" 
+              fontWeight={500}
+              sx={{
+                fontSize: { xs: '0.85rem', sm: '0.875rem' }
+              }}
+            >
               Always Active
             </Typography>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: { xs: 1.5, sm: 2 } }} />
 
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+              }}
+            >
               Analytics & Performance Cookies
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              paragraph
+              sx={{
+                fontSize: { xs: '0.85rem', sm: '0.875rem' },
+                lineHeight: { xs: 1.4, sm: 1.5 }
+              }}
+            >
               These cookies help us understand how visitors interact with our website by collecting and reporting information anonymously.
             </Typography>
           </Box>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+              }}
+            >
               Marketing Cookies
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              paragraph
+              sx={{
+                fontSize: { xs: '0.85rem', sm: '0.875rem' },
+                lineHeight: { xs: 1.4, sm: 1.5 }
+              }}
+            >
               These cookies are used to deliver advertisements more relevant to you and your interests.
             </Typography>
           </Box>
         </DialogContent>
         
-        <DialogActions sx={{ p: 3, pt: 0 }}>
+        <DialogActions sx={{ 
+          p: { xs: 2, sm: 3 }, 
+          pt: { xs: 1, sm: 0 },
+          position: { xs: 'sticky', sm: 'static' },
+          bottom: { xs: 0, sm: 'auto' },
+          backgroundColor: { xs: 'background.paper', sm: 'transparent' },
+          borderTop: { xs: '1px solid #eee', sm: 'none' }
+        }}>
           <Stack 
             direction={{ xs: 'column', sm: 'row' }} 
-            spacing={2} 
+            spacing={{ xs: 1.5, sm: 2 }}
             sx={{ width: '100%' }}
           >
             <Button
@@ -266,7 +375,10 @@ const CookiePopup = () => {
                 },
                 textTransform: 'none',
                 fontWeight: 500,
-                flex: { xs: 1, sm: 'auto' }
+                flex: { xs: 1, sm: 'auto' },
+                fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                py: { xs: 1, sm: 1.5 },
+                minHeight: { xs: '44px', sm: '44px' }
               }}
             >
               Accept Essential Only
@@ -281,7 +393,10 @@ const CookiePopup = () => {
                 },
                 textTransform: 'none',
                 fontWeight: 500,
-                flex: { xs: 1, sm: 'auto' }
+                flex: { xs: 1, sm: 'auto' },
+                fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                py: { xs: 1, sm: 1.5 },
+                minHeight: { xs: '44px', sm: '44px' }
               }}
             >
               Accept All
