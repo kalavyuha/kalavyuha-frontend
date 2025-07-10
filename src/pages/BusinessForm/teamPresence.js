@@ -300,7 +300,7 @@ export default function TeamPresence() {
             <Grid item xs={12} md={8} sx={{alignContent: "center",   height: '100vh', overflow: 'auto', py:2}}>
               <Box
                 sx={{
-                  mx: 4,
+                  mx: {xs:2, sm: 4},
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -371,12 +371,12 @@ export default function TeamPresence() {
                                   borderRadius: 4,
                                   borderColor: "#d9d9d9",
                                   background: "#fbfbfb",
-                                  height: "33vh",
+                                  height: {xs: "43vh",  sm:"33vh"},
                                   overflowY: "auto",
                                   scrollbarWidth: 'none',  
                                   '&::-webkit-scrollbar': { display: 'none' } ,
                                   padding: 2,
-                                  px:4
+                                  px:{xs:1 , sm: 4}
                                 }}
                               >
                                 {teamMembers.map((member, index) => (
@@ -768,9 +768,9 @@ export default function TeamPresence() {
                             </Grid>
 
                             <Grid item xs={12} sx={{my:2}}>
-                              <Grid container sx={{justifyContent: "space-between"}}>
+                              <Grid container sx={{justifyContent: "space-between"}} spacing={2}>
                                 
-                                <Grid item xs={3}>
+                                <Grid item xs={6}>
                                   <Button 
                                     fullWidth
                                     variant="outlined" 
@@ -784,7 +784,7 @@ export default function TeamPresence() {
                                 </Grid>
 
 
-                                <Grid item xs={3}>
+                                <Grid item xs={6}>
                                   <Button 
                                     type="submit" 
                                     fullWidth 

@@ -67,7 +67,7 @@ const LeftPanel = ({
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', bgcolor: '#e2e6ea', minHeight: '91vh', margin: 2, borderRadius: '16px', padding: 2.5 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', bgcolor: '#e2e6ea', minHeight: {xs: "35vh", md:'90vh'}, margin: 2, borderRadius: '16px', padding: 2.5 }}>
       <Typography variant="h6" sx={{ mb: 2, color: '#1b4d69', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
         <Box component="img" src={Logo} alt="Kalavyuha Logo" sx={{ width: 30, height: 30, mr: 1 }} />
         Kalavyuha

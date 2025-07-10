@@ -262,9 +262,9 @@ export default function BusinessDocumentUploads() {
                 <Box sx={{ mt: 1, maxWidth: 600, width: '100%', mx: 4 }}>
                     
                     <Grid item xs={12} sx={{mt:2}}>
-                        <Grid container sx={{justifyContent: "space-between"}}>
+                        <Grid container sx={{justifyContent: "space-between"}} spacing={2}>
                         
-                        <Grid item xs={3}>
+                        <Grid item xs={6}>
                             <Button 
                             fullWidth
                             variant="outlined" 
@@ -277,7 +277,7 @@ export default function BusinessDocumentUploads() {
                         </Grid>
 
 
-                        <Grid item xs={3}>
+                        <Grid item xs={6}>
                             <Button 
                             type="submit" 
                             fullWidth 

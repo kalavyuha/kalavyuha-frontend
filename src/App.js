@@ -40,6 +40,8 @@ const CartMain = lazy(() => import("./pages/CartPage/Cart"));
 const SuccessCart = lazy(() => import("./pages/CartPage/SuccessCart"));
 const BusniessPage = lazy(() => import("./pages/BusniessPage/busniess"));
 const Support = lazy(() => import("./pages/SupportPage/Support"));  //-----ADDED SUPPORT PAGE
+const TermsConditions = lazy(() => import("./pages/TermsConditions/termsConditions"));  //-----ADDED T&C PAGE
+const AppointmentHistory = lazy(() => import("./pages/AppointmentHistory/AppointmentHistory"));  //-----ADDED HISTORY PAGE
 
 // Lazy load business form pages
 const CreateBusniessAccount = lazy(() => import("./pages/BusinessForm/createAccount"));
@@ -48,10 +50,10 @@ const BusinessRoleSelection = lazy(() => import("./pages/BusinessForm/businessRo
 const BusinessInfoSelection = lazy(() => import("./pages/BusinessForm/businessInfoSelection"));
 const BusinessProfileForm = lazy(() => import("./pages/BusinessForm/businessProfile"));
 
-// const BusinessHoursSection = lazy(() => import("./pages/BusinessForm/businessHours"));
 
 const TeamPresence = lazy(() => import("./pages/BusinessForm/teamPresence"));
 const BusinessServiceInfo = lazy(() => import("./pages/BusinessForm/businessServiceInfo"));
+const BusinessHoursSection = lazy(() => import("./pages/BusinessForm/businessHours")); //-----------ADDED BUSINESS HOURS SECTION
 const BusinessDocumentUploads = lazy(() => import("./pages/BusinessForm/businessDocumentUploads"));
 
 function App() {
@@ -65,6 +67,7 @@ function App() {
     "/business-profile-form",
     "/business-team-presence",
     "/business-service-info",
+    "/business-hours",
     "/business-document-uploads"
   ];
 
@@ -95,6 +98,8 @@ function App() {
           <Route path="/cart" element={<CartMain />} />
           <Route path="/cart/success" element={<SuccessCart />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/terms&conditions" element={<TermsConditions />} />
+          <Route path="/appointment-history" element={<AppointmentHistory />} />
 
           {/* Business form routes */}
           <Route exact path="/business-page" element={<BusniessPage />} />
@@ -105,6 +110,7 @@ function App() {
           <Route exact path="/business-profile-form" element={<BusinessProfileForm />} />
           <Route exact path="/business-team-presence" element={<TeamPresence />} />
           <Route exact path="/business-service-info" element={<BusinessServiceInfo />} />
+          <Route exact path="/business-hours" element={<BusinessHoursSection />} />  
           <Route exact path="/business-document-uploads" element={<BusinessDocumentUploads />} />
         </Routes>
       </Suspense>

@@ -134,7 +134,7 @@ export default function BusinessRoleSelection() {
               <Box
                 sx={{
                   my: 8,
-                  mx: 6,
+                  mx: {xs:2, sm: 6},
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -142,7 +142,7 @@ export default function BusinessRoleSelection() {
                 }}
               >
                   
-                <Box sx={{ px:12}}>
+                <Box sx={{ px:{xs:0, sm:12}}}>
                   <Typography component="h1" variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#1b4d69",textAlign:"center" }}>
                     Unlock New Potential: Identify Your Business Role!
                   </Typography>
@@ -208,7 +208,7 @@ export default function BusinessRoleSelection() {
 
                     <Grid item xs={12} sx={{mt:4}}>
                       <Grid container sx={{justifyContent: "flex-end"}}>
-                        <Grid item xs={3}>
+                        <Grid item xs={6} sm={3}>
                           <Button 
                             type="submit" 
                             fullWidth 

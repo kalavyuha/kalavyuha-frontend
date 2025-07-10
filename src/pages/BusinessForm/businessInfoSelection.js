@@ -146,7 +146,7 @@ export default function BusinessInfoSelection() {
               <Box
                 sx={{
                   my: 8,
-                  mx: 6,
+                  mx: {xs:2, sm:6},
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -212,8 +212,8 @@ export default function BusinessInfoSelection() {
                   </Grid>
 
                   <Grid item xs={12} sx={{mt:3}}>
-                      <Grid container sx={{justifyContent: "space-between"}}>
-                        <Grid item xs={3}>
+                      <Grid container sx={{justifyContent: "space-between"}} spacing={2}>
+                        <Grid item xs={6}>
                           <Button 
                             fullWidth
                             variant="outlined" 
@@ -225,7 +225,7 @@ export default function BusinessInfoSelection() {
                           </Button>
                         </Grid>
 
-                        <Grid item xs={3}>
+                        <Grid item xs={6}>
                           <Button 
                             type="submit" 
                             fullWidth 

@@ -196,7 +196,7 @@ export default function BusinessProfileForm() {
         <Container maxWidth={false} disableGutters sx={{ display: 'flex', flexGrow: 1 }}>
           <Grid container>
             {/* Left side */}
-            <Grid item xs={12} md={4} square>
+            <Grid item xs={12} lg={4} md={5} square>
               
                 <LeftPanel
                   firstName={firstName}
@@ -213,34 +213,58 @@ export default function BusinessProfileForm() {
             <Grid 
               item 
               xs={12} 
-              md={8} 
+              lg={8}
+              md={7}
             >
               <Box
                 sx={{
-                  mx: 4,
+                  mx: { xs: 1, sm: 2, md: 3, lg: 2 },
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  maxHeight: '91vh',
-                  padding: 2.5,
-                  margin: 2,
-                  overflow: 'auto', 
+                  minHeight: { lg: '100vh' },
+                  maxHeight: { xs: '91vh', lg: 'none' },
+                  padding: { xs: 1, sm: 2, md: 2.5, lg: 1 },
+                  margin: { xs: 1, sm: 2, lg: 0 },
+                  overflow: { xs: 'auto', lg: 'visible' }, 
                   scrollbarWidth: 'none',  
-                  '&::-webkit-scrollbar': { display: 'none' } 
+                  '&::-webkit-scrollbar': { display: 'none' },
+                  justifyContent: { lg: 'center' }
                   }}
               >
-                <Typography component="h1" variant="h5" sx={{ mb: 1, fontWeight: "bold", color: "#1b4d69", textAlign:"Center"}}>
+                <Typography 
+                  component="h1" 
+                  variant="h5" 
+                  sx={{ 
+                    mb: { xs: 1, lg: 0.5 }, 
+                    fontWeight: "bold", 
+                    color: "#1b4d69", 
+                    textAlign: "center",
+                    fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem', lg: '1.4rem' },
+                    px: { xs: 1, sm: 0 }
+                  }}
+                >
                   Introduce your {selectedId}  Services Profile
                 </Typography>
-                <Typography variant="subtitle1" sx={{ mb: 3 }}>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    mb: { xs: 3, lg: 1.5 }, 
+                    textAlign: "center",
+                    fontSize: { xs: '0.9rem', sm: '1rem', lg: '0.9rem' },
+                    px: { xs: 1, sm: 0 }
+                  }}
+                >
                   Let's get your business profile set up in less than 2 minutes.
                 </Typography>
 
-                <Box component="form" noValidate onSubmit={handleSubmit} sx={{  maxWidth: 500 }}>
-                  <Grid container spacing={2}>
-                    <Grid container justifyContent="left" sx={{ my: 0.5, px:2 }}>
+                <Box component="form" noValidate onSubmit={handleSubmit} sx={{ maxWidth: { xs: '100%', sm: 500, lg: 600 }, width: '100%' }}>
+                  <Grid container spacing={{ xs: 2, lg: 1 }}>
+                    <Grid container justifyContent="left" sx={{ my: { xs: 0.5, lg: 0.25 }, px: { xs: 1, sm: 2 } }}>
                       <Grid item>
-                        <b>Business Introduction</b>
+                        <Typography variant="h6" sx={{ fontWeight: "bold", fontSize: { xs: '1rem', sm: '1.1rem', lg: '0.95rem' } }}>
+                          Business Introduction
+                        </Typography>
                       </Grid>
                     </Grid>
 
@@ -264,21 +288,32 @@ export default function BusinessProfileForm() {
                     </Grid>
 
                     <Grid item xs={12} sm={6}>
-                      <Grid container spacing={2} alignItems="center" sx={{ justifyContent: "right" }}>
+                      <Grid container spacing={2} alignItems="center" sx={{ justifyContent: { xs: "center", sm: "right" } }}>
                         <Grid item>
                           <Avatar
                             src={formData.profilePicture?.s3Url?.url || ""}
                             alt="Profile"
-                            sx={{ width: 56, height: 56, borderRadius: 3, border: 1, borderColor: "#d9d9d9" }}
+                            sx={{ 
+                              width: { xs: 48, sm: 56 }, 
+                              height: { xs: 48, sm: 56 }, 
+                              borderRadius: 3, 
+                              border: 1, 
+                              borderColor: "#d9d9d9" 
+                            }}
                           />
-
-
                         </Grid>
                         <Grid item>
                           <Button
                             variant="outlined"
                             component="label"
-                            sx={{ borderRadius: "10px", borderColor: "#d9d9d9", background: "#fbfbfb", textTransform: "none" }}
+                            sx={{ 
+                              borderRadius: "10px", 
+                              borderColor: "#d9d9d9", 
+                              background: "#fbfbfb", 
+                              textTransform: "none",
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              px: { xs: 1, sm: 2 }
+                            }}
                           >
                             Upload Picture
                             <input type="file" hidden onChange={handleFileChange} />
@@ -287,12 +322,12 @@ export default function BusinessProfileForm() {
                       </Grid>
                     </Grid>
 
-                    <Grid item xs={12} sx={{mb:1}}>
+                    <Grid item xs={12} sx={{ mb: { xs: 1, lg: 0.5 } }}>
                       <TextField
                         required
                         fullWidth
                         multiline
-                        rows={3}
+                        rows={{ xs: 3, lg: 2 }}
                         label="Share Your Business Story"
                         name="introduction"
                         placeholder='Explain what makes your business unique...'
@@ -308,9 +343,11 @@ export default function BusinessProfileForm() {
                       />
                     </Grid>
 
-                    <Grid container justifyContent="left" sx={{ my: 0.5, px:2 }}>
+                    <Grid container justifyContent="left" sx={{ my: { xs: 0.5, lg: 0.25 }, px: { xs: 1, sm: 2 } }}>
                       <Grid item>
-                        <b>Location</b>
+                        <Typography variant="h6" sx={{ fontWeight: "bold", fontSize: { xs: '1rem', sm: '1.1rem', lg: '0.95rem' } }}>
+                          Location
+                        </Typography>
                       </Grid>
                     </Grid>
 
@@ -353,7 +390,7 @@ export default function BusinessProfileForm() {
                       />
                     </Grid>
 
-                    <Grid item xs={12} sm={5}>
+                    <Grid item xs={12} sm={6} md={5}>
                       <TextField
                         name="city"
                         required
@@ -371,7 +408,7 @@ export default function BusinessProfileForm() {
                       />
                     </Grid>
 
-                    <Grid item xs={12} sm={4}>
+                    <Grid item xs={12} sm={3} md={4}>
                       <TextField
                         name="state"
                         required
@@ -389,7 +426,7 @@ export default function BusinessProfileForm() {
                       />
                     </Grid>
 
-                    <Grid item xs={12} sm={3}>
+                    <Grid item xs={12} sm={3} md={3}>
                       <TextField
                         name="zipCode"
                         required
@@ -408,28 +445,45 @@ export default function BusinessProfileForm() {
                     </Grid>
 
 
-                    <Grid item xs={12}>
-                      <Grid container sx={{justifyContent: "space-between"}}>
+                    <Grid item xs={12} >
+                      <Grid container sx={{ justifyContent: "space-between" }} spacing={1}>
                         
-                        <Grid item xs={3}>
+                        <Grid item xs={6}>
                           <Button 
                             fullWidth
                             variant="outlined" 
-                            sx={{ mt: 3,  borderRadius: "24px",color: "black", textTransform: "none", borderColor: "#d9d9d9", background:"#fbfbfb" }}
+                            sx={{ 
+                              mt: { xs: 3, lg: 1.5 }, 
+                              borderRadius: "24px",
+                              color: "black", 
+                              textTransform: "none", 
+                              borderColor: "#d9d9d9", 
+                              background: "#fbfbfb",
+                              fontSize: { xs: '0.9rem', sm: '1rem', lg: '0.9rem' },
+                              py: { xs: 1, sm: 1.5, lg: 1 }
+                            }}
                             onClick={handleBack}
                           >
-                          <ArrowLeft className="mr-2" style={{ width: "26px", height: "16px" }} />
+                            <ArrowLeft className="mr-2" style={{ width: "20px", height: "16px" }} />
                             <b>Go Back</b>
                           </Button>
                         </Grid>
 
-
-                        <Grid item xs={3}>
+                        <Grid item xs={6}>
                           <Button 
                             type="submit" 
                             fullWidth 
                             variant="contained" 
-                            sx={{ mt: 3, textTransform: "none", borderRadius: "24px", bgcolor: 'black', color: 'white', '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' } }}
+                            sx={{ 
+                              mt: { xs: 3, lg: 1.5 }, 
+                              textTransform: "none", 
+                              borderRadius: "24px", 
+                              bgcolor: 'black', 
+                              color: 'white', 
+                              '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' },
+                              fontSize: { xs: '0.9rem', sm: '1rem', lg: '0.9rem' },
+                              py: { xs: 1, sm: 1.5, lg: 1 }
+                            }}
                             disabled={isNextDisabled}
                             onClick={handleNextTeamPresence}
                           >

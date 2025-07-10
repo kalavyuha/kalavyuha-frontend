@@ -10,7 +10,7 @@ import {
   Button,
 } from "@mui/material";
 import { Clock } from "lucide-react";
-import CustomSwitch from "../components/CustomSwitch";
+// import CustomSwitch from "../components/CustomSwitch";
 
 const BusinessHours = () => {
   const [scheduleType, setScheduleType] = useState("selected_hours");
@@ -192,10 +192,10 @@ const BusinessHours = () => {
                 spacing={{ xs: 0, sm: 2 }}
                 alignItems="center"
               >
-                <CustomSwitch
+                {/* <CustomSwitch
                   checked={daysStatus[day.id].isOpen}
                   onChange={() => handleToggle(day.id)}
-                />
+                /> */}
                 <Typography
                   sx={{
                     color: "#000",
