@@ -86,6 +86,7 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
 
         const response = await apipost(`api/v1/otp/send`, {
             PhoneNumber: value,
+            UserType: "customer"
         });
 
 
@@ -106,7 +107,8 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
         const response = await apipost(`api/v1/otp/verify`, {
 
             PhoneNumber: mobile,
-            OTP: Number(otp)
+            OTP: Number(otp),
+            UserType: "customer"
         });
 
         const data = response.data || response;

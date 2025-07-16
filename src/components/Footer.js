@@ -17,6 +17,8 @@ import { keyframes } from '@mui/system';
 
 import TwitterIcon from '../assets/images/busniess_images/twitter.png';
 import GetAppButton from "../components/AppStoreButton";
+import CookiePopup from './Cookies';
+import { useCookieSettings } from '../hooks/useCookieSettings';
 
 const floatAnimation = keyframes`
   0% { transform: translateY(0px); }
@@ -27,6 +29,7 @@ const floatAnimation = keyframes`
 const Footer = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { showCookieSettings, openCookieSettings, closeCookieSettings } = useCookieSettings();
 
   const [footerRef, footerInView] = useInView({
     triggerOnce: false,
@@ -57,13 +60,13 @@ const Footer = () => {
     { name: 'Home', url: '/' },
     { name: 'Top picks', url: '/top-picks' },
     { name: 'Plan & Sign up', url: '/signup' },
-    { name: 'Enterprise', url: '/enterprise' },
+    { name: 'Enterprise', url: '/kalavyuha-frontend/business-page' },
     { name: 'Help & Support', url: '/kalavyuha-frontend/support' },
   ];
 
   const legalLinks = [
-    { name: 'Privacy & Cookie Policy', url: '/privacy' },
-    { name: 'Terms of Service', url: '/terms' },
+    { name: 'Privacy & Cookie Policy', url: '#', action: 'cookie-settings' },
+    { name: 'Terms of Service', url: '/kalavyuha-frontend/terms&conditions' },
     { name: 'Accessibility Statement', url: '/accessibility' },
     { name: 'Imprint', url: '/imprint' },
   ];
@@ -75,9 +78,15 @@ const Footer = () => {
     { name: 'Twitter', url: 'https://twitter.com' },
   ];
 
+  const handleLinkClick = (link) => {
+    if (link.action === 'cookie-settings') {
+      openCookieSettings();
+    }
+  };
+
   const companyLinks = [
-    { name: 'Contact Us', url: '/contact' },
-    { name: 'About', url: '/about' },
+    { name: 'Contact Us', url: '/kalavyuha-frontend/support' },
+    { name: 'About', url: '/kalavyuha-frontend/about' },
   ];
 
   return (
@@ -154,6 +163,8 @@ const Footer = () => {
                                   href={link.url}
                                   display="block"
                                   color="textSecondary"
+                                  target={link.name === 'Enterprise' ? '_blank' : undefined}
+                                  rel={link.name === 'Enterprise' ? 'noopener noreferrer' : undefined}
                                   sx={{
                                     mb: 1,
                                     textDecoration: "none",
@@ -174,12 +185,14 @@ const Footer = () => {
                             {legalLinks.map((link, index) => (
                               <Zoom in={legalLinksInView} style={{ transitionDelay: `${(index + quickLinks.length) * 100}ms` }} key={link.name}>
                                 <Link
-                                  href={link.url}
+                                  href={link.action === 'cookie-settings' ? undefined : link.url}
                                   display="block"
                                   color="textSecondary"
+                                  onClick={link.action === 'cookie-settings' ? () => handleLinkClick(link) : undefined}
                                   sx={{
                                     mb: 1,
                                     textDecoration: "none",
+                                    cursor: "pointer",
                                     transition: "color 0.3s ease, transform 0.3s ease",
                                     "&:hover": {
                                       color: "#1b4d69", 
@@ -298,6 +311,12 @@ const Footer = () => {
             </Container>
           </Box>
         </Container>
+        
+        {/* Cookie Settings Popup */}
+        <CookiePopup 
+          forceShowSettings={showCookieSettings}
+          onSettingsClose={closeCookieSettings}
+        />
     </Container>
   );
 }

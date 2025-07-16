@@ -282,16 +282,22 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
   };
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', maxWidth: '100%'}}>
       <Box 
         sx={{ 
-          maxHeight: '500px', 
+          maxHeight: { xs: '400px', sm: '450px', md: '500px' }, 
           overflowY: 'auto', 
-          width:'54vw',
-          mb: 2, 
-          p: 2,
+          overflowX: 'hidden',
+          width: '100%',
+          maxWidth: '100%',
+          mb: { xs: 1, sm: 2 }, 
+          p: { xs: 0, sm: 1, md: 1.5 },
+          pr: { xs: 0, sm: 0.5, md: 1 },
           scrollbarWidth: 'none',  
           '&::-webkit-scrollbar': { display: 'none' },
+          wordWrap: 'break-word',
+          wordBreak: 'break-word',
+          // bgcolor:"red"
         }}
       >
         {categories.map((category, categoryIndex) => (
@@ -300,11 +306,14 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'category', categoryIndex)}
             sx={{ 
-              mb: 2,
-              borderRadius: '15px',
+              mb: { xs: 1.5, sm: 2 },
+              borderRadius: { xs: '12px', sm: '15px' },
               border: '1px solid #d9d9d9',
               backgroundColor: '#ffffff',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              maxWidth: '100%',
+              wordWrap: 'break-word',
+              wordBreak: 'break-word',
             }}
           >
             {/* Category Header */}
@@ -315,20 +324,23 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                p: 1,
+                p: { xs: 0.5, sm: 0.75, md: 1 },
+                pr: { xs: 0.5, sm: 0.5, md: 0.75 },
                 backgroundColor: '#f5f5f5',
                 cursor: 'move',
                 '&.dragging': { opacity: 0.5 },
+                flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                gap: { xs: 0.5, sm: 0.75, md: 1 },
               }}
             >
-              <IconButton size="small" sx={{ mr: 1 }}>
-                <GripVertical />
+              <IconButton size="small" sx={{ mr: { xs: 0.5, sm: 1 } }}>
+                <GripVertical size={18} />
               </IconButton>
 
               <IconButton 
                 size="small" 
                 onClick={() => handleToggleCategory(categoryIndex)}
-                sx={{ mr: 1 }}
+                sx={{ mr: { xs: 0.5, sm: 1 } }}
               >
                 {category.expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </IconButton>
@@ -345,14 +357,19 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                 size="small"
                 sx={{ 
                   flexGrow: 1,
+                  minWidth: { xs: '120px', sm: 'auto' },
+                  maxWidth: '100%',
                   '& .MuiInput-root:before': { borderBottom: 'none' },
                   '& .MuiInput-root:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
                   '& .MuiInput-root:after': { borderBottom: 'none' },
                 }}
                 InputProps={{
                   sx: { 
-                    fontSize: '1rem',
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
                     fontWeight: 'bold',
+                    wordWrap: 'break-word',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'normal',
                   }
                 }}
               />
@@ -360,7 +377,10 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
               <IconButton 
                 size="small" 
                 onClick={() => handleRemoveCategory(categoryIndex)}
-                sx={{ mr: 1 }}
+                sx={{ 
+                  mr: { xs: 0.5, sm: 1 },
+                  display: { xs: 'none', sm: 'inline-flex' }
+                }}
               >
                 <Trash2 size={18} color="#ff4444" />
               </IconButton>
@@ -374,16 +394,42 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                   textTransform: 'none',
                   background: "#f2f2f2", 
                   color: "#000",
-                  '&:hover': { background: "#e0e0e0" }
+                  fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
+                  px: { xs: 1, sm: 1.25, md: 1.5 },
+                  py: { xs: 0.5, sm: 0.75, md: 1 },
+                  minWidth: { xs: '80px', sm: '100px', md: 'auto' },
+                  maxWidth: { xs: '120px', sm: '140px', md: 'none' },
+                  '&:hover': { background: "#e0e0e0" },
+                  '& .MuiButton-startIcon': {
+                    marginRight: { xs: '2px', sm: '3px', md: '4px' }
+                  }
                 }}
               >
-                <b>Add Service</b>
+                <Box sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  <b>Add Service</b>
+                </Box>
+                <Box sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                  <b>Add</b>
+                </Box>
               </Button>
+
+              {/* Mobile trash icon */}
+              <IconButton 
+                size="small" 
+                onClick={() => handleRemoveCategory(categoryIndex)}
+                sx={{ 
+                  display: { xs: 'inline-flex', sm: 'none' },
+                  width: '100%',
+                  mt: 1
+                }}
+              >
+                <Trash2 size={18} color="#ff4444" />
+              </IconButton>
             </Box>
 
             {/* Services List */}
             <Collapse in={category.expanded}>
-              <Box sx={{ p: 1 }}>
+              <Box sx={{ p: { xs: 0.5, sm: 0.75, md: 1 }, pr: { xs: 0.5, sm: 0.5, md: 0.75 } }}>
                 {category.services.map((service, serviceIndex) => (
                   <Box
                     key={service.id}
@@ -395,28 +441,43 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                     sx={{
                       display: 'flex',
                       flexDirection: 'column',
-                      mb: 2,
-                      p: 2,
-                      borderRadius: '10px',
+                      mb: { xs: 1.5, sm: 2 },
+                      p: { xs: 1, sm: 1.25, md: 1.5 },
+                      // pr: { xs: 1, sm: 1, md: 1.25 },
+                      borderRadius: { xs: '8px', sm: '10px' },
                       border: '1px solid #e0e0e0',
                       backgroundColor: '#ffffff',
                       '&.dragging': { backgroundColor: '#f2f2f2' },
                       '&:hover': { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' },
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      wordWrap: 'break-word',
+                      wordBreak: 'break-word',
                     }}
                   >
                     {/* First row - controls and basic info */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <IconButton size="small" sx={{ mr: 1, cursor: 'move' }}>
-                        <GripVertical />
-                      </IconButton>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      mb: { xs: 1, sm: 1.25, md: 2.5 },
+                      flexWrap: { xs: 'wrap', md: 'nowrap' },
+                      gap: { xs: 1, sm: 1.25, md: 1.5 },
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton size="small" sx={{ mr: { xs: 0.5, sm: 1 }, cursor: 'move' }}>
+                          <GripVertical size={16} />
+                        </IconButton>
 
-                      <IconButton 
-                        size="small" 
-                        sx={{ mr: 1 }}
-                        onClick={() => handleRemoveService(categoryIndex, serviceIndex)}
-                      >
-                        <Trash2 size={18} color="#ff4444" />
-                      </IconButton>
+                        <IconButton 
+                          size="small" 
+                          sx={{ mr: { xs: 0.5, sm: 1 } }}
+                          onClick={() => handleRemoveService(categoryIndex, serviceIndex)}
+                        >
+                          <Trash2 size={16} color="#ff4444" />
+                        </IconButton>
+                      </Box>
 
                       <TextField
                         label="Service Name"
@@ -430,95 +491,144 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                         size="small"  
                         sx={{
                           flexGrow: 1,
-                          mr: 1.5,
+                          minWidth: { xs: '150px', sm: '200px' },
+                          maxWidth: '100%',
                           '& .MuiInputBase-root': {
                             borderRadius: '6px',
-                            height: '40px',  
-                            fontSize: "14px",
+                            height: { xs: '36px', sm: '40px' },
+                            fontSize: { xs: '13px', sm: '14px' },
                             background: "#fbfbfb",
                           },
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: "#d9d9d9",
-                          },
-                        }}
-                      />
-
-                      <TextField
-                        label="Price"
-                        value={service.price}
-                        onChange={(e) => {
-                          const updatedCategories = [...categories];
-                          updatedCategories[categoryIndex].services[serviceIndex].price = e.target.value;
-                          setCategories(updatedCategories);
-                        }}
-                        variant="outlined"
-                        size="small"
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                          style: { background: "#fbfbfb" },
-                        }}
-                        sx={{
-                          width: '100px', 
-                          mr: 1.5,
-                          '& .MuiInputBase-root': {
-                            height: '40px',
-                            borderRadius: '6px',
-                          },
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: "#d9d9d9",
-                          },
-                        }}
-                      />
-
-                      <TextField
-                        label="Duration"
-                        value={service.duration}
-                        onChange={(e) => {
-                          const updatedCategories = [...categories];
-                          updatedCategories[categoryIndex].services[serviceIndex].duration = e.target.value;
-                          setCategories(updatedCategories);
-                        }}
-                        variant="outlined"
-                        size="small"
-                        sx={{
-                          width: '80px',
-                          mr: 1.5,
-                          '& .MuiInputBase-root': {
-                            height: '33px',
-                            borderRadius: '6px',
-                          },
-                          '& input': {
-                            textAlign: 'center',
-                            fontWeight: "bold",
-                          },
                           '& .MuiInputLabel-root': {
-                            fontSize: '13px',
+                            fontSize: { xs: '13px', sm: '14px' },
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: "#d9d9d9",
+                          },
+                          '& .MuiInputBase-input': {
+                            wordWrap: 'break-word',
+                            wordBreak: 'break-word',
+                            whiteSpace: 'normal',
                           },
                         }}
                       />
 
-                      <DurationSelect
-                        value={service.durationType}
-                        onChange={(e) => {
-                          const updatedCategories = [...categories];
-                          updatedCategories[categoryIndex].services[serviceIndex].durationType = e.target.value;
-                          setCategories(updatedCategories);
-                        }}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        gap: { xs: 1, sm: 1.25, md: 1.5 },
+                        width: { xs: '100%', md: 'auto' },
+                        mt: { xs: 1, md: 0 },
+                        flexWrap: 'wrap',
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                      }}>
+                        <TextField
+                          label="Price"
+                          value={service.price}
+                          onChange={(e) => {
+                            const updatedCategories = [...categories];
+                            updatedCategories[categoryIndex].services[serviceIndex].price = e.target.value;
+                            setCategories(updatedCategories);
+                          }}
+                          variant="outlined"
+                          size="small"
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                            style: { background: "#fbfbfb" },
+                          }}
+                          sx={{
+                            width: { xs: '80px', sm: '100px' },
+                            minWidth: { xs: '80px', sm: '100px' },
+                            maxWidth: { xs: '100px', sm: '120px' },
+                            '& .MuiInputBase-root': {
+                              height: { xs: '36px', sm: '40px' },
+                              borderRadius: '6px',
+                              fontSize: { xs: '13px', sm: '14px' },
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '13px', sm: '14px' },
+                            },
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: "#d9d9d9",
+                            },
+                            '& .MuiInputBase-input': {
+                              wordWrap: 'break-word',
+                              wordBreak: 'break-word',
+                            },
+                          }}
+                        />
 
-                      />
+                        <TextField
+                          label="Duration"
+                          value={service.duration}
+                          onChange={(e) => {
+                            const updatedCategories = [...categories];
+                            updatedCategories[categoryIndex].services[serviceIndex].duration = e.target.value;
+                            setCategories(updatedCategories);
+                          }}
+                          variant="outlined"
+                          size="small"
+                          sx={{
+                            width: { xs: '70px', sm: '80px' },
+                            minWidth: { xs: '70px', sm: '80px' },
+                            maxWidth: { xs: '80px', sm: '90px' },
+                            '& .MuiInputBase-root': {
+                              height: { xs: '30px', sm: '33px' },
+                              borderRadius: '6px',
+                            },
+                            '& input': {
+                              textAlign: 'center',
+                              fontWeight: "bold",
+                              fontSize: { xs: '12px', sm: '13px' },
+                              wordWrap: 'break-word',
+                              wordBreak: 'break-word',
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: { xs: '12px', sm: '13px' },
+                            },
+                          }}
+                        />
+
+                        <DurationSelect
+                          value={service.durationType}
+                          onChange={(e) => {
+                            const updatedCategories = [...categories];
+                            updatedCategories[categoryIndex].services[serviceIndex].durationType = e.target.value;
+                            setCategories(updatedCategories);
+                          }}
+                        />
+                      </Box>
                     </Box>
 
-                    {/* Second row - description and image upload */}
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <StaffSelect
-                        value={service.staff}
-                        onChange={(e) => {
-                          const updatedCategories = [...categories];
-                          updatedCategories[categoryIndex].services[serviceIndex].staff = e.target.value;
-                          setCategories(updatedCategories);
-                        }}
-                        teamMembers={teamMembers}
-                      />
+                    {/* Second row - staff, description and image upload */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      gap: { xs: 1, sm: 1.25, md: 1.5 },
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'stretch', sm: 'flex-start' },
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      flexWrap: { xs: 'nowrap', sm: 'wrap', md: 'nowrap' },
+                      minWidth: 0,
+                    }}>
+                      <Box sx={{ 
+                        width: { xs: '100%', sm: '180px', md: '220px' },
+                        minWidth: { xs: '100%', sm: '140px', md: '180px' },
+                        maxWidth: { xs: '100%', sm: '200px', md: '250px' },
+                        mb: { xs: 1, sm: 0 },
+                        overflow: 'hidden',
+                      }}>
+                        <StaffSelect
+                          value={service.staff}
+                          onChange={(e) => {
+                            const updatedCategories = [...categories];
+                            updatedCategories[categoryIndex].services[serviceIndex].staff = e.target.value;
+                            setCategories(updatedCategories);
+                          }}
+                          teamMembers={teamMembers}
+                        />
+                      </Box>
 
                       <TextField
                         value={service.description}
@@ -535,8 +645,22 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                         rows={2}
                         sx={{
                           flexGrow: 1,
+                          mb: { xs: 1, sm: 0 },
+                          minWidth: 0,
+                          maxWidth: '100%',
                           '& .MuiInputBase-root': {
                             borderRadius: '6px',
+                            fontSize: { xs: '13px', sm: '14px' },
+                            wordWrap: 'break-word',
+                            wordBreak: 'break-word',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: { xs: '13px', sm: '14px' },
+                          },
+                          '& .MuiInputBase-input': {
+                            wordWrap: 'break-word',
+                            wordBreak: 'break-word',
+                            whiteSpace: 'normal',
                           },
                         }}
                       />
@@ -550,12 +674,16 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                           background: service.uploaded ? '#1b4d69' : 'transparent',
                           color: service.uploaded ? '#fff' : '#000000',
                           textTransform: 'none',
-                          width: '120px',
-                          height: '64px',
+                          width: { xs: '100%', sm: '110px', md: '120px' },
+                          minWidth: { xs: '100%', sm: '110px', md: '120px' },
+                          maxWidth: { xs: '100%', sm: '120px', md: '130px' },
+                          height: { xs: '48px', sm: '56px', md: '64px' },
                           display: 'flex', 
                           flexDirection: 'column',
                           alignItems: 'center', 
-                          justifyContent: 'center', 
+                          justifyContent: 'center',
+                          fontSize: { xs: '12px', sm: '13px', md: '14px' },
+                          overflow: 'hidden',
                           '&:hover': { 
                             background: service.uploaded ? '#1b4d69' : "#f2f2f2", 
                             color: service.uploaded ? '#fff' : "#000" 
@@ -564,13 +692,17 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                       >
                         {service.uploaded ? (
                           <>
-                            <CheckCircleIcon sx={{ fontSize: '20px', mb: 0.5 }} />
-                            <Typography variant="caption">Image Uploaded</Typography>
+                            <CheckCircleIcon sx={{ fontSize: { xs: '18px', sm: '20px' }, mb: 0.5 }} />
+                            <Typography variant="caption" sx={{ fontSize: { xs: '11px', sm: '12px' } }}>
+                              Image Uploaded
+                            </Typography>
                           </>
                         ) : (
                           <>
-                            <PlusCircle size={20} style={{ marginBottom: '4px' }} />
-                            <Typography variant="caption">Upload Image</Typography>
+                            <PlusCircle size={18} style={{ marginBottom: '4px' }} />
+                            <Typography variant="caption" sx={{ fontSize: { xs: '11px', sm: '12px' } }}>
+                              Upload Image
+                            </Typography>
                           </>
                         )}
                         <input
@@ -580,7 +712,6 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
                           onChange={(e) => handleFileChange(e, categoryIndex, serviceIndex)}
                         />
                       </Button>
-
                     </Box>
                   </Box>
                 ))}
@@ -591,15 +722,37 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
       </Box>
 
       {/* Add New Category */}
-      <Box sx={{ display: 'flex', gap: 2, mt: 2, px: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        gap: { xs: 1, sm: 1.5, md: 2 }, 
+        mt: { xs: 1, sm: 2 }, 
+        px: { xs: 1, sm: 1.5, md: 2 }, 
+        pr: { xs: 1, sm: 1, md: 1.5 },
+        flexDirection: { xs: "column", sm: "row" },
+        alignItems: { xs: 'stretch', sm: 'center' },
+        maxWidth: '100%',
+        overflow: 'hidden',
+      }}>
         <TextField
           value={newCategoryName}
           onChange={(e) => setNewCategoryName(e.target.value)}
           placeholder="Enter new category name"
           size="small"
-          sx={{ flexGrow: 1 }}
-          InputProps={{
-            sx: { borderRadius: '6px' }
+          sx={{ 
+            flexGrow: 1,
+            maxWidth: '100%',
+            '& .MuiInputBase-root': {
+              borderRadius: '6px',
+              fontSize: { xs: '13px', sm: '14px' },
+            },
+            '& .MuiInputLabel-root': {
+              fontSize: { xs: '13px', sm: '14px' },
+            },
+            '& .MuiInputBase-input': {
+              wordWrap: 'break-word',
+              wordBreak: 'break-word',
+              whiteSpace: 'normal',
+            },
           }}
         />
         <Button
@@ -609,8 +762,16 @@ const ServiceFormBox = ({ onServicesChange, services: initialServices, teamMembe
             textTransform: 'none',
             background: "#f2f2f2", 
             color: "#000",
+            fontSize: { xs: '13px', sm: '14px' },
+            px: { xs: 2, sm: 3 },
+            py: { xs: 1, sm: 1.5 },
             '&:hover': { background: "#e0e0e0" },
-            borderRadius: '6px'
+            borderRadius: '6px',
+            minWidth: { xs: '100%', sm: 'auto' },
+            maxWidth: { xs: '100%', sm: 'auto' },
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
         >
           <b>Add Category</b>

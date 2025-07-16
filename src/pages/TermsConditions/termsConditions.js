@@ -142,8 +142,9 @@ const TermsConditions = () => {
         <Paper
           elevation={0}
           sx={{
-            background: 'linear-gradient(135deg, #1b4d69 0%, #8eabbb 100%)',
-            color: 'white',
+            // background: "#1b4d69",
+            background: "#eaeef2  ",
+            color: 'black',
             borderRadius: 4,
             p: { xs: 3, md: 5 },
             mt: 8,
@@ -155,7 +156,7 @@ const TermsConditions = () => {
             variant="h2"
             component="h1"
             sx={{
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
+              fontSize: { xs: '1.5rem', md: '2.5rem' },
               fontWeight: 700,
               mb: 2,
               textShadow: '0 2px 4px rgba(0,0,0,0.3)'
@@ -166,7 +167,7 @@ const TermsConditions = () => {
           <Typography
             variant="h6"
             sx={{
-              fontSize: { xs: '1rem', md: '1.2rem' },
+              fontSize: { xs: '0.8rem', md: '1rem' },
               opacity: 0.9,
               maxWidth: 600,
               mx: 'auto',
@@ -179,9 +180,10 @@ const TermsConditions = () => {
             icon={<UpdateIcon />}
             label={`Last Updated: ${lastUpdated}`}
             sx={{
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              fontWeight: 600
+              backgroundColor: 'rgba(255,255,255,0.9)',
+              color: 'black',
+              fontWeight: 600,
+              fontSize: { xs: '0.8rem', md: '1rem' },
             }}
           />
         </Paper>
@@ -192,6 +194,7 @@ const TermsConditions = () => {
           sx={{
             mb: 4,
             borderRadius: 2,
+            alignItems: 'center',
             backgroundColor: '#f0f8ff',
             border: '1px solid #1b4d69',
             '& .MuiAlert-icon': {
@@ -199,7 +202,7 @@ const TermsConditions = () => {
             }
           }}
         >
-          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+          <Typography variant="body1" sx={{ fontWeight: 500 ,  fontSize: { xs: '0.8rem', md: '1rem' }}}>
             By using Kalavyuha's services, you agree to these terms. If you have any questions, 
             please contact our support team before proceeding.
           </Typography>
@@ -238,9 +241,9 @@ const TermsConditions = () => {
                 <Typography
                   variant="h6"
                   sx={{
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: '#1b4d69',
-                    fontSize: { xs: '1rem', md: '1.25rem' }
+                    fontSize: { xs: '0.8rem', md: '1rem' }
                   }}
                 >
                   {index + 1}. {term.title}
@@ -257,7 +260,7 @@ const TermsConditions = () => {
                             sx={{
                               color: '#2d3748',
                               lineHeight: 1.6,
-                              fontSize: { xs: '0.9rem', md: '1rem' }
+                              fontSize: { xs: '0.7rem', md: '0.9rem' }
                             }}
                           >
                             • {item}
@@ -273,23 +276,24 @@ const TermsConditions = () => {
         </Box>
 
         {/* Contact Section */}
-        <Paper
-          elevation={2}
+        <Box
+          // elevation={2}
           sx={{
             p: { xs: 3, md: 4 },
-            borderRadius: 3,
-            backgroundColor: 'white',
-            border: '2px solid #e2e8f0'
+            // borderRadius: 3,
+            // backgroundColor: 'white',
+            // border: '2px solid #e2e8f0'
           }}
         >
           <Box sx={{ textAlign: 'center' }}>
-            <EmailIcon sx={{ fontSize: 48, color: '#1b4d69', mb: 2 }} />
+            <EmailIcon sx={{ fontSize: 48, color: '#1b4d69', mb: 1 }} />
             <Typography
               variant="h5"
               sx={{
-                fontWeight: 700,
+                fontWeight: 500,
                 color: '#1b4d69',
-                mb: 2
+                mb: 2,
+                 fontSize: { xs: '1.2rem', md: '1.4rem' },
               }}
             >
               Questions About These Terms?
@@ -301,7 +305,8 @@ const TermsConditions = () => {
                 mb: 3,
                 maxWidth: 500,
                 mx: 'auto',
-                lineHeight: 1.6
+                lineHeight: 1.6,
+                fontSize: { xs: '0.8rem', md: '1rem' }
               }}
             >
               If you have any questions about these Terms and Conditions, 
@@ -317,17 +322,17 @@ const TermsConditions = () => {
                 },
                 borderRadius: 3,
                 px: 4,
-                py: 1.5,
+                py: 0.5,
                 textTransform: 'none',
-                fontSize: '1.1rem',
-                fontWeight: 600
+                 fontSize: { xs: '0.8rem', md: '1rem' },
+                fontWeight: 500
               }}
               onClick={() => window.location.href = '/kalavyuha-frontend/support'}
             >
               Contact Support
             </Button>
           </Box>
-        </Paper>
+        </Box>
 
         {/* Footer Note */}
         <Box sx={{ textAlign: 'center', mt: 4 }}>

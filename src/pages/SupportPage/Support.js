@@ -12,13 +12,43 @@ import {
   TextField,
   Button,
   Collapse,
+  Popper,
+  Paper,
+  Fade,
+  ListItem,
 } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { styled } from "@mui/system";
 
 import FAQSection from "../BusniessPage/faqSection";
 
 
 // responsive
 import { useTheme } from "@mui/material/styles";
+
+// Styled components for custom dropdown
+const CustomDropdownButton = styled(Button)({
+  color: "#333",
+  textTransform: "none",
+  fontSize: "1rem",
+  borderRadius: "8px",
+  padding: "12px 16px",
+  backgroundColor: "#eaeef2",
+  border: "1px solid #ddd",
+  width: "100%",
+  justifyContent: "space-between",
+  "&:hover": {
+    backgroundColor: "#ddd",
+  },
+});
+
+const DropdownItem = styled(ListItem)({
+  padding: "12px 16px",
+  cursor: "pointer",
+  "&:hover": {
+    backgroundColor: "rgba(0, 0, 0, 0.04)",
+  },
+});
 
 const Support = () => {
   const theme = useTheme();
@@ -27,9 +57,40 @@ const Support = () => {
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
+  
+  // Join business form states
+  const [joinBusinessEmail, setJoinBusinessEmail] = useState("");
+  const [joinBusinessQuery, setJoinBusinessQuery] = useState("");
+  const [joinBusinessScreenshot, setJoinBusinessScreenshot] = useState(null);
+  
+  // Dropdown state
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [timeoutId, setTimeoutId] = useState(null);
+  
+  const open = Boolean(anchorEl);
+  
+  const dropdownOptions = [
+    { value: "business-support", label: "I already have a business account and need support" },
+    { value: "join-business", label: "Having difficulty in joining Kalavyuha as a business" },
+    { value: "appointment-booked", label: "I booked an appointment with a business on Kalavyuha" },
+  ];
+  
+  const getSelectedLabel = () => {
+    const option = dropdownOptions.find(opt => opt.value === selectedOption);
+    return option ? option.label : "Please Select";
+  };
 
-  const handleSelectChange = (event) => {
-    setSelectedOption(event.target.value);
+  const handleClick = (event) => {
+    if (open) {
+      setAnchorEl(null);
+    } else {
+      setAnchorEl(event.currentTarget);
+    }
+  };
+
+  const handleOptionSelect = (value) => {
+    setSelectedOption(value);
+    setAnchorEl(null);
   };
 
   const handleEmailChange = (event) => {
@@ -52,21 +113,45 @@ const Support = () => {
     // Add your email sending logic here
   };
 
+  const handleJoinBusinessEmailChange = (event) => {
+    setJoinBusinessEmail(event.target.value);
+  };
+
+  const handleJoinBusinessQueryChange = (event) => {
+    setJoinBusinessQuery(event.target.value);
+  };
+
+  const handleScreenshotUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setJoinBusinessScreenshot(file);
+    }
+  };
+
+  const handleJoinBusinessSubmit = () => {
+    // Handle join business form submission
+    console.log("Join Business Email:", joinBusinessEmail);
+    console.log("Join Business Query:", joinBusinessQuery);
+    console.log("Screenshot:", joinBusinessScreenshot);
+    // Add your email sending logic here
+  };
+
   return (
     <Box sx={{ flexGrow: 1, backgroundColor: "#eaeef2" }}>
       {/* Email Us Section */}
       <Box
         sx={{
           margin: "auto",
-          paddingX: { xs: 2, sm: 3, md: 4 },
+          paddingX: { xs: 3, sm: 3, md: 4 },
           // overflow: "hidden",
           minHeight: "20rem",
-          alignItems: "center",
+          // alignItems: "center",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: {xs:"column", md:"row"},
           maxWidth: { xs: "100%", sm: 600, md: 800 }, // Responsive max width
         }}
       >
+        <Box>
         <Typography
           variant="h3"
           component="h1"
@@ -75,17 +160,19 @@ const Support = () => {
             mt: { xs: 15, sm: 15, md: 15 },
             mb: { xs: 3, sm: 4, md: 4 },
             fontSize: { xs: "2.5rem", sm: "2rem", md: "2.5rem" },
-            textAlign: "center",
+            // textAlign: "center",
           }}
         >
           Email Us
         </Typography>
+          </Box>
 
         <Box sx={{ 
+           mt: { xs: 2, sm: 2, md: 15 },
           maxWidth: { xs: "100%", sm: 450, md: 500 }, 
           width: "100%",
           mx: "auto",
-          // px: { xs: 1, sm: 2 }
+          px: { xs: 0, sm: 2 }
         }}>
           <Typography
             variant="h6"
@@ -100,36 +187,59 @@ const Support = () => {
             How can we help?
           </Typography>
 
-          <FormControl fullWidth>
-            <Select
-              labelId="help-select-label"
-              id="help-select"
-              value={selectedOption}
-              onChange={handleSelectChange}
-              displayEmpty
+          <Box sx={{ position: "relative", width: "100%" }}>
+            <CustomDropdownButton
+              endIcon={<KeyboardArrowDownIcon />}
+              onClick={handleClick}
               sx={{
-                backgroundColor: "white",
-                borderRadius: 2,
                 height: { xs: 45, sm: 40 },
-                width: "100%",
-                bgcolor: "#eaeef2",
-                fontSize: { xs: "0.9rem", sm: "1rem" },
+                fontSize: { xs: "0.7rem", sm: "1rem" },
+                color: selectedOption ? "#333" : "#999",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              <MenuItem value="" disabled>
-                Please Select
-              </MenuItem>
-              <MenuItem value="business-support">
-                I already have a business account and need support
-              </MenuItem>
-              <MenuItem value="join-business">
-                I'm interested in joining Kalavyuha as a business
-              </MenuItem>
-              <MenuItem value="appointment-booked">
-                I booked an appointment with a business on Kalavyuha
-              </MenuItem>
-            </Select>
-          </FormControl>
+              {getSelectedLabel()}
+            </CustomDropdownButton>
+
+            <Popper
+              open={open}
+              anchorEl={anchorEl}
+              placement="bottom-start"
+              transition
+              sx={{ zIndex: 1300, width: anchorEl ? anchorEl.clientWidth : "auto" }}
+            >
+              {({ TransitionProps }) => (
+                <Fade {...TransitionProps} timeout={200}>
+                  <Paper
+                    sx={{
+                      mt: 1,
+                      borderRadius: "8px",
+                      boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                      minWidth: anchorEl ? anchorEl.clientWidth : "200px",
+                      maxWidth: "500px",
+                    }}
+                  >
+                    {dropdownOptions.map((option) => (
+                      <DropdownItem
+                        key={option.value}
+                        onClick={() => handleOptionSelect(option.value)}
+                        sx={{
+                          color: "#333",
+                          fontSize: { xs: "0.9rem", sm: "1rem" },
+                          whiteSpace: "normal",
+                          wordWrap: "break-word",
+                        }}
+                      >
+                        {option.label}
+                      </DropdownItem>
+                    ))}
+                  </Paper>
+                </Fade>
+              )}
+            </Popper>
+          </Box>
 
           {/* Business Support Form */}
           <Collapse in={selectedOption === "business-support"} timeout={500}>
@@ -266,65 +376,151 @@ const Support = () => {
 
           {/* Join Business Form */}
           <Collapse in={selectedOption === "join-business"} timeout={500}>
-            <Box sx={{ 
-              mt: { xs: 2, sm: 6 }, 
-              width: "100%", 
-              textAlign: "center",
-              px: { xs: 1, sm: 0 }
-            }}>
-              {/* Main Heading */}
-              <Typography
-                variant="h4"
+            <Box sx={{ mt: { xs: 2, sm: 3 }, width: "100%" }}>
+              {/* Title */}
+              {/* <Typography
+                variant="h5"
                 component="h2"
                 sx={{
-                  fontWeight: "bold",
-                  mb: { xs: 2, sm: 2, md: 3 },
-                  fontSize: { xs: "1.25rem", sm: "1.5rem", md: "2rem" },
+                  mb: { xs: 2, sm: 3 },
+                  fontSize: { xs: "1.1rem", sm: "1.3rem", md: "1.5rem" },
                   color: "#1b4d69",
-                  lineHeight: { xs: 1.3, sm: 1 },
+                  fontWeight: "bold",
                 }}
               >
-                Great! We are excited to help you.
-              </Typography>
+                We are here to help you join Kalavyuha
+              </Typography> */}
 
-              {/* Subtitle */}
-              <Typography
-                variant="h6"
-                component="h3"
-                sx={{
-                  mb: { xs: 3, sm: 4 },
-                  fontSize: { xs: "0.9rem", sm: "1rem", md: "1.15rem" },
-                  fontWeight: 500,
-                  color: "#555",
-                  lineHeight: { xs: 1.2, sm: 1.3 },
-                }}
-              >
-                Let's create a business account
-              </Typography>
+              {/* Email Field */}
+              <Box sx={{ mb: { xs: 2, sm: 2 } }}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    mb: 1,
+                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                    fontWeight: 600,
+                  }}
+                >
+                  Email Address
+                </Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Enter your email address"
+                  value={joinBusinessEmail}
+                  onChange={handleJoinBusinessEmailChange}
+                  type="email"
+                  sx={{
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-root": {
+                      height: { xs: 45, sm: 40 },
+                      fontSize: { xs: "0.9rem", sm: "1rem" },
+                    },
+                  }}
+                />
+              </Box>
 
-              {/* Register Business Button */}
+              {/* Query Field */}
+              <Box sx={{ mb: { xs: 2, sm: 2 } }}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    mb: 1,
+                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                    fontWeight: 600,
+                  }}
+                >
+                  Query
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  variant="outlined"
+                  placeholder="Please describe your difficulty in joining Kalavyuha as a business..."
+                  value={joinBusinessQuery}
+                  onChange={handleJoinBusinessQueryChange}
+                  sx={{
+                    borderRadius: 2,
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: { xs: "0.9rem", sm: "1rem" },
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Screenshot Upload */}
+              <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    mb: 1,
+                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                    fontWeight: 600,
+                  }}
+                >
+                  Screenshot
+                </Typography>
+                <Box
+                  sx={{
+                    border: "2px dashed #ddd",
+                    borderRadius: 2,
+                    padding: { xs: 2, sm: 3 },
+                    textAlign: "center",
+                    backgroundColor: "#f0f4f8",
+                    cursor: "pointer",
+                    "&:hover": {
+                      borderColor: "#1b4d69",
+                      backgroundColor: "#f9f9f9",
+                    },
+                  }}
+                  onClick={() => document.getElementById('screenshot-upload').click()}
+                >
+                  <input
+                    id="screenshot-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleScreenshotUpload}
+                    style={{ display: "none" }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: joinBusinessScreenshot ? "#1b4d69" : "#666",
+                      fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                    }}
+                  >
+                    {joinBusinessScreenshot 
+                      ? `Selected: ${joinBusinessScreenshot.name}`
+                      : "Click to upload a screenshot or drag and drop"
+                    }
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Send Email Button */}
               <Button
                 variant="contained"
                 fullWidth
-                onClick={() => window.open('/kalavyuha-frontend/business-page', '_blank')}
+                onClick={handleJoinBusinessSubmit}
+                disabled={!joinBusinessEmail || !joinBusinessQuery}
                 sx={{
                   backgroundColor: "#1b4d69",
                   color: "white",
-                  height: { xs: 40, sm: 42, md: 45 },
+                  height: { xs: 48, sm: 45 },
                   borderRadius: 2,
                   fontWeight: 500,
-                  fontSize: { xs: "0.9rem", sm: "1rem", md: "0.9rem" },
+                  fontSize: { xs: "0.9rem", sm: "1rem" },
                   textTransform: "none",
                   "&:hover": {
                     backgroundColor: "#22424d",
                   },
-                  "&:active": {
-                    transform: "scale(0.98)",
+                  "&:disabled": {
+                    backgroundColor: "#ccc",
                   },
-                  transition: "all 0.2s ease-in-out",
                 }}
               >
-                Register Your Business
+                Send Email
               </Button>
             </Box>
           </Collapse>

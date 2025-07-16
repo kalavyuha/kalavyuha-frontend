@@ -1,0 +1,63 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Test Autocomplete</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.5/umd/material-ui.development.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        const { useState } = React;
+        const { Autocomplete, TextField } = MaterialUI;
+
+        function TestAutocomplete() {
+            const [roles, setRoles] = useState([]);
+            
+            console.log('Current roles:', roles);
+
+            return React.createElement(
+                'div',
+                null,
+                React.createElement(
+                    Autocomplete,
+                    {
+                        multiple: true,
+                        freeSolo: true,
+                        value: roles,
+                        onChange: (event, newValue) => {
+                            console.log('onChange:', newValue);
+                            setRoles(newValue);
+                        },
+                        renderInput: (params) => {
+                            return React.createElement(
+                                TextField,
+                                {
+                                    ...params,
+                                    placeholder: "Add Designation",
+                                    onKeyDown: (e) => {
+                                        if (e.key === 'Enter') {
+                                            const inputValue = e.target.value?.trim();
+                                            if (inputValue && !roles.includes(inputValue)) {
+                                                setRoles([...roles, inputValue]);
+                                            }
+                                        }
+                                    }
+                                }
+                            );
+                        },
+                        options: [],
+                        sx: { width: 300 }
+                    }
+                )
+            );
+        }
+
+        ReactDOM.render(React.createElement(TestAutocomplete), document.getElementById('root'));
+    </script>
+</body>
+</html> -->

@@ -71,7 +71,7 @@ const GoogleImage = styled('img')({
   marginRight: 4
 });
 
- const ReviewsSection=React.memo(({ data = [], businessId = "99349543", customerId = "11126042" }) =>{
+ const ReviewsSection=React.memo(({ data = [], businessId = "55319888", customerId = "21138275" }) =>{
   const [expandedReview, setExpandedReview] = useState(null);
   const scrollContainerRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);

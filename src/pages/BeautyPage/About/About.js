@@ -194,7 +194,7 @@ const AboutUs = ({
     }
 
     return (
-        <Box sx={{ padding: 4 }}>
+        <Box sx={{ padding: {xs:0, sm:4}}}>
             <Typography
                 variant="h4"
                 gutterBottom
@@ -307,22 +307,23 @@ const AboutUs = ({
                 </Grid>}
 
                 <Grid item xs={12}>
-                    <Grid container>
-                        <Grid item xs={12} sm={7}>
+                    <Grid container spacing={0}>
+                        <Grid item xs={12} sm={12} md={6}>
                             <Card
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    flexWrap: { xs: "wrap", sm: "nowrap" },
+                                    // flexWrap: { xs: "wrap", sm: "nowrap" },
                                     background: "transparent",
                                     boxShadow: "none",
+                                    height: { xs: "12rem", sm: "12rem", md: "15rem", lg: "15rem" }, //-----CHANGED HEIGHT
                                 }}
                             >
                                 <CardContent
                                     sx={{
-                                        padding: "0",
+                                        padding: "0", 
                                         width: "100%",
-                                        height: { xs: "15vw", sm: "15vw", lg: "15vw" }, //-----CHANGED HEIGHT
+                                        height: { xs: "12rem", sm: "12rem", md: "15rem", lg: "15rem" }, //-----CHANGED HEIGHT
                                     }}
                                 >
                                     <iframe
@@ -339,14 +340,14 @@ const AboutUs = ({
                             </Card>
                         </Grid>
 
-                        <Grid item xs={12} sm={5}>
+                        <Grid item xs={12} sm={12} md={6}>
                             <Box
                                 display="flex"
                                 sx={{
                                     background: "#e2e6ea",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    height: { xs: "max-content", sm: "20vw", lg: "15vw" },
+                                    height: { xs: "12rem", sm: "12rem", md: "15rem", lg: "15rem" },
                                     // height: { xs: "15vw", sm: "15vw", lg: "15vw" },
                                     padding: { xs: '5px', sm: 'unset', md: 'unset' }
                                 }}
@@ -387,7 +388,7 @@ const AboutUs = ({
                                         >
                                            {StreetAddress || ''}
                                         </Typography>
-                                        <Box sx={{ display: "flex", flexDirection: { xs: 'column', sm: 'row', md: 'row' }, gap: 1, marginTop: "40px" }}>
+                                        <Box sx={{ display: "flex", flexDirection: { xs: 'column', sm: 'row', md: 'row' }, gap: 1, marginTop: {xs:"20px", sm:"40px"} }}>
                                             <Button
                                                 variant="contained"
                                                 onClick={openDirections}

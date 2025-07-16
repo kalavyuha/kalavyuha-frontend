@@ -125,7 +125,8 @@ export default function BusinessRoleSelection() {
                   countryCode={previousData.countryCode}
                   phone={previousData.phone}
                   businessRoleForm={true}
-                  formData={previousData} 
+                  formData={previousData}
+                  selectedBusinessRole={selected}
                 />
             </Grid>
 
@@ -133,7 +134,7 @@ export default function BusinessRoleSelection() {
             <Grid item xs={12} md={8} sx={{alignContent: "center",   height: '100vh', overflow: 'auto'}}>
               <Box
                 sx={{
-                  my: 8,
+                  my: 4,
                   mx: {xs:2, sm: 6},
                   display: 'flex',
                   flexDirection: 'column',
@@ -143,7 +144,7 @@ export default function BusinessRoleSelection() {
               >
                   
                 <Box sx={{ px:{xs:0, sm:12}}}>
-                  <Typography component="h1" variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#1b4d69",textAlign:"center" }}>
+                  <Typography component="h1" variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#1b4d69",textAlign:"center",  fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem', lg: '2rem' } }}>
                     Unlock New Potential: Identify Your Business Role!
                   </Typography>
 

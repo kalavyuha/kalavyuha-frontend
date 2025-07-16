@@ -1,15 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Grid, Modal } from "@mui/material";
 import { Upload as AntdUpload, message } from "antd";
 import { Upload as LucideUpload, X, Eye } from "lucide-react";
 
 const { Dragger } = AntdUpload;
 
+// Add CSS animation styles
+const animationStyles = `
+  @keyframes fadeInSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
 export default function FormWithDocumentUpload({ setFileListParent, initialFiles }) {
   const [highlightedSection, setHighlightedSection] = useState(null);
   const [fileList, setFileList] = useState(initialFiles || {});
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+
+  // Inject CSS styles
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = animationStyles;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   const documentTypes = [
     { name: "Pan Card (Owner)", notMoreThen: 1, required: true },
@@ -54,18 +79,17 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
       const newFileList = (fileList[doc.name] || []).filter((f) => f.uid !== file.uid);
       handleFileChange(doc, newFileList);
     },
-    showUploadList: {
-      showPreviewIcon: true,
-      showRemoveIcon: true,
-      showDownloadIcon: false,
-    },
+    showUploadList: false,
   });
 
   const renderUploadedFiles = (doc) => {
     const files = fileList[doc.name] || [];
     
     return (
-      <div style={{ marginTop: "8px" }}>
+      <div style={{ 
+        marginTop: "8px",
+        transition: "all 0.3s ease-in-out"
+      }}>
         {files.map((file, index) => (
           <div
             key={index}
@@ -76,7 +100,21 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
               border: "1px solid #e2e6ea",
               borderRadius: "4px",
               marginBottom: "8px",
-              background: "#fafafa"
+              background: "#fafafa",
+              transition: "all 0.3s ease-in-out",
+              transform: "translateY(0)",
+              opacity: 1,
+              animation: `fadeInSlide 0.3s ease-in-out ${index * 0.1}s both`
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "translateY(-2px)";
+              e.target.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+              e.target.style.background = "#f0f0f0";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "none";
+              e.target.style.background = "#fafafa";
             }}
           >
             <div style={{ flex: 1, overflow: "hidden" }}>
@@ -138,20 +176,21 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
               )}
             </h3>
             <Dragger
-              // {...uploadProps(doc)}
-              className="border-2 border-dashed rounded-md"
+              {...uploadProps(doc)}
               onMouseEnter={() => setHighlightedSection(doc.name)}
               onMouseLeave={() => setHighlightedSection(null)}
               style={{
                 borderColor: highlightedSection === doc.name ? "#8eabbb" : "#e2e6ea",
+                border: "2px dashed",
+                borderRadius: "6px",
               }}
             >
-              <p className="ant-upload-drag-icon" style={{ marginTop: 0, marginBottom: 2, color: "#8eabbb", fontSize: "12px" }}>
-                <LucideUpload className="text-3xl text-gray-400" />
-              </p>
-              <p className="ant-upload-text text-sm text-gray-500" style={{ margin: 0, color: "#8eabbb", fontSize: "12px" }}>
+              <div style={{ marginTop: 0, marginBottom: 2, color: "#8eabbb", fontSize: "12px" }}>
+                <LucideUpload size={32} color="#8eabbb" />
+              </div>
+              <div style={{ margin: 0, color: "#8eabbb", fontSize: "12px" }}>
                 Click to upload or drag and drop
-              </p>
+              </div>
             </Dragger>
 
             {fileList[doc.name]?.length > 0 && renderUploadedFiles(doc)}

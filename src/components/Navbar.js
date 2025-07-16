@@ -485,10 +485,19 @@ export default function Navbar() {
                 >
                   Sign In
                 </DropdownItem>
-              ) : (              <DropdownItem sx={{ color: "#000" }} onClick={handleLogOut}>
-                Sign out
-              </DropdownItem>
-            )}
+              ) : (
+                <>
+                  <DropdownItem sx={{ color: "#000" }} onClick={() => navigate('/profile')}>
+                    My Profile
+                  </DropdownItem>
+                  <DropdownItem sx={{ color: "#000" }} onClick={() => navigate('/appointment-history')}>
+                    History
+                  </DropdownItem>
+                  <DropdownItem sx={{ color: "#000" }} onClick={handleLogOut}>
+                    Sign out
+                  </DropdownItem>
+                </>
+              )}
             <DropdownItem onClick={() => navigate('/support')}>Support</DropdownItem>
             <DropdownItem>Community</DropdownItem>
               <DropdownItem>Download App</DropdownItem>

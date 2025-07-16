@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Grid,
   Typography,
@@ -10,11 +11,30 @@ import {
   Button,
 } from "@mui/material";
 import { Clock } from "lucide-react";
-// import CustomSwitch from "../components/CustomSwitch";
+import CustomSwitch from "./CustomSwitch";
 
 const BusinessHours = () => {
-  const [scheduleType, setScheduleType] = useState("selected_hours");
+  const navigate = useNavigate();
+  
+  const getStoredData = () => {
+    try {
+      const storedData = localStorage.getItem('formData');
+      return storedData ? JSON.parse(storedData) : {};
+    } catch (error) {
+      console.error('Error parsing stored data:', error);
+      return {};
+    }
+  };
+
+  const storedData = getStoredData();
+  const existingBusinessHours = storedData.businessHours || {};
+  
+  const [scheduleType, setScheduleType] = useState(
+    existingBusinessHours.scheduleType || "selected_hours"
+  );
+  
   const [daysStatus, setDaysStatus] = useState(
+    existingBusinessHours.daysStatus || 
     WeekDays.reduce(
       (acc, day) => ({
         ...acc,
@@ -53,6 +73,62 @@ const BusinessHours = () => {
     }
 
     return `${hours.toString().padStart(2, "0")}:${minutes}`;
+  };
+
+  // Save business hours to localStorage whenever they change
+  useEffect(() => {
+    const currentData = getStoredData();
+    const updatedData = {
+      ...currentData,
+      businessHours: {
+        scheduleType,
+        daysStatus
+      }
+    };
+    localStorage.setItem('formData', JSON.stringify(updatedData));
+    
+    // Dispatch custom event to notify parent component
+    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+      detail: { key: 'formData', data: updatedData }
+    }));
+  }, [scheduleType, daysStatus]);
+
+  const handleGoBack = () => {
+    const previousData = getStoredData();
+    const formData = {
+      ...previousData,
+      businessHours: {
+        scheduleType,
+        daysStatus
+      }
+    };
+    localStorage.setItem('formData', JSON.stringify(formData));
+    
+    // Dispatch custom event to notify parent component
+    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+      detail: { key: 'formData', data: formData }
+    }));
+    
+    navigate("/business-service-info", { state: formData });
+  };
+
+  const handleNextStep = () => {
+    const previousData = getStoredData();
+    const formData = {
+      ...previousData,
+      businessHours: {
+        scheduleType,
+        daysStatus
+      }
+    };
+    localStorage.setItem('formData', JSON.stringify(formData));
+    
+    // Dispatch custom event to notify parent component
+    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
+      detail: { key: 'formData', data: formData }
+    }));
+    
+    navigate("/business-document-uploads", { state: formData });
   };
 
   const handlePreview = () => {
@@ -192,10 +268,10 @@ const BusinessHours = () => {
                 spacing={{ xs: 0, sm: 2 }}
                 alignItems="center"
               >
-                {/* <CustomSwitch
+                <CustomSwitch
                   checked={daysStatus[day.id].isOpen}
                   onChange={() => handleToggle(day.id)}
-                /> */}
+                />
                 <Typography
                   sx={{
                     color: "#000",
@@ -383,6 +459,7 @@ const BusinessHours = () => {
             }}
           >
             <Button
+              onClick={handleGoBack}
               sx={{
                 textTransform: "none",
                 fontSize: { xs: 12, sm: 13 },
@@ -397,7 +474,7 @@ const BusinessHours = () => {
               Go Back
             </Button>
             <Button
-              onClick={handlePreview}
+              onClick={handleNextStep}
               sx={{
                 textTransform: "none",
                 fontSize: { xs: 12, sm: 13 },
@@ -410,8 +487,8 @@ const BusinessHours = () => {
                 border: "1px solid #999",
               }}
             >
-              Preview
-            </Button>
+              Next Step
+             </Button>
           </Box>
         </Box>
       </Box>

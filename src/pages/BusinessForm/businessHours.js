@@ -22,7 +22,7 @@ const theme = createTheme({
 });
 
 
-export default function businessHoursSection(){
+export default function BusinessHoursSection(){
 
       
     const getStoredData = () => {
@@ -35,9 +35,33 @@ export default function businessHoursSection(){
     }
     };
     
-    const previousData = getStoredData();
+    const [formData, setFormData] = useState(getStoredData());
 
-    const { firstName, lastName, email, countryCode, phone, selectedId } = previousData || {};
+    // Update formData when localStorage changes
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setFormData(getStoredData());
+        };
+        
+        // Listen for storage changes from other tabs
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Custom event listener for same-tab updates
+        const handleCustomStorageChange = (e) => {
+            if (e.detail?.key === 'formData') {
+                setFormData(getStoredData());
+            }
+        };
+        
+        window.addEventListener('localStorageUpdate', handleCustomStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('localStorageUpdate', handleCustomStorageChange);
+        };
+    }, []);
+
+    const { firstName, lastName, email, countryCode, phone, selectedId } = formData || {};
     
     return (
         <ThemeProvider theme={theme}>
@@ -54,13 +78,13 @@ export default function businessHoursSection(){
                     {/* Left side */}
                     <Grid item xs={12} md={4} square>
                         <LeftPanel
-                        //   firstName={firstName}
-                        //   lastName={lastName}
-                        //   email={email}
-                        //   countryCode={countryCode}
-                        //   phone={phone}
-                        //   isSignIn={true}
-                        //   formData={previousData} 
+                          firstName={firstName}
+                          lastName={lastName}
+                          email={email}
+                          countryCode={countryCode}
+                          phone={phone}
+                          isSignIn={true}
+                          formData={formData} 
                         />
                     </Grid>
                     

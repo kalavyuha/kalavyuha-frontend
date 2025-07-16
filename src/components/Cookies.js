@@ -19,9 +19,9 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const CookiePopup = () => {
+const CookiePopup = ({ forceShowSettings = false, onSettingsClose = null }) => {
   const [open, setOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(forceShowSettings);
 
   useEffect(() => {
     // Check if user has already accepted cookies
@@ -35,6 +35,10 @@ const CookiePopup = () => {
     }
   }, []);
 
+  useEffect(() => {
+    setShowSettings(forceShowSettings);
+  }, [forceShowSettings]);
+
   const handleAcceptAll = () => {
     localStorage.setItem('kalavyuha_cookie_consent', 'all');
     setOpen(false);
@@ -46,6 +50,9 @@ const CookiePopup = () => {
 
   const handleSettingsClose = () => {
     setShowSettings(false);
+    if (onSettingsClose) {
+      onSettingsClose();
+    }
   };
 
   const handleSettingsAccept = () => {

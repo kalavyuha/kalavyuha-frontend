@@ -10,19 +10,20 @@ import CheckIcon from '@mui/icons-material/Check';
 
 const SuccessCart = () => {
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          py: 6, 
-          px: 4, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center',
-          textAlign: 'center',
-          bgcolor: 'background.default'
-        }}
-      >
+    <Box sx={{ bgcolor: 'white', minHeight: '100vh' }}>
+      <Container maxWidth="sm" sx={{ pt: 8 }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            py: 6, 
+            px: 4, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            textAlign: 'center',
+            bgcolor: 'background.default'
+          }}
+        >
         <Box 
           sx={{ 
             position: 'relative',
@@ -82,6 +83,7 @@ const SuccessCart = () => {
         </Typography>
       </Paper>
     </Container>
+    </Box>
   );
 };
 

@@ -446,8 +446,10 @@ console.log(days)
       sx={{
         px: 4,
         mb: 2,
+        mt:10,
         py: 15,
         bgcolor: '#f5f5f5',
+        // bgcolor: '#eaeef2',
         borderRadius: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -482,7 +484,7 @@ console.log(days)
   // Skeleton loader for the entire component
   if (loadingCart) {
     return (
-      <Box sx={{ p: 3, maxWidth: 1200, margin: '100px auto' }}>
+      <Box sx={{ bgcolor: 'white', minHeight: '100vh', p: 3, maxWidth: 1200, margin: '100px auto' }}>
         <Grid container spacing={6}>
           {/* Left column skeletons */}
           <Grid item xs={12} md={4}>
@@ -535,7 +537,7 @@ console.log(days)
   }
 
   return (
-    <>
+    <Box sx={{ bgcolor: 'white', minHeight: '100vh' }}>
       {cartItems.length > 0 ? (
         <Box sx={{ p: 3, maxWidth: 1200, margin: '100px auto' }}>
           <Grid container spacing={6}>
@@ -669,11 +671,13 @@ console.log(days)
           </Grid>
         </Box>
       ) : (
-        <EmptyCart />
+        <Box sx={{ bgcolor: 'white', minHeight: '100vh', p: 3 }}>
+          <EmptyCart />
+        </Box>
       )}
 
       <PromoCodeModal />
-    </>
+    </Box>
   );
 });
 

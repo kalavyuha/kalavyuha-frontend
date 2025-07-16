@@ -71,7 +71,17 @@ export default function TeamPresence() {
       const storedData = localStorage.getItem('formData');
       const parsedData = storedData ? JSON.parse(storedData) : {};
       const stateData = location.state || {};
-      return { ...parsedData, ...stateData };
+      const combinedData = { ...parsedData, ...stateData };
+      
+      // Ensure teamMembers is properly formatted
+      if (combinedData.teamMembers && Array.isArray(combinedData.teamMembers)) {
+        combinedData.teamMembers = combinedData.teamMembers.map(member => ({
+          ...member,
+          role: Array.isArray(member.role) ? member.role : (member.role ? [member.role] : [])
+        }));
+      }
+      
+      return combinedData;
     } catch (error) {
       console.error('Error parsing stored data:', error);
       return {};
@@ -79,13 +89,28 @@ export default function TeamPresence() {
   };
 
   const previousData = getInitialData();
-  console.log(previousData)
   const { firstName, lastName, email, countryCode, phone } = previousData || {};
 
   const [teamSize, setTeamSize] = useState(previousData.teamSize || [1]);
-  const [teamMembers, setTeamMembers] = useState(
-    previousData.teamMembers || [{ id: 1, name: '', experience: '', role: '', profileImage: null }]
-  );
+  
+  // Migrate existing team members to ensure role is always an array
+  const migrateTeamMembers = (members) => {
+    if (!members || !Array.isArray(members)) return [];
+    return members.map(member => ({
+      ...member,
+      role: Array.isArray(member.role) ? member.role : (member.role ? [member.role] : []),
+      gender: member.gender || '',
+      experience: member.experience || '',
+      name: member.name || ''
+    }));
+  };
+  
+  const [teamMembers, setTeamMembers] = useState(() => {
+    if (previousData.teamMembers && Array.isArray(previousData.teamMembers)) {
+      return migrateTeamMembers(previousData.teamMembers);
+    }
+    return [{ id: 1, name: '', experience: '', gender: '', role: [], profileImage: null }];
+  });
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedAvatar, setSelectedAvatar] = useState(null);
@@ -94,6 +119,13 @@ export default function TeamPresence() {
   const [currentMemberId, setCurrentMemberId] = useState(null);
 
   const containerRef = useRef(null);
+
+  // Create current form data that includes updated team members
+  const currentFormData = {
+    ...previousData,
+    teamSize,
+    teamMembers,
+  };
 
   useEffect(() => {
     const updateLocalStorage = () => {
@@ -215,7 +247,7 @@ export default function TeamPresence() {
       name: '',
       experience: '',
       gender: '',
-      role: '',
+      role: [],
       profileImage: null
     };
     const updatedTeamMembers = [...teamMembers, newMember];
@@ -290,27 +322,33 @@ export default function TeamPresence() {
                   countryCode={countryCode}
                   phone={phone}
                   isSignIn={true}
-                  formData={previousData} 
+                  formData={currentFormData} 
                 />
 
             </Grid>
 
 
             {/* Right side - form */}
-            <Grid item xs={12} md={8} sx={{alignContent: "center",   height: '100vh', overflow: 'auto', py:2}}>
+            <Grid item xs={12} md={8} sx={{alignContent: "center",   height: '100vh', overflow: 'auto'}}>
               <Box
                 sx={{
-                  mx: {xs:2, sm: 4},
+                  mx: {xs:4, sm: 4},
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
+                  mt:10,
                 }}
               >
-                <Typography component="h1" variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#1b4d69"}}>
+                <Typography component="h1" variant="h4" sx={{ mb: 1, fontWeight: "bold", color: "#1b4d69",  fontSize: {
+                      xs: "1.2rem",
+                      sm: "1.5rem",
+                      md: "1.8rem",
+                      lg: "2rem",
+                    },}}>
                     Enhance Your Team's Presence
                 </Typography>
 
-                <Typography variant="subtitle1" sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" sx={{ mb: 0 }}>
                     A well-rounded business profile attracts more clients!
                 </Typography>
 
@@ -499,7 +537,7 @@ export default function TeamPresence() {
                                           freeSolo
                                           value={member.role || []}
                                           onChange={(event, newValue) => {
-                                            updateTeamMember(member.id, 'role', newValue);
+                                            updateTeamMember(member.id, 'role', newValue || []);
                                           }}
                                           renderInput={(params) => (
                                             <TextField
@@ -520,11 +558,21 @@ export default function TeamPresence() {
                                             />
                                           )}
                                           options={[]}
-                                          onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && e.target.value) {
-                                              // Handle new role addition
+                                          filterOptions={(options, params) => {
+                                            const filtered = options.filter(option => 
+                                              option.toLowerCase().includes(params.inputValue.toLowerCase())
+                                            );
+                                            
+                                            // Add the current input as an option if it doesn't exist
+                                            if (params.inputValue !== '' && !filtered.includes(params.inputValue)) {
+                                              filtered.push(params.inputValue);
                                             }
+                                            
+                                            return filtered;
                                           }}
+                                          selectOnFocus
+                                          clearOnBlur
+                                          handleHomeEndKeys
                                           sx={{
                                             "& .MuiAutocomplete-tag": {
                                               margin: '2px',

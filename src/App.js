@@ -40,11 +40,14 @@ const CartMain = lazy(() => import("./pages/CartPage/Cart"));
 const SuccessCart = lazy(() => import("./pages/CartPage/SuccessCart"));
 const BusniessPage = lazy(() => import("./pages/BusniessPage/busniess"));
 const Support = lazy(() => import("./pages/SupportPage/Support"));  //-----ADDED SUPPORT PAGE
+const About = lazy(() => import("./pages/About/About"));  //-----ADDED ABOUT PAGE
 const TermsConditions = lazy(() => import("./pages/TermsConditions/termsConditions"));  //-----ADDED T&C PAGE
 const AppointmentHistory = lazy(() => import("./pages/AppointmentHistory/AppointmentHistory"));  //-----ADDED HISTORY PAGE
+const AppointmentHistoryDetail = lazy(() => import("./pages/AppointmentHistory/AppointmentHistoryDetail"));  //-----ADDED APPOINTMENT DETAIL PAGE
 
 // Lazy load business form pages
 const CreateBusniessAccount = lazy(() => import("./pages/BusinessForm/createAccount"));
+const LoginBusinessAccount = lazy(() => import("./pages/Login_page/Screen"));
 const OTPVerification = lazy(() => import("./pages/BusinessForm/otpVerification"));
 const BusinessRoleSelection = lazy(() => import("./pages/BusinessForm/businessRoleSelection"));
 const BusinessInfoSelection = lazy(() => import("./pages/BusinessForm/businessInfoSelection"));
@@ -61,6 +64,7 @@ function App() {
   const hideNavbarRoutes = [
     "/business-page",
     "/business-account",
+    "/login-business",
     "/otp-verification",
     "/business-role-selection",
     "/business-info-selection",
@@ -74,14 +78,18 @@ function App() {
   const hideFooterRoutes = [
     "/business-page",
     "/business-account",
+     "/login-business",
     "/otp-verification",
     "/business-role-selection",
     "/business-info-selection",
     "/business-profile-form",
     "/business-team-presence",
     "/business-service-info",
+    "/business-hours",
     "/business-document-uploads",
-    "/cart"
+    "/cart",
+    "/cart/success",
+    "/appointment-history-details"
   ];
 
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
@@ -98,12 +106,15 @@ function App() {
           <Route path="/cart" element={<CartMain />} />
           <Route path="/cart/success" element={<SuccessCart />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/about" element={<About />} />
           <Route path="/terms&conditions" element={<TermsConditions />} />
           <Route path="/appointment-history" element={<AppointmentHistory />} />
+          <Route path="/appointment-history-details" element={<AppointmentHistoryDetail />} />
 
           {/* Business form routes */}
           <Route exact path="/business-page" element={<BusniessPage />} />
           <Route exact path="/business-account" element={<CreateBusniessAccount />} />
+          <Route exact path="/login-business" element={<LoginBusinessAccount />} />
           <Route exact path="/otp-verification" element={<OTPVerification />} />
           <Route exact path="/business-role-selection" element={<BusinessRoleSelection />} />
           <Route exact path="/business-info-selection" element={<BusinessInfoSelection />} />

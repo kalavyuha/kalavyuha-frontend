@@ -35,6 +35,14 @@ export default function BusinessInfoSelection() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
 
+  // Business role options mapping
+  const businessRoleOptions = {
+    'Beauty': 'Beauty',
+    'Wellness': 'Wellness',
+    'Fitness': 'Fitness',
+    'Health Care': 'Health Care',
+  };
+
   const getStoredData = () => {
     try {
       const storedData = localStorage.getItem('formData');
@@ -47,6 +55,9 @@ export default function BusinessInfoSelection() {
 
   const previousData = getStoredData();
   const { firstName, lastName, email, countryCode, phone, businessRole } = previousData;
+
+  // Get the business role title for display
+  const businessRoleTitle = businessRoleOptions[businessRole] || businessRole;
 
   const options = [
     { id: 'no-website', icon: PendingActionsIcon, title: 'No Website?', description: 'Enter Your Details and Get Started.' },
@@ -137,6 +148,7 @@ export default function BusinessInfoSelection() {
                   countryCode={countryCode}
                   phone={phone}
                   businessRoleForm = {true}
+                  businessRoleTitle={businessRoleTitle}
                   formData={previousData} 
                 />
             </Grid>
@@ -154,7 +166,7 @@ export default function BusinessInfoSelection() {
               >
                 
                   <Typography component="h1" variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#1b4d69",textAlign:"center" }}>
-                      How Would You Like to Share Your <br></br> {businessRole} Business Details?
+                      How Would You Like to Share Your <br></br> {businessRoleTitle} Business Details?
                   </Typography>
 
                   <Typography variant="subtitle1" sx={{ mb: 3, textAlign:"center" }}>

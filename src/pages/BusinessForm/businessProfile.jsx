@@ -144,33 +144,81 @@ export default function BusinessProfileForm() {
   };
 
  
+  // const handleFileChange = async (event) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file) return;
+
+  //   try {
+  //     const token = 'VIRoHdqUAtpklgKg'; 
+  //     const { data, error: uploadError } = await uploadImages([file], token);
+
+  //     if (uploadError) {
+  //       throw new Error(uploadError);
+  //     }
+
+  //     const uploadedUrl = data?.Data?.[0];
+  //     if (!uploadedUrl) throw new Error('No URL returned from upload');
+
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       profilePicture: {
+  //         s3Url: uploadedUrl,
+  //       },
+  //     }));
+  //   } catch (err) {
+  //     console.error('Upload failed:', err);
+  //     alert(`Image upload failed: ${err.message}`);
+  //   }
+  // };
+
+//TESTING---------------------Rakshit
+
   const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const file = event.target.files?.[0];
+  if (!file) return;
 
-    try {
-      const token = 'VIRoHdqUAtpklgKg'; 
-      const { data, error: uploadError } = await uploadImages([file], token);
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file');
+    return;
+  }
 
-      if (uploadError) {
-        throw new Error(uploadError);
-      }
+  // Validate file size (5MB limit)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('File size should be less than 5MB');
+    return;
+  }
 
-      const uploadedUrl = data?.Data?.[0];
-      if (!uploadedUrl) throw new Error('No URL returned from upload');
+  try {
+    // TODO: Get token dynamically or from environment
+    const token = process.env.REACT_APP_UPLOAD_TOKEN || 'VIRoHdqUAtpklgKg'; 
+    
+    console.log('Uploading file:', file.name, file.size);
+    
+    const { data, error: uploadError } = await uploadImages([file], token);
 
-      setFormData((prev) => ({
-        ...prev,
-        profilePicture: {
-          s3Url: uploadedUrl,
-        },
-      }));
-    } catch (err) {
-      console.error('Upload failed:', err);
-      alert(`Image upload failed: ${err.message}`);
+    if (uploadError) {
+      throw new Error(uploadError);
     }
-  };
 
+    const uploadedUrl = data?.Data?.[0];
+    if (!uploadedUrl) throw new Error('No URL returned from upload');
+
+    console.log('Upload successful:', uploadedUrl);
+
+    setFormData((prev) => ({
+      ...prev,
+      profilePicture: {
+        s3Url: uploadedUrl,
+      },
+    }));
+  } catch (err) {
+    console.error('Upload failed:', err);
+    alert(`Image upload failed: ${err.message}`);
+  }
+};
+
+//-----------------------------
 
   useEffect(() => {
     const { businessName, introduction, streetAddress, zipCode, city, state, profilePicture } = formData;
@@ -240,7 +288,7 @@ export default function BusinessProfileForm() {
                     fontWeight: "bold", 
                     color: "#1b4d69", 
                     textAlign: "center",
-                    fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem', lg: '1.4rem' },
+                    fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem', lg: '2rem' },
                     px: { xs: 1, sm: 0 }
                   }}
                 >
@@ -291,7 +339,8 @@ export default function BusinessProfileForm() {
                       <Grid container spacing={2} alignItems="center" sx={{ justifyContent: { xs: "center", sm: "right" } }}>
                         <Grid item>
                           <Avatar
-                            src={formData.profilePicture?.s3Url?.url || ""}
+                            // src={formData.profilePicture?.s3Url?.url || ""}
+                            src={formData.profilePicture?.s3Url || ""}
                             alt="Profile"
                             sx={{ 
                               width: { xs: 48, sm: 56 }, 
@@ -316,7 +365,8 @@ export default function BusinessProfileForm() {
                             }}
                           >
                             Upload Picture
-                            <input type="file" hidden onChange={handleFileChange} />
+                            {/* <input type="file" hidden onChange={handleFileChange} /> */}
+                            <input type="file" hidden accept='image/*' onChange={handleFileChange} />
                           </Button>
                         </Grid>
                       </Grid>
