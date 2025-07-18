@@ -402,6 +402,7 @@ const LoginSection = ({ onForgotPassword }) => {
                     </Typography>
                     <Typography
                       sx={{ fontSize: 9.5, fontWeight: 600, cursor: "pointer" }}
+                      onClick={() => navigate("/privacy")}
                     >
                       Privacy Policy
                     </Typography>
@@ -410,6 +411,7 @@ const LoginSection = ({ onForgotPassword }) => {
                     </Typography>
                     <Typography
                       sx={{ fontSize: 9.5, fontWeight: 600, cursor: "pointer" }}
+                      onClick={() => navigate("/terms&conditions")}
                     >
                       Terms of Service
                     </Typography>

@@ -273,17 +273,20 @@ const BookingInterface = React.memo(() => {
     setIsLoading(true);
 
     try {
-      // Get the selected day object
-      const selectedDay = days.find(day => day.date === selectedDate);
-console.log(selectedDate)
-console.log(days)
-
-      if (!selectedDay) {
-        showError("Invalid day selected");
-        return;
+      // Create date object from selected date
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+      
+      // Find the correct date - selectedDate is just the day number
+      let targetDate = new Date(currentYear, currentMonth, selectedDate);
+      
+      // If the selected date is in the past, move to next month
+      if (targetDate < today) {
+        targetDate = new Date(currentYear, currentMonth + 1, selectedDate);
       }
 
-      const formattedDate = selectedDay.fullDate.toISOString().split('T')[0];
+      const formattedDate = targetDate.toISOString().split('T')[0];
 
       // Transform cart items to match API expected format
       const services = cartItems.map(item => ({
@@ -448,8 +451,8 @@ console.log(days)
         mb: 2,
         mt:10,
         py: 15,
-        bgcolor: '#f5f5f5',
-        // bgcolor: '#eaeef2',
+        // bgcolor: '#f5f5f5',
+        bgcolor: '#eaeef2',
         borderRadius: '16px',
         display: 'flex',
         flexDirection: 'column',

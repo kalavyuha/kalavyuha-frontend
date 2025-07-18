@@ -62,6 +62,16 @@ export default function OTPVerification() {
         setOtpValue(newOtpValue);
     };
 
+    const handleKeyDown = (event, index) => {
+        if (event.key === 'Backspace' && !otpValue[index] && index > 0) {
+            // If current field is empty and backspace is pressed, move to previous field
+            inputRefs.current[index - 1].focus();
+            const newOtpValue = [...otpValue];
+            newOtpValue[index - 1] = '';
+            setOtpValue(newOtpValue);
+        }
+    };
+
     const handleVerifyOTP = async () => {
         setIsLoading(true);
         const enteredOtp = otpValue.join('');
@@ -230,6 +240,7 @@ export default function OTPVerification() {
                                                     placeholder="-" 
                                                     inputRef={el => inputRefs.current[index] = el} 
                                                     onChange={(event) => handleChange(event, index)}
+                                                    onKeyDown={(event) => handleKeyDown(event, index)}
                                                     value={otpValue[index]}
                                                 />
                                             </Grid>

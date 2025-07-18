@@ -42,6 +42,7 @@ const BusniessPage = lazy(() => import("./pages/BusniessPage/busniess"));
 const Support = lazy(() => import("./pages/SupportPage/Support"));  //-----ADDED SUPPORT PAGE
 const About = lazy(() => import("./pages/About/About"));  //-----ADDED ABOUT PAGE
 const TermsConditions = lazy(() => import("./pages/TermsConditions/termsConditions"));  //-----ADDED T&C PAGE
+const Privacy = lazy(() => import("./pages/Privacy/Privacy"));  //-----ADDED Privacy PAGE
 const AppointmentHistory = lazy(() => import("./pages/AppointmentHistory/AppointmentHistory"));  //-----ADDED HISTORY PAGE
 const AppointmentHistoryDetail = lazy(() => import("./pages/AppointmentHistory/AppointmentHistoryDetail"));  //-----ADDED APPOINTMENT DETAIL PAGE
 
@@ -108,6 +109,7 @@ function App() {
           <Route path="/support" element={<Support />} />
           <Route path="/about" element={<About />} />
           <Route path="/terms&conditions" element={<TermsConditions />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/appointment-history" element={<AppointmentHistory />} />
           <Route path="/appointment-history-details" element={<AppointmentHistoryDetail />} />
 

@@ -65,20 +65,26 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
         if (data && data.Status === 200) {
             setSignupOpen(false);
 
-            const userDetail = {
-                _id: data?.Data?._id,
-                PhoneNumber: data?.Data?.PhoneNumber,
-                Name: data?.Data?.Name
-            };
+            // Check if user data exists in localStorage (should be set after OTP verification)
+            let userDetail = JSON.parse(localStorage.getItem("userDetail") || "{}");
+            
+            // If not in localStorage or incomplete, create it from response
+            if (!userDetail._id) {
+                userDetail = {
+                    _id: data?.Data?._id,
+                    PhoneNumber: data?.Data?.PhoneNumber,
+                    Name: data?.Data?.Name
+                };
+                localStorage.setItem("userDetail", JSON.stringify(userDetail));
+            }
 
-
-            localStorage.setItem("userDetail", JSON.stringify(userDetail));
             setUserAction(data)
             formik.resetForm();
             showSuccess('Sign up Successfully')
             setLoading(false)
         } else {
             showError('Something went wrong please try again');
+            setLoading(false)
         }
     };
 
@@ -112,14 +118,23 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
         });
 
         const data = response.data || response;
-        console.log(data)
-        if (data.Status===200) {
-            setIsVerified(true);    
+        console.log("OTP Verification Signup Response:", data);
+        if (data.Status === 200) {
+            setIsVerified(true);
             
+            // Store user data in localStorage after successful OTP verification
+            const userDetail = {
+                _id: data?.Data?._id,
+                PhoneNumber: data?.Data?.PhoneNumber,
+                Name: data?.Data?.Name
+            };
+            
+            localStorage.setItem("userDetail", JSON.stringify(userDetail));
+            console.log("User data stored in localStorage:", userDetail);
         }
         if (data.Status === 401) {
-            setIsVerified(true);
-            // showError("Invalid OTP")
+            setIsVerified(false);
+            showError("Invalid OTP")
         }
         setVerifyotp(false)
 

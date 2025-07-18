@@ -37,13 +37,15 @@ const ServiceCard = ({
 }) => {
 
   return (
-    <Card
+    <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
         padding: '10px',
         justifyContent: 'space-between',
-        flexDirection: 'row'
+        flexDirection: 'row',
+        bgcolor:"#9f9f9f",
+        borderRadius: '8px',
       }}
     >
       <Box
@@ -86,7 +88,7 @@ const ServiceCard = ({
                 {serviceName}
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                {duration}
+                {duration} {duration && !duration.includes('m') && !duration.includes('h') ? 'mins' : ''}
                 <span style={{
                   color: '#1b4d69',
                   fontWeight: 600,
@@ -138,7 +140,7 @@ const ServiceCard = ({
                 color="#1b4d69"
                 fontSize={{ xs: '10px', sm: '14px', md: '14px' }}
               >
-                Save up to {DiscountPercentage || '50%'}
+                Save up to {DiscountPercentage || '0%'}
               </Typography>
             </Box>
           )}
@@ -167,7 +169,7 @@ const ServiceCard = ({
           )}
         </Box>
       </Box>
-    </Card>
+    </Box>
   );
 }
 
@@ -238,12 +240,61 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   const navigate = useNavigate();
   const params = useParams();
   const [visibleServices, setVisibleServices] = useState(5);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  // Extract and flatten services from the nested structure
+  const flattenedServices = React.useMemo(() => {
+    if (!services || !services.length || !services[0]?.Categories) {
+      return [];
+    }
+    
+    const allServices = [];
+    services[0].Categories.forEach(category => {
+      if (category.Services && category.Services.length > 0) {
+        category.Services.forEach(service => {
+          allServices.push({
+            ...service,
+            _id: service._id,
+            ServiceName: service.Name,
+            Price: service.Price,
+            Duration: service.Duration,
+            ImageURL: service.Image,
+            AverageRating: services[0].AverageRating || 0,
+            DiscountPercentage: service.DiscountPercentage,
+            CategoryName: category.Name
+          });
+        });
+      }
+    });
+    return allServices;
+  }, [services]);
+
+  // Get all available categories dynamically from the data
+  const categories = React.useMemo(() => {
+    if (!services || !services.length || !services[0]?.Categories) return ['All'];
+    
+    const categoryNames = services[0].Categories.map(cat => cat.Name);
+    return ['All', ...categoryNames];
+  }, [services]);
+
+  // Filter services based on selected category
+  const filteredServices = React.useMemo(() => {
+    if (selectedCategory === 'All') {
+      return flattenedServices;
+    }
+    return flattenedServices.filter(service => service.CategoryName === selectedCategory);
+  }, [flattenedServices, selectedCategory]);
 
   const handleSeeMore = () => {
     setVisibleServices(prev => prev + 5);
   };
 
-  const hasMoreServices = services && visibleServices < services.length;
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setVisibleServices(5); // Reset visible services when category changes
+  };
+
+  const hasMoreServices = filteredServices && visibleServices < filteredServices.length;
 
 
   useEffect(() => {
@@ -478,6 +529,44 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
         </Typography>
       </Stack>
 
+      {/* Category Section */}
+      <Box sx={{ mb: 3 }}>
+        <Stack direction="row" spacing={3}>
+          {categories.map((category) => (
+            <Typography
+              key={category}
+              onClick={() => handleCategoryChange(category)}
+              sx={{
+                cursor: 'pointer',
+                fontSize: '18px',
+                fontWeight: 600,
+                color: selectedCategory === category ? '#1b4d69' : '#000',
+                position: 'relative',
+                transition: 'color 0.3s ease',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  bottom: '-2px',
+                  left: 0,
+                  width: selectedCategory === category ? '100%' : '0%',
+                  height: '2px',
+                  backgroundColor: '#1b4d69',
+                  transition: 'width 0.3s ease',
+                },
+                '&:hover': {
+                  color: '#1b4d69',
+                  '&::after': {
+                    width: '100%',
+                  }
+                }
+              }}
+            >
+              {category}
+            </Typography>
+          ))}
+        </Stack>
+      </Box>
+
       <Box mt={2}>
         <Grid container spacing={2}>
           {loading ? (
@@ -489,7 +578,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
             ))
           ) : (
             // Show actual services when loaded - LIMITED TO visibleServices
-            services && services.length > 0 && services.slice(0, visibleServices).map((service, index) => {
+            filteredServices && filteredServices.length > 0 && filteredServices.slice(0, visibleServices).map((service, index) => {
               const isInCart = cartItems.some((item) => item._id == service._id);
 
               return (
@@ -541,7 +630,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
           </Box>
         )}
 
-        {!loading && (!services || services.length === 0) && (
+        {!loading && (!filteredServices || filteredServices.length === 0) && (
           <Box
             sx={{
               display: 'flex',
@@ -553,10 +642,10 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
             }}
           >
             <Typography variant="h6" color="textSecondary">
-              No services available
+              {selectedCategory === 'All' ? 'No services available' : `No services available in ${selectedCategory}`}
             </Typography>
             <Typography variant="body2" color="textSecondary">
-              Please check back later for available services.
+              {selectedCategory === 'All' ? 'Please check back later for available services.' : 'Try selecting a different category or check back later.'}
             </Typography>
           </Box>
         )}

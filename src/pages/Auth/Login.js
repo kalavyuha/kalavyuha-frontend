@@ -116,6 +116,7 @@ const LoginPage = ({ setLoginOpen, setSignupOpen,setUserAction }) => {
         });
 
         const data = response.data || response;
+        console.log("OTP Verification Login Response:", data);
     
 
         if (data.Status===200) {

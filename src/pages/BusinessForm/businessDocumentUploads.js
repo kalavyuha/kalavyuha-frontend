@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box, Container, Typography, Button, Grid } from "@mui/material";
+import { Box, Container, Typography, Button, Grid, LinearProgress, Backdrop, CircularProgress } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -37,6 +37,10 @@ export default function BusinessDocumentUploads() {
       : {}
   );
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStage, setUploadStage] = useState("");
+
   const {
     firstName,
     lastName,
@@ -67,6 +71,15 @@ export default function BusinessDocumentUploads() {
   // backend integration
   const handleSubmit = async () => {
     try {
+      setIsUploading(true);
+      setUploadProgress(0);
+      setUploadStage("Initializing upload...");
+
+      // Validate auth token
+      if (!authToken) {
+        throw new Error("Auth token is missing");
+      }
+      
       const requiredDocuments = [
         "Pan Card (Owner)",
         "GST Certificate",
@@ -81,6 +94,7 @@ export default function BusinessDocumentUploads() {
         alert(
           `Please upload all required documents: ${missingDocuments.join(", ")}`
         );
+        setIsUploading(false);
         return;
       }
 
@@ -89,6 +103,12 @@ export default function BusinessDocumentUploads() {
       console.log("MerchantAccountID:", previousData.MerchantAccountID);
       console.log("Business Role:", previousData.businessRole);
       console.log("Form Data:", previousData.formData);
+      console.log("Team Members:", previousData.teamMembers);
+      console.log("Team Size:", previousData.teamSize);  
+
+      // Progress update
+      setUploadProgress(5);
+      setUploadStage("Creating business profile...");
 
       // 1. Submit busniessDetails
       const businessPayload = {
@@ -153,29 +173,102 @@ export default function BusinessDocumentUploads() {
       });
 
       const businessData = await createBusinessDetails(businessPayload);
-      const businessId = Number(businessData.Data?._id);
+      console.log("Business Creation Response:", businessData);
+      
+      // Progress update
+      setUploadProgress(20);
+      setUploadStage("Processing business details...");
+      
+      // Handle large integer IDs properly
+      const businessId = businessData.Data?._id;
+      console.log("Raw Business ID:", businessId);
+      console.log("Business ID type:", typeof businessId);
+      
+      if (!businessId) {
+        throw new Error("No business ID returned from business creation");
+      }
+      
+      // Convert to number carefully for large integers
+      const businessIdNum = typeof businessId === 'string' ? parseInt(businessId) : Number(businessId);
+      console.log("Converted Business ID:", businessIdNum);
+      
+      if (isNaN(businessIdNum)) {
+        throw new Error("Invalid business ID returned from business creation");
+      }
+
+      // Progress update
+      setUploadProgress(30);
+      setUploadStage("Adding team members...");
 
       // 2. Submit Staff Data
-      const staffPayload = previousData.teamMembers.map((member) => ({
-        BussinessId: businessId,
-        StaffName: member.name,
-        StaffNumber: Number(member.id),
-        Gender: member.gender,
-        Experience: String(member.experience),
-        Specialization: Array.isArray(member.role)
-          ? member.role.join(", ")
-          : "General",
-          Role: member.role,
-        ProfileImage: member.profileImage?.url || null,
-      }));
+      if (previousData.teamMembers && previousData.teamMembers.length > 0) {
+        console.log("Raw team members data:", previousData.teamMembers);
+        
+        const staffPayload = previousData.teamMembers.map((member, index) => {
+          console.log(`Processing member ${index + 1}:`, member);
+          console.log(`Member role type:`, typeof member.role);
+          console.log(`Member role value:`, member.role);
+          
+          // Convert role to string safely
+          let roleString = "General";
+          if (Array.isArray(member.role)) {
+            roleString = member.role.join(", ");
+          } else if (typeof member.role === 'string') {
+            roleString = member.role;
+          } else if (member.role && typeof member.role === 'object') {
+            // Handle object case - try to extract meaningful value
+            if (member.role.value) {
+              roleString = member.role.value;
+            } else if (member.role.label) {
+              roleString = member.role.label;
+            } else {
+              roleString = JSON.stringify(member.role);
+            }
+          }
+          
+          return {
+            BussinessId: String(businessIdNum), // Send as string to avoid precision issues
+            StaffName: member.name || "Unknown",
+            StaffNumber: Number(member.id) || (index + 1), // Use index+1 as fallback
+            Gender: member.gender || "Other",
+            Experience: String(member.experience) || "0",
+            Specialization: roleString,
+            Role: roleString,
+            ProfileImage: member.profileImage?.url || null,
+          };
+        });
 
-      try {
-        console.log(staffPayload);
-        const staffData = await createStaff(staffPayload, authToken);
-        console.log("StaffResponse:", staffData);
-      } catch (error) {
-        console.error("Error creating staff:", error);
+        console.log("Staff Payload:", staffPayload);
+        console.log("Staff Payload Validation:", staffPayload.map(staff => ({
+          BussinessId: `${typeof staff.BussinessId} (${staff.BussinessId})`,
+          StaffName: `${typeof staff.StaffName} (${staff.StaffName})`,
+          StaffNumber: `${typeof staff.StaffNumber} (${staff.StaffNumber})`,
+          Gender: `${typeof staff.Gender} (${staff.Gender})`,
+          Experience: `${typeof staff.Experience} (${staff.Experience})`,
+          Specialization: `${typeof staff.Specialization} (${staff.Specialization})`,
+          Role: `${typeof staff.Role} (${staff.Role})`,
+          ProfileImage: `${typeof staff.ProfileImage} (${staff.ProfileImage})`,
+        })));
+
+        try {
+          const staffData = await createStaff(staffPayload, authToken);
+          console.log("StaffResponse:", staffData);
+          
+          // Progress update
+          setUploadProgress(45);
+          setUploadStage("Staff added successfully...");
+        } catch (error) {
+          console.error("Error creating staff:", error);
+          console.error("Staff payload that caused error:", JSON.stringify(staffPayload, null, 2));
+          throw new Error(`Staff creation failed: ${error.message}`);
+        }
+      } else {
+        console.warn("No team members data found, skipping staff creation");
       }
+
+      // Progress update
+      setUploadProgress(50);
+      setUploadStage("Setting up services...");
 
       // 3. Submit Services
       const staffMap = new Map(
@@ -211,7 +304,7 @@ export default function BusinessDocumentUploads() {
         createdBy
       ) => {
         return {
-          BussinessId: businessId,
+          BussinessId: businessIdNum,
           CreatedBy: createdBy,
           Categories: servicesData.map((category) => ({
             Id: category.id || null,
@@ -270,7 +363,7 @@ export default function BusinessDocumentUploads() {
 
         const servicePayload = prepareServicePayload(
           previousData.services,
-          businessId,
+          businessIdNum,
           staffMap,
           458
         );
@@ -301,44 +394,191 @@ export default function BusinessDocumentUploads() {
 
         const response = await createServices(servicePayload, authToken);
         console.log("API Response:", response);
+        
+        // Progress update
+        setUploadProgress(65);
+        setUploadStage("Services configured successfully...");
       } catch (error) {
         console.error("Service creation failed:", error);
         throw error;
       }
 
-      // 4. Business Hours Uploads
+      // Progress update
+      setUploadProgress(70);
+      setUploadStage("Configuring business hours...");
 
-      const businessHoursPayload = {
-        BusinessId: businessId,
-        Day: previousData.formData.day || "Monday",
-        AlwaysOpen: previousData.formData.alwaysOpen || false,
-        Closed: previousData.formData.closed || false,
-        CustomeTime: {
-          StartTime: previousData.formData.startTime || "09:00",
-          CloseTime: previousData.formData.closeTime || "21:00",
-        },
-        CreatedBy: 1,
-        UpdatedBy: 1,
+      // 4. Business Hours Uploads for all 7 days
+
+      const weekDays = [
+        { id: 1, name: "Monday" },
+        { id: 2, name: "Tuesday" },
+        { id: 3, name: "Wednesday" },
+        { id: 4, name: "Thursday" },
+        { id: 5, name: "Friday" },
+        { id: 6, name: "Saturday" },
+        { id: 7, name: "Sunday" }
+      ];
+
+      // Helper function to convert 12-hour format to 24-hour format
+      const convertTo24Hour = (time12, meridian) => {
+        if (!time12) return "00:00";
+        
+        let [hours, minutes] = time12.split(":");
+        hours = parseInt(hours);
+        
+        if (meridian === "PM" && hours !== 12) {
+          hours += 12;
+        } else if (meridian === "AM" && hours === 12) {
+          hours = 0;
+        }
+        
+        return `${hours.toString().padStart(2, "0")}:${minutes}`;
       };
-      console.log("Business Hours Payload:", businessHoursPayload);
 
-      try {
-        const businessHoursData = await createBusinessHours(businessHoursPayload, authToken);
-        console.log("Business Hours Response:", businessHoursData);
-      } catch (error) {
-        console.error("Error creating business hours:", error);
-        // Don't throw error here to allow other uploads to continue
+      // Process business hours for each day
+      const businessHoursPromises = weekDays.map(async (day) => {
+        try {
+          const dayData = previousData.businessHours?.daysStatus?.[day.id];
+          const scheduleType = previousData.businessHours?.scheduleType || "selected_hours";
+          
+          let businessHoursPayload;
+          
+          if (!dayData?.isOpen) {
+            // Day is closed
+            businessHoursPayload = {
+              BusinessId: businessIdNum,
+              Day: day.name,
+              AlwaysOpen: false,
+              Closed: true,
+              CustomeTime: {
+                StartTime: "00:00",
+                CloseTime: "00:00",
+              },
+              CreatedBy: 1,
+              UpdatedBy: 1,
+            };
+          } else if (scheduleType === "always_open") {
+            // Always open (24 hours)
+            businessHoursPayload = {
+              BusinessId: businessIdNum,
+              Day: day.name,
+              AlwaysOpen: true,
+              Closed: false,
+              CustomeTime: {
+                StartTime: "00:00",
+                CloseTime: "23:59",
+              },
+              CreatedBy: 1,
+              UpdatedBy: 1,
+            };
+          } else if (scheduleType === "appointment") {
+            // By appointment only
+            businessHoursPayload = {
+              BusinessId: businessIdNum,
+              Day: day.name,
+              AlwaysOpen: false,
+              Closed: false,
+              CustomeTime: {
+                StartTime: "09:00",
+                CloseTime: "17:00",
+              },
+              CreatedBy: 1,
+              UpdatedBy: 1,
+            };
+          } else {
+            // Selected hours
+            const startTime = convertTo24Hour(dayData.startTime, dayData.startMeridian);
+            const endTime = convertTo24Hour(dayData.endTime, dayData.endMeridian);
+            
+            businessHoursPayload = {
+              BusinessId: businessIdNum,
+              Day: day.name,
+              AlwaysOpen: false,
+              Closed: false,
+              CustomeTime: {
+                StartTime: startTime,
+                CloseTime: endTime,
+              },
+              CreatedBy: 1,
+              UpdatedBy: 1,
+            };
+          }
+          
+          console.log(`Business Hours Payload for ${day.name}:`, businessHoursPayload);
+          
+          const businessHoursData = await createBusinessHours(businessHoursPayload, authToken);
+          console.log(`Business Hours Response for ${day.name}:`, businessHoursData);
+          
+          return { day: day.name, success: true, data: businessHoursData };
+        } catch (error) {
+          console.error(`Error creating business hours for ${day.name}:`, error);
+          return { day: day.name, success: false, error: error.message };
+        }
+      });
+
+      // Wait for all business hours to be processed
+      const businessHoursResults = await Promise.all(businessHoursPromises);
+      
+      // Log results
+      businessHoursResults.forEach(result => {
+        if (result.success) {
+          // console.log(`✓ Business hours created successfully for ${result.day}`);
+        } else {
+          // console.error(`✗ Failed to create business hours for ${result.day}: ${result.error}`);
+        }
+      });
+
+      // Check if any business hours failed to create
+      const failedDays = businessHoursResults.filter(result => !result.success);
+      if (failedDays.length > 0) {
+        // console.warn(`Business hours creation failed for ${failedDays.length} days:`, failedDays.map(f => f.day).join(', '));
       }
 
-      // 5. Documents Uploads
-      await uploadDocuments(businessId, fileList, authToken);
-      alert("All data uploaded successfully!");
+      // Progress update
+      setUploadProgress(80);
+      setUploadStage("Business hours configured...");
 
+      // 5. Documents Uploads
+      setUploadProgress(85);
+      setUploadStage("Uploading documents...");
+      
+      await uploadDocuments(businessIdNum, fileList, authToken);
+      
+      // Progress update
+      setUploadProgress(95);
+      setUploadStage("Finalizing setup...");
+      
+      // Clear all form-related data from localStorage
       localStorage.removeItem("documentUploads");
       localStorage.removeItem("formData");
-      window.open("/kalavyuha-frontend/business-page", "_blank");
+      localStorage.removeItem("businessHours");
+      localStorage.removeItem("teamMembers");
+      localStorage.removeItem("services");
+      localStorage.removeItem("businessDetails");
+      localStorage.removeItem("businessProfile");
+      localStorage.removeItem("businessRole");
+      localStorage.removeItem("MerchantAccountID");
+      
+      // Clear browser history to prevent back navigation
+      window.history.pushState(null, null, window.location.href);
+      window.history.pushState(null, null, window.location.href);
+      window.onpopstate = function () {
+        window.history.go(1);
+      };
+      
+      // Final progress update
+      setUploadProgress(100);
+      setUploadStage("Upload complete! Redirecting...");
+      
+      // Small delay to show completion
+      setTimeout(() => {
+        window.location.replace("http://localhost:3001/");
+      }, 1000);
     } catch (error) {
-      console.error("Error during submission:", error);
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadStage("");
+      // console.error("Error during submission:", error);
       localStorage.setItem("documentUploads", JSON.stringify(fileList));
 
       if (error.message === "Document upload failed") {
@@ -366,6 +606,100 @@ export default function BusinessDocumentUploads() {
           overflow: "hidden",
         }}
       >
+        {/* Upload Progress Overlay */}
+        <Backdrop
+          sx={{
+            color: '#fff',
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          }}
+          open={isUploading}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: 4,
+              backgroundColor: 'white',
+              borderRadius: 3,
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+              minWidth: '400px',
+              maxWidth: '500px',
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 2,
+                color: '#1b4d69',
+                fontWeight: 'bold',
+                textAlign: 'center'
+              }}
+            >
+              Processing Your Business Registration
+            </Typography>
+            
+            <Box sx={{ width: '100%', mb: 2 }}>
+              <LinearProgress
+                variant="determinate"
+                value={uploadProgress}
+                sx={{
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: '#e0e0e0',
+                  '& .MuiLinearProgress-bar': {
+                    backgroundColor: '#1b4d69',
+                    borderRadius: 4,
+                  },
+                }}
+              />
+            </Box>
+            
+            <Typography
+              variant="body2"
+              sx={{
+                mb: 2,
+                color: '#666',
+                textAlign: 'center',
+                minHeight: '20px'
+              }}
+            >
+              {uploadStage}
+            </Typography>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  color: '#1b4d69',
+                  fontWeight: 'bold',
+                }}
+              >
+                {uploadProgress}%
+              </Typography>
+              <CircularProgress
+                size={24}
+                sx={{
+                  color: '#1b4d69',
+                }}
+              />
+            </Box>
+            
+            <Typography
+              variant="caption"
+              sx={{
+                mt: 2,
+                color: '#999',
+                textAlign: 'center',
+                fontStyle: 'italic'
+              }}
+            >
+              Please don't close this window while we set up your business profile
+            </Typography>
+          </Box>
+        </Backdrop>
+
         <Container
           maxWidth={false}
           disableGutters
