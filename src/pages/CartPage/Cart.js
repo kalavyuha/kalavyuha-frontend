@@ -171,8 +171,8 @@ const BookingInterface = React.memo(() => {
             const apiCartItems = cartData.services.map(service => ({
               _id: service.service_id,
               serviceName: service.service_name,
-              Duration: service.duration,
-              Price: service.price
+              duration: service.duration, // Use lowercase to match local format
+              price: service.price // Use lowercase to match local format
             }));
 
             setCartItems(apiCartItems);
@@ -290,27 +290,43 @@ const BookingInterface = React.memo(() => {
 
       // Transform cart items to match API expected format
       const services = cartItems.map(item => ({
-        ServiceId: item._id,
+        ServiceId: String(item._id), // Convert to string as expected by API
         ServiceName: item.serviceName,
-        Duration: item.duration,
+        Duration: item.duration || item.Duration, // Handle both lowercase and uppercase
         Price: Number(item.price)
       }));
 
-      // Build the request payload
+      // Build the request payload to match the API structure
       const payload = {
-        CustomerId: userId._id,
-        BussinessId: buisnes_id || "default-business-id",
+        BusinessId: Number(buisnes_id), // Convert to number and fix field name
+        CustomerId: Number(userId._id), // Convert to number
+        AssignedStaffs: selectedStaff.length > 0 ? selectedStaff : [], // Use empty array instead of null
         SelectedDate: formattedDate,
         SelectedTime: selectedTime,
         Services: services,
         TotalPrice: subtotal,
-        discount: discount,
-        finalPrice: subtotal - discount,
-        AssignedStaffs: selectedStaff.length > 0 ? selectedStaff : null,
+        PaymentMethod: "online", // Add required PaymentMethod field
         PaymentStatus: "pending",
-        SendSms: true,
-        promoCode: selectedPromoCode ? selectedPromoCode.code : null
+        SendSms: true
       };
+
+      console.log("Booking payload:", payload);
+
+      // Validate payload before sending
+      if (!payload.BusinessId || isNaN(payload.BusinessId)) {
+        showError("Invalid business ID");
+        return;
+      }
+
+      if (!payload.CustomerId || isNaN(payload.CustomerId)) {
+        showError("Invalid customer ID");
+        return;
+      }
+
+      if (!payload.Services || payload.Services.length === 0) {
+        showError("No services selected");
+        return;
+      }
 
       // Call the booking API
       const result = await apipost('api/v1/booking/book/', payload);
@@ -344,7 +360,15 @@ const BookingInterface = React.memo(() => {
       }
     } catch (err) {
       console.log("Error in booking", err);
-      showError(err.response?.data?.message || "Failed to create booking. Please try again.");
+      console.log("Error response:", err.response?.data);
+      
+      // Show specific API error message if available
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          err.response?.data?.details ||
+                          "Failed to create booking. Please try again.";
+      
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }

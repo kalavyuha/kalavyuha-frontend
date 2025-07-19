@@ -242,6 +242,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   const [visibleServices, setVisibleServices] = useState(5);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  console.log("Services component props:", { services, buisness_Id, loading, staffData });
+
   // Extract and flatten services from the nested structure
   const flattenedServices = React.useMemo(() => {
     if (!services || !services.length || !services[0]?.Categories) {
@@ -300,19 +302,25 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log("Initializing cart...");
         const userDetail = JSON.parse(localStorage.getItem("userDetail"));
+        console.log("User detail from localStorage:", userDetail);
 
         if (userDetail && userDetail._id) {
+          console.log("User is logged in, setting userId:", userDetail._id);
           setUserId(userDetail._id);
 
           await fetchCartItems(userDetail._id);
         } else {
+          console.log("User not logged in, using localStorage for cart");
           const savedCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+          console.log("Saved cart items from localStorage:", savedCartItems);
           setCartItems(savedCartItems);
         }
       } catch (error) {
         console.error("Error initializing cart:", error);
       } finally {
+        console.log("Cart initialization complete");
         setLoadingCart(false);
       }
     };
@@ -322,7 +330,9 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
   const fetchCartItems = async (userId) => {
     try {
+      console.log("Fetching cart items for userId:", userId);
       const result = await apiget(`api/v1/addToCart/service/cart/${userId}`);
+      console.log("Fetch cart result:", result);
 
       if (result && result.status === 200 && result.data && result.data.Data) {
         const cartData = result?.data?.Data;
@@ -335,7 +345,10 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
           duration: service.duration,
         }));
 
+        console.log("Setting cart items:", apiCartItems);
         setCartItems(apiCartItems);
+      } else {
+        console.log("No cart data found or unexpected response structure");
       }
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -351,6 +364,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   };
 
   const handleAddToCart = async (service) => {
+    console.log("Service being added to cart:", service);
     setActionId(service._id)
     const isServiceInCart = cartItems.some(item => item._id == service._id);
 
@@ -365,9 +379,12 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
           await addToCartAPI(service);
         }
 
+        // Refresh cart items after operation
         await fetchCartItems(userId);
       } catch (error) {
         console.error("Cart operation failed:", error);
+        // Even if API fails, let's try to continue with localStorage as fallback
+        handleLocalStorageCart(service);
       }
     } else {
       // If user is not logged in, use localStorage
@@ -378,48 +395,58 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
   // Add to cart using API
   const addToCartAPI = async (service) => {
+    console.log("addToCartAPI called with service:", service);
+    console.log("Current cartId:", cartId);
+    console.log("Current userId:", userId);
 
-    if (!cartId && userId) {
-
-      const result = await apipost('api/v1/addToCart/service/add', {
-        UserId: `${userId}`,
-        BussinessId: buisness_Id,
-        SelectedDate: "",
-        SelectedTime: "",
-        Services: [
-          {
-            ServiceId: `${service._id}`,
-            ServiceName: service.serviceName,
-            Duration: service.duration,
-            Price: service.price
-          }
-        ],
-      });
-      if (result && result.status === 200) {
-        setCartId(result?.data?.Data);
-
+    try {
+      if (!cartId && userId) {
+        console.log("Creating new cart...");
+        const result = await apipost('api/v1/addToCart/service/add', {
+          UserId: `${userId}`,
+          BussinessId: buisness_Id,
+          SelectedDate: "",
+          SelectedTime: "",
+          Services: [
+            {
+              ServiceId: `${service._id}`,
+              ServiceName: service.serviceName,
+              Duration: service.duration,
+              Price: service.price
+            }
+          ],
+        });
+        console.log("Create cart result:", result);
+        if (result && result.status === 200) {
+          setCartId(result?.data?.Data);
+        }
+      } else {
+        console.log("Updating existing cart...");
+        const updatePayload = {
+          services: [
+            ...cartItems.map(item => ({
+              service_id: item._id,
+              service_name: item.serviceName,
+              duration: item.duration,
+              price: item.price
+            })),
+            {
+              service_id: `${service._id}`,
+              service_name: service.serviceName,
+              duration: service.duration,
+              price: service.price
+            }
+          ],
+        };
+        console.log("Update payload:", updatePayload);
+        
+        const result = await apipatch(`api/v1/addToCart/service/update/${cartId}`, updatePayload);
+        console.log("Update cart result:", result);
       }
-    } else {
-
-      await apipatch(`api/v1/addToCart/service/update/${cartId}`, {
-        services: [
-          ...cartItems.map(item => ({
-            service_id: item._id,
-            service_name: item.serviceName,
-            duration: item.duration,
-            price: item.price
-          })),
-          {
-            service_id: `${service._id}`,
-            service_name: service.serviceName,
-            duration: service.duration,
-            price: service.price
-          }
-        ],
-      });
-
+    } catch (error) {
+      console.error("Error in addToCartAPI:", error);
+      throw error; // Re-throw to be caught by handleAddToCart
     }
-
   };
 
   const removeFromCartAPI = async (service) => {
@@ -458,6 +485,9 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   };
 
   const handleLocalStorageCart = (service) => {
+    console.log("Using localStorage for cart. Current cartItems:", cartItems);
+    console.log("Service to add/remove:", service);
+    
     setCartItems(prevItems => {
       const existingItemIndex = prevItems.findIndex(
         item => item._id === service._id
@@ -465,11 +495,14 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
       let updatedItems;
       if (existingItemIndex > -1) {
+        console.log("Removing service from localStorage cart");
         updatedItems = prevItems.filter((_, index) => index !== existingItemIndex);
       } else {
+        console.log("Adding service to localStorage cart");
         updatedItems = [...prevItems, service];
       }
 
+      console.log("Updated cart items:", updatedItems);
       localStorage.setItem('cartItems', JSON.stringify(updatedItems));
       return updatedItems;
     });

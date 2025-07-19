@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Select, MenuItem, Typography, Paper, Box } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Select, MenuItem, Typography, Paper, Box, IconButton } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -59,6 +61,7 @@ const Calendar = ({ selectedSlotDate }) => {
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [selectedDate, setSelectedDate] = useState(null);
   const [days, setDays] = useState([]);
+  const scrollContainerRef = useRef(null);
 
   const generateCalendarDays = (monthName) => {
     const currentYear = new Date().getFullYear();
@@ -95,6 +98,24 @@ const Calendar = ({ selectedSlotDate }) => {
     setSelectedMonth(event.target.value);
   };
 
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: -240,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: 240,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 500, mx: 'auto' }}>
       <Typography variant="h6" fontSize={16} sx={{ mb: 2 }}>
@@ -106,42 +127,80 @@ const Calendar = ({ selectedSlotDate }) => {
           <MonthSelect value={selectedMonth} onChange={handleMonthChange} />
         </Box>
 
-        
-        <Box sx={{
-          display: 'flex',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
-        }}>
-          {days.map(({ day, date }) => (
-            <Box
-              key={date}
-              onClick={() => {
-                selectedSlotDate(date)
-                setSelectedDate(date)
-              }}
-              sx={{
-                minWidth: 40,
-                height: 40,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '20%',
-                bgcolor: selectedDate === date ? '#1b4d69' : 'transparent',
-                color: selectedDate === date ? 'white' : 'inherit',
-                cursor: 'pointer',
-                mx: 0.5,
-                '&:hover': {
-                  bgcolor: selectedDate !== date ? '#eaeef2' : '#1b4d69'
-                }
-              }}
-            >
-              <Typography variant="caption">{day}</Typography>
-              <Typography variant="body2">{date}</Typography>
-            </Box>
-          ))}
+        {/* Calendar with navigation arrows */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton
+            onClick={scrollLeft}
+            size="small"
+            sx={{
+              bgcolor: '#1b4d69',
+              color: 'white',
+              width: 22,
+              height: 22,
+              '&:hover': {
+                bgcolor: '#143a50'
+              }
+            }}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+
+          <Box
+            ref={scrollContainerRef}
+            sx={{
+              display: 'flex',
+              overflowX: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+              flex: 1,
+            }}
+          >
+            {days.map(({ day, date }) => (
+              <Box
+                key={date}
+                onClick={() => {
+                  selectedSlotDate(date)
+                  setSelectedDate(date)
+                }}
+                sx={{
+                  minWidth: 40,
+                  height: 40,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '20%',
+                  bgcolor: selectedDate === date ? '#1b4d69' : 'transparent',
+                  color: selectedDate === date ? 'white' : 'inherit',
+                  cursor: 'pointer',
+                  mx: 0.5,
+                  '&:hover': {
+                    bgcolor: selectedDate !== date ? '#eaeef2' : '#1b4d69'
+                  }
+                }}
+              >
+                <Typography variant="caption">{day}</Typography>
+                <Typography variant="body2">{date}</Typography>
+              </Box>
+            ))}
+          </Box>
+
+          <IconButton
+            onClick={scrollRight}
+            size="small"
+            sx={{
+              bgcolor: '#1b4d69',
+              color: 'white',
+              width: 22,
+              height: 22,
+              '&:hover': {
+                bgcolor: '#143a50'
+              }
+            }}
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
         </Box>
       </Paper>
     </Box>

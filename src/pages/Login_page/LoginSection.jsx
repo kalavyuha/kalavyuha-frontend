@@ -172,7 +172,8 @@ const LoginSection = ({ onForgotPassword }) => {
                 /> */}
                 <TextField
                   type="text"
-                  placeholder="Phone Number"
+                  label="Phone Number"
+                  // placeholder="Phone Number"
                   value={phone}
                   onChange={(e) => {
                     let input = e.target.value;
@@ -202,6 +203,14 @@ const LoginSection = ({ onForgotPassword }) => {
                       "&:hover fieldset": {
                         borderColor: phoneError ? "red" : "rgba(0, 0, 0, 0.23)",
                       },
+                      "&.Mui-focused fieldset": {
+                        borderColor: phoneError ? "red" : "#1b4d69",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      "&.Mui-focused": {
+                        color: phoneError ? "red" : "#1b4d69",
+                      },
                     },
                   }}
                   InputProps={{
@@ -220,7 +229,7 @@ const LoginSection = ({ onForgotPassword }) => {
                 />
                 <TextField
                   type="password"
-                  placeholder="Password"
+                  label="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   fullWidth
@@ -230,6 +239,16 @@ const LoginSection = ({ onForgotPassword }) => {
                     // border: "1px solid rgba(0, 0, 0, 0.23)",
                     // borderRadius: 2.5,
                     mt: 3,
+                    "& .MuiOutlinedInput-root": {
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#1b4d69",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      "&.Mui-focused": {
+                        color: "#1b4d69",
+                      },
+                    },
                   }}
                   InputProps={{
                     sx: {
@@ -254,6 +273,9 @@ const LoginSection = ({ onForgotPassword }) => {
                     color: "white",
                     mt: 6,
                     textTransform: "none",
+                     fontWeight: "bold",
+                     height: { xs: "44px", sm: "48px", md: "52px" },
+                      fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
                     borderRadius: 1,
                     "&:disabled": {
                       bgcolor: "#e0e0e0",

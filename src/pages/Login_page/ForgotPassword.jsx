@@ -26,7 +26,6 @@ const ForgotPassword = ({ onBack }) => {
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [otpError, setOtpError] = useState("");
   const [loading, setLoading] = useState(false);
-  
 
   const handleOtpChange = (e, idx) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
@@ -37,6 +36,21 @@ const ForgotPassword = ({ onBack }) => {
     // Move to next input if value entered
     if (value && idx < 3) {
       document.getElementById(`otp-input-${idx + 1}`).focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e, idx) => {
+    // Handle backspace
+    if (e.key === "Backspace") {
+      const newOtp = [...otp];
+      if (otp[idx] === "" && idx > 0) {
+        // If current field is empty and backspace is pressed, move to previous field
+        document.getElementById(`otp-input-${idx - 1}`).focus();
+      } else {
+        // Clear current field
+        newOtp[idx] = "";
+        setOtp(newOtp);
+      }
     }
   };
 
@@ -57,7 +71,7 @@ const ForgotPassword = ({ onBack }) => {
       const res = await fetch("http://127.0.0.1:8000/api/v1/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({  PhoneNumber: phoneNumber }),
+        body: JSON.stringify({ PhoneNumber: phoneNumber }),
       });
       if (!res.ok) throw new Error("Failed to send reset request");
       setStep(2);
@@ -91,15 +105,18 @@ const ForgotPassword = ({ onBack }) => {
     setLoading(true);
     setOtpError("");
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/BussinessMember/update/28629796", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          phone: phoneNumber,
-          newPassword,
-        }),
-      });
+      const res = await fetch(
+        "http://127.0.0.1:8000/api/v1/BussinessMember/update/28629796",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            phone: phoneNumber,
+            newPassword,
+          }),
+        }
+      );
       if (!res.ok) throw new Error("Failed to update password");
       setOpenDialog(true);
     } catch (err) {
@@ -192,11 +209,11 @@ const ForgotPassword = ({ onBack }) => {
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: "left", width: "100%" }}>
-                  <Typography sx={{ color: "grey" }}>Email</Typography>
+                  {/* <Typography sx={{ color: "grey" }}>Email</Typography> */}
                 </Box>
                 <TextField
                   type="email"
-                  placeholder="Email Address"
+                  label="Email Address"
                   fullWidth
                   value={email}
                   onChange={handleEmailChange}
@@ -211,6 +228,19 @@ const ForgotPassword = ({ onBack }) => {
                     // bgcolor: "white",
                     // border: "none",
                     borderRadius: 2.5,
+                    "& .MuiOutlinedInput-root": {
+                      "&:hover fieldset": {
+                        borderColor: !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      "&.Mui-focused": {
+                        color: !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
+                      },
+                    },
                   }}
                   InputProps={{
                     sx: {
@@ -232,11 +262,11 @@ const ForgotPassword = ({ onBack }) => {
                   }}
                 />
                 <Box sx={{ textAlign: "left", width: "100%" }}>
-                  <Typography sx={{ color: "grey" }}>Phone Number</Typography>
+                  {/* <Typography sx={{ color: "grey" }}>Phone Number</Typography> */}
                 </Box>
                 <TextField
                   type="text"
-                  placeholder="Phone Number"
+                  label="Phone Number"
                   fullWidth
                   value={`+91-${phoneNumber}`}
                   onChange={handlePhoneChange}
@@ -257,6 +287,17 @@ const ForgotPassword = ({ onBack }) => {
                           !isPhoneValid && phoneNumber.length > 0
                             ? "red"
                             : "#dadada",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: !isPhoneValid && phoneNumber.length > 0 ? "red" : "#1b4d69",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: !isPhoneValid && phoneNumber.length > 0 ? "red" : "#1b4d69",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      "&.Mui-focused": {
+                        color: !isPhoneValid && phoneNumber.length > 0 ? "red" : "#1b4d69",
                       },
                     },
                   }}
@@ -286,14 +327,23 @@ const ForgotPassword = ({ onBack }) => {
                     mt: 6,
                     textTransform: "none",
                     borderRadius: 1,
+                    fontWeight: "bold",
                     width: "100%",
+                    height: { xs: "44px", sm: "48px", md: "52px" },
+                    fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
                     "&.Mui-disabled": {
                       bgcolor: "#e0e0e0",
                       cursor: "not-allowed",
                       border: "1px solid #cccccc",
                     },
                   }}
-                  disabled={!email || !isEmailValid || !phoneNumber || !isPhoneValid || loading}
+                  disabled={
+                    !email ||
+                    !isEmailValid ||
+                    !phoneNumber ||
+                    !isPhoneValid ||
+                    loading
+                  }
                   onClick={handleSendReset}
                 >
                   {loading ? "Sending..." : "Continue"}
@@ -342,19 +392,33 @@ const ForgotPassword = ({ onBack }) => {
                       key={idx}
                       id={`otp-input-${idx}`}
                       type="text"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "12px",
+                          "& fieldset": {
+                            borderColor: "#dadada",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#1b4d69",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#1b4d69",
+                          },
+                        },
+                      }}
                       inputProps={{
                         maxLength: 1,
                         style: {
                           textAlign: "center",
-                          fontSize: 16,
+                          fontSize: 22,
                           width: "30px",
                           height: "30px",
-                          borderRadius: "8px",
                           background: "#fbfbfb",
                         },
                       }}
                       value={otp[idx]}
                       onChange={(e) => handleOtpChange(e, idx)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, idx)}
                     />
                   ))}
                 </Box>
@@ -389,13 +453,17 @@ const ForgotPassword = ({ onBack }) => {
                 </Typography>
                 <Button
                   sx={{
-                    bgcolor: "#1b4d69",
+                     bgcolor: "#1b4d69",
                     color: "white",
+                    mt: 1,
                     textTransform: "none",
                     borderRadius: 1,
+                    fontWeight: "bold",
                     width: "100%",
+                    height: { xs: "44px", sm: "48px", md: "52px" },
+                    fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
                     "&.Mui-disabled": {
-                      bgcolor: "rgba(27, 77, 105, 0.5)",
+                      bgcolor: "#e0e0e0",
                       cursor: "not-allowed",
                       border: "1px solid #cccccc",
                     },
@@ -440,24 +508,37 @@ const ForgotPassword = ({ onBack }) => {
                 </Typography>
                 <TextField
                   type="password"
-                  placeholder="New Password"
+                  label="New Password"
                   fullWidth
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   sx={{
                     width: { xs: "290px", sm: "400px" },
                     bgcolor: "white",
-                    border: "none",
-                    borderRadius: 1,
+                    // border: "1px solid #dadada",
+                    borderRadius: 2.5,
+                    "& .MuiOutlinedInput-root": {
+                      "&:hover fieldset": {
+                        borderColor: "#1b4d69",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#1b4d69",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      "&.Mui-focused": {
+                        color: "#1b4d69",
+                      },
+                    },
                   }}
                   InputProps={{
                     sx: {
-                      height: 36,
+                      height: 50,
                       padding: 0,
                       fontSize: 16,
                       border: "none",
                       "& .MuiOutlinedInput-notchedOutline": {
-                        border: "none",
+                        // border: "none",
                       },
                     },
                     style: {
@@ -468,24 +549,37 @@ const ForgotPassword = ({ onBack }) => {
                 />
                 <TextField
                   type="password"
-                  placeholder="Confirm Password"
+                  label="Confirm Password"
                   fullWidth
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   sx={{
                     width: { xs: "290px", sm: "400px" },
                     bgcolor: "white",
-                    border: "none",
-                    borderRadius: 1,
+                    // border: "1px solid #dadada",
+                    borderRadius: 2.5,
+                    "& .MuiOutlinedInput-root": {
+                      "&:hover fieldset": {
+                        borderColor: "#1b4d69",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#1b4d69",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      "&.Mui-focused": {
+                        color: "#1b4d69",
+                      },
+                    },
                   }}
                   InputProps={{
                     sx: {
-                      height: 36,
+                      height: 50,
                       padding: 0,
                       fontSize: 16,
-                      border: "none",
+                      // border: "none",
                       "& .MuiOutlinedInput-notchedOutline": {
-                        border: "none",
+                        // border: "none",
                       },
                     },
                     style: {
@@ -510,14 +604,17 @@ const ForgotPassword = ({ onBack }) => {
                 )}
                 <Button
                   sx={{
-                    bgcolor: "#1b4d69",
+                   bgcolor: "#1b4d69",
                     color: "white",
-                    mt: 3,
+                    mt: 2,
                     textTransform: "none",
                     borderRadius: 1,
+                    fontWeight: "bold",
                     width: "100%",
+                    height: { xs: "44px", sm: "48px", md: "52px" },
+                    fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
                     "&.Mui-disabled": {
-                      bgcolor: "rgba(27, 77, 105, 0.5)",
+                      bgcolor: "#e0e0e0",
                       cursor: "not-allowed",
                       border: "1px solid #cccccc",
                     },
