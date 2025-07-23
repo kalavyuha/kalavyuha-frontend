@@ -21,6 +21,7 @@ import ImageIcon from '../../../assets/images/Overview_Images/image.png'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DemoImg from '../../../assets/images/Overview_Images/detailServiceListingImg.jpg';
 import { apipost, apipatch, apidelete, apiget } from '../../service/api';
+import { notifyCartUpdate, updateCartAndNotify } from '../../../utils';
 
 const ServiceCard = ({
   serviceName,
@@ -347,11 +348,19 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
         console.log("Setting cart items:", apiCartItems);
         setCartItems(apiCartItems);
+        // Notify navbar about cart update
+        notifyCartUpdate();
       } else {
         console.log("No cart data found or unexpected response structure");
+        // Clear cart and notify
+        setCartItems([]);
+        notifyCartUpdate();
       }
     } catch (error) {
       console.error("Error fetching cart items:", error);
+      // Clear cart on error and notify
+      setCartItems([]);
+      notifyCartUpdate();
     }
   };
 
@@ -503,7 +512,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
       }
 
       console.log("Updated cart items:", updatedItems);
-      localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+      // Update localStorage and notify navbar
+      updateCartAndNotify(updatedItems);
       return updatedItems;
     });
   };

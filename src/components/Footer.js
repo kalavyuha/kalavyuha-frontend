@@ -60,7 +60,7 @@ const Footer = () => {
     { name: 'Home', url: '/' },
     { name: 'Top picks', url: '/top-picks' },
     { name: 'Plan & Sign up', url: '/signup' },
-    { name: 'Enterprise', url: '/kalavyuha-frontend/business-page' },
+    { name: 'Enterprise', url: '/kalavyuha-frontend/enterprise' },
     { name: 'Help & Support', url: '/kalavyuha-frontend/support' },
   ];
 

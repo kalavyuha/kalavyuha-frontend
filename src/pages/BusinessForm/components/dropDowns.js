@@ -39,9 +39,9 @@ export const StaffSelect = ({ value, onChange, teamMembers }) => (
     displayEmpty
     sx={{ 
       ...commonSelectStyles, 
-      width: { xs: '100%', sm: '160px', md: '180px' },
-      minWidth: { xs: '100%', sm: '140px', md: '160px' },
-      maxWidth: { xs: '100%', sm: '180px', md: '200px' },
+      width: { xs: '100%', sm: '100%', md: '100%' },
+      minWidth: { xs: '100%', sm: '120px', md: '160px' },
+      // maxWidth: { xs: '100%', sm: '180px', md: '200px' },
       height: { xs: '40px', sm: '45px', md: '50px' },
       '& .MuiSelect-select': {
         padding: { xs: '8px 12px', sm: '10px 14px', md: '12px 16px' },
@@ -113,9 +113,9 @@ export const DurationSelect = ({ value, onChange }) => (
     sx={{
       ...commonSelectStyles,
       width: { xs: '60px', sm: '80px', md: '90px' },
-      minWidth: { xs: '60px', sm: '80px', md: '90px' },
+      minWidth: { xs: '80px', sm: '80px', md: '90px' },
       maxWidth: { xs: '80px', sm: '100px', md: '110px' },
-      height: { xs: '30px', sm: '33px' },
+      height: { xs: '44px', sm: '44px' },
       '& .MuiSelect-select': {
         ...commonSelectStyles['& .MuiSelect-select'],
         fontSize: { xs: '11px', sm: '12px' },

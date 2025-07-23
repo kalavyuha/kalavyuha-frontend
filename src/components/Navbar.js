@@ -15,6 +15,7 @@ import {
   ListItem,
   ListItemText,
   Collapse,
+  Badge,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { styled } from "@mui/system";
@@ -22,11 +23,13 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { Download, MoreVert, Notifications, Store } from "@mui/icons-material";
+import { Download, MoreVert, Store } from "@mui/icons-material";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Signup from "../pages/Auth/Signup";
 import Login from "../pages/Auth/Login";
 import ColorLogo from "../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png";
+import { apiget } from "../pages/service/api";
 
 const StyledAppBar = styled(AppBar)({
   background: "#eaeef2",
@@ -93,19 +96,85 @@ export default function Navbar() {
   const [visible, setVisible] = useState(true);
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [userId, setUserId] = useState(null);
 
   const handleBackdropClick = () => {
     setLoginOpen(false);
     setSignupOpen(false);
   };
 
-  const [userId, setUserId] = useState(null);
+  // Fetch cart items function
+  const fetchCartItems = async () => {
+    try {
+      const userDetail = JSON.parse(localStorage.getItem("userDetail"));
+      
+      if (userDetail && userDetail._id) {
+        // For logged-in users, try API first
+        try {
+          const result = await apiget(`api/v1/addToCart/service/cart/${userDetail._id}`);
+          if (result && result.status === 200 && result?.data?.Data?.services) {
+            setCartItems(result.data.Data.services);
+            return;
+          }
+        } catch (apiError) {
+          console.log("API fetch failed, using localStorage");
+        }
+      }
+      
+      // For non-logged-in users or API fallback, use localStorage
+      const savedCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      setCartItems(savedCartItems);
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+      setCartItems([]);
+    }
+  };
+
+  const handleCartClick = () => {
+    navigate('/cart');
+  };
 
   useEffect(() => {
     const user_Id = JSON.parse(localStorage.getItem("userDetail"));
     if (user_Id) {
       setUserId(user_Id);
     }
+    
+    // Initial cart fetch
+    fetchCartItems();
+    
+    // Set up polling for cart updates (every 2 seconds)
+    const cartInterval = setInterval(fetchCartItems, 2000);
+    
+    // Custom event listener for cart updates
+    const handleCartUpdate = () => {
+      setTimeout(fetchCartItems, 100); // Small delay to ensure data is updated
+    };
+    
+    // Listen for custom cart events
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    
+    // Listen for localStorage changes from other tabs
+    const handleStorageChange = (e) => {
+      if (e.key === 'cartItems') {
+        fetchCartItems();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listen for focus events to refresh cart
+    const handleFocus = () => {
+      fetchCartItems();
+    };
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      clearInterval(cartInterval);
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [userAction]);
 
   const handleLogOut = () => {
@@ -226,6 +295,37 @@ export default function Navbar() {
       </Box>
 
       <List sx={{ flexGrow: 1, overflowY: "auto" }}>
+        {/* Cart Button in Mobile Menu */}
+        {cartItems.length > 0 && (
+          <ListItem 
+            button 
+            onClick={() => {
+              handleCartClick();
+              setMobileOpen(false);
+            }}
+            sx={{ 
+              borderRadius: "50px", 
+              "&:hover": { background: "#eaeef2" },
+              mb: 1
+            }}
+          >
+            <Badge badgeContent={cartItems.length} color="primary" sx={{ mr: 2 }}>
+              <ShoppingCartIcon />
+            </Badge>
+            <ListItemText
+              primary="Cart"
+              sx={{
+                "& .MuiTypography-root": {
+                  fontWeight: "548!important",
+                  color: "#1a1a1a !important",
+                  fontSize: "0.9rem !important",
+                  fontFamily: "inherit",
+                },
+              }}
+            />
+          </ListItem>
+        )}
+        
         <ListItem 
           button 
           onClick={() => {
@@ -414,25 +514,28 @@ export default function Navbar() {
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 2, mr: 2 }}
               >
-                <IconButton
-                  size="small"
-                  color="#000"
-                  sx={{
-                    color: "#333",
-                    textTransform: "none",
-                    fontSize: "16px",
-                    borderRadius: "20px",
-                    padding: "6px 18px",
-                    // border: "1px solid black",
-                    // boxShadow:"1px 2px 5px -2px black",
-                    "&:hover": {
-                      boxShadow: "none",
-                      background: "#cdddec",
-                    },
-                  }}
-                >
-                  <Notifications />
-                </IconButton>
+                {/* Cart Button - Only show when cart has items */}
+                {cartItems.length > 0 && (
+                  <IconButton
+                    size="small"
+                    onClick={handleCartClick}
+                    sx={{
+                      color: "#333",
+                      textTransform: "none",
+                      fontSize: "16px",
+                      borderRadius: "20px",
+                      padding: "6px 18px",
+                      "&:hover": {
+                        boxShadow: "none",
+                        background: "#cdddec",
+                      },
+                    }}
+                  >
+                    <Badge badgeContent={cartItems.length} color="primary">
+                      <ShoppingCartIcon />
+                    </Badge>
+                  </IconButton>
+                )}
               </Box>
 
               <Box sx={{ display: { xs: "none", md: "block" } }}>

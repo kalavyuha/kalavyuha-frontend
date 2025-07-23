@@ -26,6 +26,7 @@ import CartList from './CartList';
 import ServiceStaffSelect from './StaffMember';
 import { showSuccess, showError } from '../../components/toast';
 import { apipost, apipatch, apiget } from '../service/api';
+import { notifyCartUpdate, updateCartAndNotify } from '../../utils';
 import Calendar from './CalenderData';
 import AvailableTimesComponent from './TimeSlots';
 
@@ -235,8 +236,8 @@ const BookingInterface = React.memo(() => {
         });
       }
 
-      // Update localStorage
-      localStorage.setItem('cartItems', JSON.stringify(newCartItems));
+      // Update localStorage and notify navbar
+      updateCartAndNotify(newCartItems);
     } catch (error) {
       console.error("Error removing item from cart:", error);
       showError("Failed to remove item from cart");
@@ -346,6 +347,9 @@ const BookingInterface = React.memo(() => {
         setCartItems([]);
         setSelectedPromoCode(null);
         setDiscount(0);
+        
+        // Notify navbar that cart has been cleared
+        notifyCartUpdate();
 
         // Navigate to booking confirmation or history page
         navigate('/cart/success', {

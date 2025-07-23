@@ -45,6 +45,7 @@ const TermsConditions = lazy(() => import("./pages/TermsConditions/termsConditio
 const Privacy = lazy(() => import("./pages/Privacy/Privacy"));  //-----ADDED Privacy PAGE
 const AppointmentHistory = lazy(() => import("./pages/AppointmentHistory/AppointmentHistory"));  //-----ADDED HISTORY PAGE
 const AppointmentHistoryDetail = lazy(() => import("./pages/AppointmentHistory/AppointmentHistoryDetail"));  //-----ADDED APPOINTMENT DETAIL PAGE
+const Enterprise = lazy(() => import("./pages/Enterprise/Enterprise"));  //-----ADDED ENTERPRISE PAGE
 
 // Lazy load business form pages
 const CreateBusniessAccount = lazy(() => import("./pages/BusinessForm/createAccount"));
@@ -112,6 +113,7 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/appointment-history" element={<AppointmentHistory />} />
           <Route path="/appointment-history-details" element={<AppointmentHistoryDetail />} />
+          <Route path="/enterprise" element={<Enterprise />} />
 
           {/* Business form routes */}
           <Route exact path="/business-page" element={<BusniessPage />} />

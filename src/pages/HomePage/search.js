@@ -159,12 +159,12 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                 fontWeight: 600,
                                 p: "0 10px",
                                 borderRadius: '20px',
-                                backgroundColor: selectedQuick === key ? '#1B4E6C' : '#f0f0f0',
-                                color: selectedQuick === key ? '#fff' : '#1B4E6C',
+                                backgroundColor: selectedQuick === key ? '#1b4d69' : '#f0f0f0',
+                                color: selectedQuick === key ? '#fff' : '#1b4e6c',
                                 border: selectedQuick === key ? 'none' : '1px solid #ccc',
                                 textTransform: 'none',
                                 '&:hover': {
-                                    backgroundColor: selectedQuick === key ? '#154157' : '#e0e0e0',
+                                    backgroundColor: selectedQuick === key ? '#1b4d69' : '#e0e0e0',
                                 },
                             }}
                         >
@@ -206,11 +206,11 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                         minWidth: 0,
                                         p: 0,
                                         borderRadius: '50%',
-                                        bgcolor: isSelected(day) ? '#1B4E6C' : 'transparent',
+                                        bgcolor: isSelected(day) ? '#1b4d69' : 'transparent',
                                         color: isSelected(day) ? 'white' : 'black',
-                                        border: isToday(day) ? '2px solid #1B4E6C' : 'none',
+                                        border: isToday(day) ? '2px solid #1b4d69' : 'none',
                                         '&:hover': {
-                                            bgcolor: isSelected(day) ? '#1B4E6C' : '#eee',
+                                            bgcolor: isSelected(day) ? '#1b4d69' : '#eee',
                                         },
                                     }}
                                 >
@@ -237,11 +237,11 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                     p: "0 10px",
                                     textTransform: 'capitalize',
                                     borderRadius: '20px',
-                                    backgroundColor: selectedSlot === slot ? '#1B4E6C' : '#f0f0f0',
-                                    color: selectedSlot === slot ? '#fff' : '#1B4E6C',
+                                    backgroundColor: selectedSlot === slot ? '#1b4d69' : '#f0f0f0',
+                                    color: selectedSlot === slot ? '#fff' : '#1b4e6c',
                                     border: selectedSlot === slot ? 'none' : '1px solid #ccc',
                                     '&:hover': {
-                                        backgroundColor: selectedSlot === slot ? '#154157' : '#e0e0e0',
+                                        backgroundColor: selectedSlot === slot ? '#1b4d69' : '#e0e0e0',
                                     }
                                 }}
                             >
@@ -393,7 +393,7 @@ export default function SearchUI() {
 
   const handleChange = (event, newValue) => {
     setValue(newValue)
-    setCategory(["Beauty", "Fitness", "Wellness"][newValue])
+    setCategory(["Beauty", "Fitness", "Wellness", "Health"][newValue])
   }
 
   const handleSearchChange = (event) => {
@@ -557,7 +557,7 @@ export default function SearchUI() {
             mb: 3,
           }}
         >
-          {["Beauty", "Fitness", "Wellness"].map((cat, idx) => (
+          {["Beauty", "Fitness", "Wellness", "Health"].map((cat, idx) => (
             <Button
               key={idx}
               variant={value === idx ? "contained" : "outlined"}
@@ -909,7 +909,7 @@ export default function SearchUI() {
           borderRadius: "20px 22px 0 0",
           overflow: "hidden",
           background: "transparent",
-          width: "20rem",
+          width: "25rem",
         }}
       >
         <Tabs
@@ -948,6 +948,7 @@ export default function SearchUI() {
           <Tab label="Beauty" onClick={() => setCategory("Beauty")} />
           <Tab label="Fitness" onClick={() => setCategory("Fitness")} />
           <Tab label="Wellness" onClick={() => setCategory("Wellness")} />
+          <Tab label="Health" onClick={() => setCategory("Health")} />
         </Tabs>
       </AppBar>
       <Box
@@ -965,7 +966,7 @@ export default function SearchUI() {
             What are you looking?
           </Typography>
           <TextField
-            placeholder={`Name of Services (${["beauty", "fitness", "wellness"][value]}...)`}
+            placeholder={`Name of Services (${["beauty", "fitness", "wellness", "health"][value]}...)`}
             variant="standard"
             fullWidth
             value={serviceName}
