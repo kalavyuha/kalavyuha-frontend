@@ -29,6 +29,7 @@ const ServiceCard = ({
   rating,
   duration,
   price,
+  description,
   onAddToCart,
   isInCart,
   loadingId,
@@ -45,7 +46,8 @@ const ServiceCard = ({
         padding: '10px',
         justifyContent: 'space-between',
         flexDirection: 'row',
-        bgcolor:"#9f9f9f",
+        // bgcolor:"#9f9f9f",
+        bgcolor:"#d7dbdf",
         borderRadius: '8px',
       }}
     >
@@ -88,6 +90,22 @@ const ServiceCard = ({
               >
                 {serviceName}
               </Typography>
+              {description && (
+                <Typography 
+                  variant="body2" 
+                  color="textSecondary"
+                  sx={{
+                    width: '40vw',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    fontSize: { xs: '12px', sm: '14px', md: '14px' },
+                    mb: 0.5
+                  }}
+                >
+                  {description}
+                </Typography>
+              )}
               <Typography variant="body2" color="textSecondary">
                 {duration} {duration && !duration.includes('m') && !duration.includes('h') ? 'mins' : ''}
                 <span style={{
@@ -161,7 +179,7 @@ const ServiceCard = ({
                 serviceName,
                 price,
                 duration,
-                img: DemoImg,
+                img: imageUrl || DemoImg,
                 _id
               })}
             >
@@ -262,6 +280,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
             Price: service.Price,
             Duration: service.Duration,
             ImageURL: service.Image,
+            Description: service.Description,
             AverageRating: services[0].AverageRating || 0,
             DiscountPercentage: service.DiscountPercentage,
             CategoryName: category.Name
@@ -344,6 +363,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
           serviceName: service.service_name,
           price: service.price,
           duration: service.duration,
+          img: service.image || service.img,
         }));
 
         console.log("Setting cart items:", apiCartItems);
@@ -421,7 +441,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
               ServiceId: `${service._id}`,
               ServiceName: service.serviceName,
               Duration: service.duration,
-              Price: service.price
+              Price: service.price,
+              Image: service.img
             }
           ],
         });
@@ -437,13 +458,15 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
               service_id: item._id,
               service_name: item.serviceName,
               duration: item.duration,
-              price: item.price
+              price: item.price,
+              image: item.img
             })),
             {
               service_id: `${service._id}`,
               service_name: service.serviceName,
               duration: service.duration,
-              price: service.price
+              price: service.price,
+              image: service.img
             }
           ],
         };
@@ -467,7 +490,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
           service_id: item._id,
           service_name: item.serviceName,
           duration: item.duration,
-          price: item.price
+          price: item.price,
+          image: item.img
         }));
 
       if (updatedServices.length > 0) {
@@ -534,7 +558,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
             ServiceId: item._id,
             ServiceName: item.serviceName,
             Duration: item.duration,
-            Price: item.price
+            Price: item.price,
+            Image: item.img
           })),
         });
 
@@ -634,6 +659,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
                     price={service.Price}
                     rating={service.AverageRating}
                     DiscountPercentage={service.DiscountPercentage}
+                    description={service.Description}
                     onAddToCart={handleAddToCart}
                     isInCart={isInCart}
                     loadingId={actionId}
@@ -715,8 +741,16 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
               {cartItems.length} item added
             </Typography>
             <Box display="flex" alignItems="center" gap={2}>
-              <Badge badgeContent={cartItems.length} color="primary">
-                <ShoppingCartIcon sx={{ color: '#1b4d69' }} />
+              <Badge 
+                badgeContent={cartItems.length} 
+                sx={{
+                  '& .MuiBadge-badge': {
+                    backgroundColor: '#1b4d69',
+                    color: 'white'
+                  }
+                }}
+              >
+                <ShoppingCartIcon sx={{ color: '#000' }} />
               </Badge>
               <Button
                 variant="contained"

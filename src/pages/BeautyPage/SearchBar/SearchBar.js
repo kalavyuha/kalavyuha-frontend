@@ -128,18 +128,59 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
   };
 
   useEffect(() => {
+    // Helper to get today's opening/closing times
+    const getTodayTimes = () => {
+      // Assume buisnessInfo.OpeningTimes is an object like { Monday: '09:00', ... }
+      // Fallback to buisnessInfo.OpeningTime/ClosingTime if not present
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const today = days[new Date().getDay()];
+      const openingTimes = buisnessInfo?.OpeningTimes || {};
+      const openingTime = openingTimes[today] || buisnessInfo?.OpeningTime || '';
+      const closingTimes = buisnessInfo?.ClosingTimes || {};
+      const closingTime = closingTimes[today] || buisnessInfo?.ClosingTime || '';
+      return { openingTime, closingTime, today };
+    };
+
     const checkBusinessStatus = () => {
-      const currentTime = new Date();
-      const currentHour = currentTime.getHours();
-      const currentMinutes = currentTime.getMinutes();
-      const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
-
-      const openingTime = buisnessInfo?.OpeningTime || '';
-      const closingTime = buisnessInfo?.ClosingTime || '';
-
-      if (currentTimeString >= openingTime && currentTimeString < closingTime) {
+      const now = new Date();
+      const { openingTime, closingTime, today } = getTodayTimes();
+      // If no opening/closing time for today, find next available opening time
+      if (!openingTime || !closingTime) {
+        // If today has a valid opening time, show it
+        if (buisnessInfo?.OpeningTimes && buisnessInfo?.ClosingTimes && buisnessInfo.OpeningTimes[today] && buisnessInfo.ClosingTimes[today]) {
+          setIsOpen(false);
+          setStatusText(`Opens At: ${buisnessInfo.OpeningTimes[today]}`);
+          return;
+        }
+        // Otherwise, look for next available day
+        let found = false;
+        let nextDay = '';
+        let nextOpen = '';
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const todayIdx = new Date().getDay();
+        for (let i = 1; i <= 7; i++) {
+          const idx = (todayIdx + i) % 7;
+          const open = buisnessInfo?.OpeningTimes ? buisnessInfo.OpeningTimes[days[idx]] : '';
+          const close = buisnessInfo?.ClosingTimes ? buisnessInfo.ClosingTimes[days[idx]] : '';
+          if (open && close) {
+            found = true;
+            nextDay = days[idx];
+            nextOpen = open;
+            break;
+          }
+        }
+        setIsOpen(false);
+        setStatusText(found ? `Opens ${nextDay} At: ${nextOpen}` : 'Closed');
+        return;
+      }
+      // Parse opening/closing time
+      const [openH, openM] = openingTime.split(':').map(Number);
+      const [closeH, closeM] = closingTime.split(':').map(Number);
+      const openDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), openH, openM);
+      const closeDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), closeH, closeM);
+      if (now >= openDate && now < closeDate) {
         setIsOpen(true);
-        setStatusText(`Closes At: ${closingTime}`);
+        setStatusText('Open Now');
       } else {
         setIsOpen(false);
         setStatusText(`Opens At: ${openingTime}`);
@@ -148,7 +189,6 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
 
     checkBusinessStatus();
     const intervalId = setInterval(checkBusinessStatus, 60000);
-
     return () => clearInterval(intervalId);
   }, [buisnessInfo]);
 
@@ -355,7 +395,7 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
                     justifyContent: "center",
                     gap: 1,
                     marginTop: "16px",
-                    border: `2px solid ${!isOpen ? "#2e7d32" : "#d32f2f"}`,
+                    border: `2px solid ${!isOpen ? "#d32f2f" : "#2e7d32"}`,
                     borderRadius: "12px",
                     width: "max-content",
                     paddingRight: "10px",
@@ -365,18 +405,25 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
                     label={statusText}
                     sx={{
                       background: "#fff",
-                      color: !isOpen ? "#2e7d32" : "#d32f2f",
+                      color:
+                        statusText === 'Closed'
+                          ? '#d32f2f'
+                          : (!isOpen ? "#2e7d32" : "#d32f2f"),
                       fontWeight: "bold",
-                      borderColor: !isOpen ? "#2e7d32" : "#d32f2f",
+                      borderColor:
+                        statusText === 'Closed'
+                          ? '#d32f2f'
+                          : (!isOpen ? "#2e7d32" : "#d32f2f"),
                     }}
                   />
                   <Typography
                     variant="body2"
                     sx={{
-                      cursor: "pointer",
+                      cursor: isOpen ? "pointer" : "default",
                       fontWeight: "bold",
-                      color: "#000",
+                      color: statusText === 'Closed' ? '#d32f2f' : '#000',
                     }}
+                    title={isOpen ? `Closes At: ${buisnessInfo?.ClosingTimes ? (buisnessInfo.ClosingTimes[(new Date()).toLocaleDateString('en-US', { weekday: 'long' })] || buisnessInfo.ClosingTime) : buisnessInfo.ClosingTime}` : ""}
                   >
                     ⓘ
                   </Typography>

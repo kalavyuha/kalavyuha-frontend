@@ -25,7 +25,8 @@ const ServiceStaffSelect = ({ selectedStaff,staffData}) => {
       onChange={handleChange}
       startAdornment={<UserRound sx={{ mr: 2 }} />}
       sx={{
-        bgcolor: '#dce1e6',
+        // bgcolor: '#dce1e6',
+        bgcolor: '#d7dbdf',
         border: 'none',
         py: 0,
         borderRadius: 3,

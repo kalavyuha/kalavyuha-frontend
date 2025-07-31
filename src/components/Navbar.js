@@ -193,6 +193,15 @@ export default function Navbar() {
     };
   }, [loginOpen, signupOpen]);
 
+  // Listen for custom event to open login modal (from CartPage or anywhere)
+  useEffect(() => {
+    const handleOpenLoginModal = () => setLoginOpen(true);
+    window.addEventListener('open-login-modal', handleOpenLoginModal);
+    return () => {
+      window.removeEventListener('open-login-modal', handleOpenLoginModal);
+    };
+  }, []);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -309,7 +318,15 @@ export default function Navbar() {
               mb: 1
             }}
           >
-            <Badge badgeContent={cartItems.length} color="primary" sx={{ mr: 2 }}>
+            <Badge badgeContent={cartItems.length}
+             sx={{
+                  '& .MuiBadge-badge': {
+                    backgroundColor: '#1b4d69',
+                    color: 'white'
+                  },
+                   mr: 2
+                }}
+             >
               <ShoppingCartIcon />
             </Badge>
             <ListItemText
@@ -531,7 +548,12 @@ export default function Navbar() {
                       },
                     }}
                   >
-                    <Badge badgeContent={cartItems.length} color="primary">
+                    <Badge badgeContent={cartItems.length} sx={{
+                  '& .MuiBadge-badge': {
+                    backgroundColor: '#1b4d69',
+                    color: 'white'
+                  }
+                }}>
                       <ShoppingCartIcon />
                     </Badge>
                   </IconButton>

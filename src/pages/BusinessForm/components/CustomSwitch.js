@@ -69,7 +69,7 @@ export default function CustomSwitch({ checked, onChange }) {
   return (
     <FormControlLabel
       control={
-        <IOSSwitch sx={{ m: 1 }} checked={checked} onChange={onChange} />
+        <IOSSwitch sx={{ mr: 1 }} checked={checked} onChange={onChange} />
       }
     />
   );

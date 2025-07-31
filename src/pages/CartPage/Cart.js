@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import sampleimage from "../../assets/image (9).png";
 import {
   Box,
   Typography,
@@ -14,32 +15,37 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  Chip
-} from '@mui/material';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import BoltIcon from '@mui/icons-material/Bolt';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import CloseIcon from '@mui/icons-material/Close';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+  Chip,
+} from "@mui/material";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import BoltIcon from "@mui/icons-material/Bolt";
+import StarIcon from "@mui/icons-material/Star";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import CloseIcon from "@mui/icons-material/Close";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import DiscountTicket from "../../assets/cart/discount-ticket.png";
-import CartList from './CartList';
-import ServiceStaffSelect from './StaffMember';
-import { showSuccess, showError } from '../../components/toast';
-import { apipost, apipatch, apiget } from '../service/api';
-import { notifyCartUpdate, updateCartAndNotify } from '../../utils';
-import Calendar from './CalenderData';
-import AvailableTimesComponent from './TimeSlots';
+
+import CartList from "./CartList";
+import ServiceStaffSelect from "./StaffMember";
+import { showSuccess, showError } from "../../components/toast";
+import { apipost, apipatch, apiget } from "../service/api";
+import { notifyCartUpdate, updateCartAndNotify } from "../../utils";
+import Calendar from "./CalenderData";
+import AvailableTimesComponent from "./TimeSlots";
+import SuccessCart from "./SuccessCart";
 
 const BookingInterface = React.memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
 
+  // Try to get businessId from location.state, else fallback to URL param
   const staffData = location?.state?.staff || [];
-  const buisnes_id = location?.state?._id || [];
+  const buisnes_id = location?.state?._id || params.businessId || "";
 
   const [cartItems, setCartItems] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedTime, setSelectedTime] = useState("");
   const [subtotal, setSubtotal] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [selectedStaff, setSelectedStaff] = useState([]);
@@ -50,24 +56,43 @@ const BookingInterface = React.memo(() => {
   const [promoCode, setPromoCode] = useState([]);
   const [selectedPromoCode, setSelectedPromoCode] = useState(null);
   const [promoModalOpen, setPromoModalOpen] = useState(false);
+  const [businessInfo, setBusinessInfo] = useState(null);
+  const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(true);
+  const [successCartOpen, setSuccessCartOpen] = useState(false);
 
   const fetchPromoCode = async () => {
-
     try {
       if (!buisnes_id) return;
       const result = await apiget(`api/v1/PromoCode/list/${buisnes_id}`);
 
       if (result && result?.data?.Status === 200) {
-        setPromoCode(result?.data?.Data)
+        setPromoCode(result?.data?.Data);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  }
+  };
+
+  const fetchBusinessInfo = async () => {
+    try {
+      if (!buisnes_id) return;
+      setLoadingBusinessInfo(true);
+      const result = await apiget(`api/v1/BussinessDetails/alldetails/${buisnes_id}`);
+      
+      if (result && result?.data?.Status === 200) {
+        setBusinessInfo(result?.data?.Data?.BusinessInfo);
+      }
+    } catch (err) {
+      console.log("Error fetching business info:", err);
+    } finally {
+      setLoadingBusinessInfo(false);
+    }
+  };
 
   useEffect(() => {
     fetchPromoCode();
-  }, [])
+    fetchBusinessInfo();
+  }, []);
 
   // Function to check if promo code is applicable
   const isPromoCodeApplicable = (promo) => {
@@ -86,8 +111,8 @@ const BookingInterface = React.memo(() => {
     }
 
     // Check if any cart item's service ID is in applicable_services
-    const cartServiceIds = cartItems.map(item => parseInt(item._id));
-    const hasApplicableService = promo.applicable_services.some(serviceId =>
+    const cartServiceIds = cartItems.map((item) => parseInt(item._id));
+    const hasApplicableService = promo.applicable_services.some((serviceId) =>
       cartServiceIds.includes(serviceId)
     );
 
@@ -100,9 +125,9 @@ const BookingInterface = React.memo(() => {
       return 0;
     }
 
-    if (promo.discount_type === 'flat') {
+    if (promo.discount_type === "flat") {
       return promo.discount_value;
-    } else if (promo.discount_type === 'percentage') {
+    } else if (promo.discount_type === "percentage") {
       return (subtotal * promo.discount_value) / 100;
     }
 
@@ -118,7 +143,7 @@ const BookingInterface = React.memo(() => {
       setPromoModalOpen(false);
       showSuccess(`Promo code ${promo.code} applied successfully!`);
     } else {
-      showError('This promo code is not applicable for your current cart');
+      showError("This promo code is not applicable for your current cart");
     }
   };
 
@@ -126,7 +151,7 @@ const BookingInterface = React.memo(() => {
   const handleRemovePromoCode = () => {
     setSelectedPromoCode(null);
     setDiscount(0);
-    showSuccess('Promo code removed');
+    showSuccess("Promo code removed");
   };
 
   const generateDateOptions = () => {
@@ -137,12 +162,12 @@ const BookingInterface = React.memo(() => {
       const date = new Date();
       date.setDate(today.getDate() + i);
 
-      const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+      const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
       options.push({
         day: dayNames[date.getDay()],
         date: date.getDate(),
-        fullDate: date
+        fullDate: date,
       });
     }
 
@@ -151,8 +176,7 @@ const BookingInterface = React.memo(() => {
 
   const days = generateDateOptions();
 
-
-  // Fetch cart items 
+  // Fetch cart items
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -162,36 +186,49 @@ const BookingInterface = React.memo(() => {
           setUserId(userDetail);
 
           // to get cart from API
-          const result = await apiget(`api/v1/addToCart/service/cart/${userDetail._id}`);
+          const result = await apiget(
+            `api/v1/addToCart/service/cart/${userDetail._id}`
+          );
 
-          if (result && result.status === 200 && result?.data && result?.data?.Data) {
+          if (
+            result &&
+            result.status === 200 &&
+            result?.data &&
+            result?.data?.Data
+          ) {
             const cartData = result?.data?.Data;
             setCartId(cartData._id);
-            console.log(result)
+            console.log(result);
             // Transform API cart items to match local format
-            const apiCartItems = cartData.services.map(service => ({
+            const apiCartItems = cartData.services.map((service) => ({
               _id: service.service_id,
               serviceName: service.service_name,
               duration: service.duration, // Use lowercase to match local format
-              price: service.price // Use lowercase to match local format
+              price: service.price, // Use lowercase to match local format
+              img: service.img || service.image, // Add image field from API
             }));
 
             setCartItems(apiCartItems);
-
           } else {
             // If no cart from API, try localStorage
-            const savedCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+            const savedCartItems = JSON.parse(
+              localStorage.getItem("cartItems") || "[]"
+            );
             setCartItems(savedCartItems);
           }
         } else {
           // If user is not logged in, get cart from localStorage
-          const savedCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+          const savedCartItems = JSON.parse(
+            localStorage.getItem("cartItems") || "[]"
+          );
           setCartItems(savedCartItems);
         }
       } catch (error) {
         console.error("Error initializing cart:", error);
         // Fallback to localStorage
-        const savedCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+        const savedCartItems = JSON.parse(
+          localStorage.getItem("cartItems") || "[]"
+        );
         setCartItems(savedCartItems);
       } finally {
         setLoadingCart(false);
@@ -224,15 +261,16 @@ const BookingInterface = React.memo(() => {
 
       // Update cart in API if user is logged in and we have a cartId
       if (userId && cartId) {
-        const updatedServices = newCartItems.map(item => ({
+        const updatedServices = newCartItems.map((item) => ({
           service_id: item._id,
           service_name: item.serviceName,
           duration: item.duration,
-          price: item.price
+          price: item.price,
+          image: item.img,
         }));
 
         await apipatch(`api/v1/addToCart/service/update/${cartId}`, {
-          services: updatedServices
+          services: updatedServices,
         });
       }
 
@@ -245,8 +283,14 @@ const BookingInterface = React.memo(() => {
   };
 
   // Navigate to services page
+  // Navigate to services page
   const handleAddServices = () => {
-    navigate(-1);
+    // Always navigate with businessId in URL for persistence
+    if (buisnes_id) {
+      navigate(`/cart/${buisnes_id}`, { state: { staff: staffData, _id: buisnes_id } });
+    } else {
+      navigate(-1);
+    }
   };
 
   // Handle checkout and booking creation
@@ -267,7 +311,11 @@ const BookingInterface = React.memo(() => {
     }
 
     if (!userId) {
-      showError("Please login to your account");
+      // Directly open login pop/modal instead of showing toast
+      // Assuming a global function or context to open login modal
+      // Dispatch a custom event to trigger login popup in navbar
+      window.dispatchEvent(new CustomEvent('open-login-modal'));
+      return;
       return;
     }
 
@@ -278,23 +326,23 @@ const BookingInterface = React.memo(() => {
       const today = new Date();
       const currentYear = today.getFullYear();
       const currentMonth = today.getMonth();
-      
+
       // Find the correct date - selectedDate is just the day number
       let targetDate = new Date(currentYear, currentMonth, selectedDate);
-      
+
       // If the selected date is in the past, move to next month
       if (targetDate < today) {
         targetDate = new Date(currentYear, currentMonth + 1, selectedDate);
       }
 
-      const formattedDate = targetDate.toISOString().split('T')[0];
+      const formattedDate = targetDate.toISOString().split("T")[0];
 
       // Transform cart items to match API expected format
-      const services = cartItems.map(item => ({
+      const services = cartItems.map((item) => ({
         ServiceId: String(item._id), // Convert to string as expected by API
         ServiceName: item.serviceName,
         Duration: item.duration || item.Duration, // Handle both lowercase and uppercase
-        Price: Number(item.price)
+        Price: Number(item.price),
       }));
 
       // Build the request payload to match the API structure
@@ -308,7 +356,7 @@ const BookingInterface = React.memo(() => {
         TotalPrice: subtotal,
         PaymentMethod: "online", // Add required PaymentMethod field
         PaymentStatus: "pending",
-        SendSms: true
+        SendSms: true,
       };
 
       console.log("Booking payload:", payload);
@@ -330,48 +378,52 @@ const BookingInterface = React.memo(() => {
       }
 
       // Call the booking API
-      const result = await apipost('api/v1/booking/book/', payload);
+      const result = await apipost("api/v1/booking/book/", payload);
 
       if (result && result.status === 200) {
-        showSuccess("Appointment Booking successfully");
+        // showSuccess("Appointment Booking successfully test");
+
+        // Show success cart popup
+        setSuccessCartOpen(true);
 
         // Clear cart after successful booking
         if (cartId) {
           await apipatch(`api/v1/addToCart/service/update/${cartId}`, {
-            services: []
+            services: [],
           });
         }
 
         // Clear local cart and promo code
-        localStorage.removeItem('cartItems');
+        localStorage.removeItem("cartItems");
         setCartItems([]);
         setSelectedPromoCode(null);
         setDiscount(0);
-        
+
         // Notify navbar that cart has been cleared
         notifyCartUpdate();
 
-        // Navigate to booking confirmation or history page
-        navigate('/cart/success', {
-          state: {
-            bookingId: result.data.Data._id,
-            date: formattedDate,
-            time: selectedTime,
-            services: services,
-            total: subtotal - discount
-          }
-        });
+        // Optionally, navigate after closing the success popup
+        // navigate("/", {
+        //   state: {
+        //     bookingId: result.data.Data._id,
+        //     date: formattedDate,
+        //     time: selectedTime,
+        //     services: services,
+        //     total: subtotal - discount,
+        //   },
+        // });
       }
     } catch (err) {
       console.log("Error in booking", err);
       console.log("Error response:", err.response?.data);
-      
+
       // Show specific API error message if available
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          err.response?.data?.details ||
-                          "Failed to create booking. Please try again.";
-      
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.details ||
+        "Failed to create booking. Please try again.";
+
       showError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -386,7 +438,13 @@ const BookingInterface = React.memo(() => {
       maxWidth="sm"
       fullWidth
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Typography variant="h6">Select Promo Code</Typography>
         <IconButton onClick={() => setPromoModalOpen(false)}>
           <CloseIcon />
@@ -398,7 +456,7 @@ const BookingInterface = React.memo(() => {
             No promo codes available
           </Typography>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {promoCode.map((promo) => {
               const applicable = isPromoCodeApplicable(promo);
               const discountAmount = calculateDiscount(promo);
@@ -410,41 +468,69 @@ const BookingInterface = React.memo(() => {
                   sx={{
                     p: 3,
                     borderRadius: 2,
-                    cursor: applicable ? 'pointer' : 'not-allowed',
+                    cursor: applicable ? "pointer" : "not-allowed",
                     opacity: applicable ? 1 : 0.6,
-                    border: selectedPromoCode?._id === promo._id ? '2px solid #1b4d69' : '1px solid #e0e0e0',
-                    '&:hover': {
-                      bgcolor: applicable ? '#f5f5f5' : 'inherit'
-                    }
+                    border:
+                      selectedPromoCode?._id === promo._id
+                        ? "2px solid #1b4d69"
+                        : "1px solid #e0e0e0",
+                    "&:hover": {
+                      bgcolor: applicable ? "#f5f5f5" : "inherit",
+                    },
                   }}
                   onClick={() => applicable && handlePromoCodeSelect(promo)}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <Box sx={{ flex: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <LocalOfferIcon sx={{ color: '#1b4d69', fontSize: 20 }} />
-                        <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 'bold' }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mb: 1,
+                        }}
+                      >
+                        <LocalOfferIcon
+                          sx={{ color: "#1b4d69", fontSize: 20 }}
+                        />
+                        <Typography
+                          variant="h6"
+                          sx={{ fontSize: 18, fontWeight: "bold" }}
+                        >
                           {promo.code}
                         </Typography>
                       </Box>
 
                       <Typography variant="body2" color="gray" sx={{ mb: 1 }}>
-                        {promo.discount_type === 'flat'
+                        {promo.discount_type === "flat"
                           ? `Flat ₹${promo.discount_value} off`
-                          : `${promo.discount_value}% off`
-                        }
+                          : `${promo.discount_value}% off`}
                       </Typography>
 
                       <Typography variant="body2" color="gray" sx={{ mb: 1 }}>
                         Min order: ₹{promo.min_order_value}
                       </Typography>
 
-                      <Typography variant="body2" color="gray" sx={{ fontSize: 12 }}>
-                        Valid till: {new Date(promo.valid_to).toLocaleDateString()}
+                      <Typography
+                        variant="body2"
+                        color="gray"
+                        sx={{ fontSize: 12 }}
+                      >
+                        Valid till:{" "}
+                        {new Date(promo.valid_to).toLocaleDateString()}
                       </Typography>
 
                       {applicable && (
-                        <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 'bold', mt: 1 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#4caf50", fontWeight: "bold", mt: 1 }}
+                        >
                           You'll save ₹{discountAmount}
                         </Typography>
                       )}
@@ -477,34 +563,36 @@ const BookingInterface = React.memo(() => {
       sx={{
         px: 4,
         mb: 2,
-        mt:10,
+        mt: 10,
         py: 15,
         // bgcolor: '#f5f5f5',
-        bgcolor: '#eaeef2',
-        borderRadius: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '250px',
-        textAlign: 'center'
+        bgcolor: "#eaeef2",
+        borderRadius: "16px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "250px",
+        textAlign: "center",
       }}
     >
-      <ShoppingCartIcon sx={{ fontSize: 60, color: '#aab4be', mb: 2 }} />
-      <Typography variant="h6" sx={{ mb: 1, color: '#555' }}>Your cart is empty</Typography>
-      <Typography variant="body2" sx={{ mb: 3, color: '#777' }}>
+      <ShoppingCartIcon sx={{ fontSize: 60, color: "#aab4be", mb: 2 }} />
+      <Typography variant="h6" sx={{ mb: 1, color: "#555" }}>
+        Your cart is empty
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: "#777" }}>
         Add some services to continue with booking
       </Typography>
       <Button
         variant="contained"
         onClick={handleAddServices}
         sx={{
-          bgcolor: '#1b4d69',
+          bgcolor: "#1b4d69",
           borderRadius: 2,
           px: 3,
-          '&:hover': {
-            bgcolor: '#143a50'
-          }
+          "&:hover": {
+            bgcolor: "#143a50",
+          },
         }}
       >
         Add Services
@@ -515,28 +603,58 @@ const BookingInterface = React.memo(() => {
   // Skeleton loader for the entire component
   if (loadingCart) {
     return (
-      <Box sx={{ bgcolor: 'white', minHeight: '100vh', p: 3, maxWidth: 1200, margin: '100px auto' }}>
+      <Box
+        sx={{
+          bgcolor: "white",
+          minHeight: "100vh",
+          p: 3,
+          maxWidth: 1200,
+          margin: "100px auto",
+        }}
+      >
         <Grid container spacing={6}>
           {/* Left column skeletons */}
           <Grid item xs={12} md={4}>
             <Skeleton variant="text" width="60%" height={30} sx={{ mb: 3 }} />
             <Box sx={{ mb: 4 }}>
-              <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
+              <Skeleton
+                variant="rectangular"
+                height={120}
+                sx={{ borderRadius: 2 }}
+              />
             </Box>
 
             <Skeleton variant="text" width="70%" height={30} sx={{ mb: 2 }} />
-            <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 3, mb: 2 }} />
-            <Skeleton variant="rectangular" height={250} sx={{ borderRadius: 3 }} />
+            <Skeleton
+              variant="rectangular"
+              height={150}
+              sx={{ borderRadius: 3, mb: 2 }}
+            />
+            <Skeleton
+              variant="rectangular"
+              height={250}
+              sx={{ borderRadius: 3 }}
+            />
           </Grid>
 
           {/* Right column skeletons */}
           <Grid item xs={12} md={8}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={6}>
-                <Skeleton variant="text" width="80%" height={30} sx={{ mb: 3 }} />
+                <Skeleton
+                  variant="text"
+                  width="80%"
+                  height={30}
+                  sx={{ mb: 3 }}
+                />
               </Grid>
               <Grid item xs={6} textAlign="right">
-                <Skeleton variant="text" width="60%" height={30} sx={{ mb: 3, ml: 'auto' }} />
+                <Skeleton
+                  variant="text"
+                  width="60%"
+                  height={30}
+                  sx={{ mb: 3, ml: "auto" }}
+                />
               </Grid>
             </Grid>
 
@@ -552,13 +670,31 @@ const BookingInterface = React.memo(() => {
 
             <Grid container spacing={4} sx={{ mt: 2 }}>
               <Grid item xs={12} md={6}>
-                <Skeleton variant="text" width="40%" height={30} sx={{ my: 3 }} />
-                <Skeleton variant="rectangular" height={90} sx={{ borderRadius: 4 }} />
+                <Skeleton
+                  variant="text"
+                  width="40%"
+                  height={30}
+                  sx={{ my: 3 }}
+                />
+                <Skeleton
+                  variant="rectangular"
+                  height={90}
+                  sx={{ borderRadius: 4 }}
+                />
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <Skeleton variant="text" width="50%" height={30} sx={{ my: 3 }} />
-                <Skeleton variant="rectangular" height={240} sx={{ borderRadius: 4 }} />
+                <Skeleton
+                  variant="text"
+                  width="50%"
+                  height={30}
+                  sx={{ my: 3 }}
+                />
+                <Skeleton
+                  variant="rectangular"
+                  height={240}
+                  sx={{ borderRadius: 4 }}
+                />
               </Grid>
             </Grid>
           </Grid>
@@ -568,14 +704,103 @@ const BookingInterface = React.memo(() => {
   }
 
   return (
-    <Box sx={{ bgcolor: 'white', minHeight: '100vh' }}>
+    <Box sx={{ bgcolor: "#eaeef2", minHeight: "100vh" }}>
       {cartItems.length > 0 ? (
-        <Box sx={{ p: 3, maxWidth: 1200, margin: '100px auto' }}>
+        <Box sx={{ p: 3, maxWidth: 1200, margin: "100px auto" }}>
+          <Box
+            sx={{
+              maxWidth: 1200,
+              width: "100%",
+              mx: "auto",
+              // bgcolor: "white",
+              // py: 4,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "top",
+              // flexDirection: "column",
+              gap: 3,
+              borderRadius: 2,
+              marginBottom: 6,
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "top", gap: 4 }}>
+              {loadingBusinessInfo ? (
+                <Skeleton 
+                  variant="rectangular" 
+                  width={150} 
+                  height={130} 
+                  sx={{ borderRadius: "14px" }} 
+                />
+              ) : (
+                <img
+                  src={businessInfo?.ProfileImage || sampleimage}
+                  alt="Business Image"
+                  style={{ width: 150, height: 130, borderRadius: 14, objectFit: 'cover' }}
+                />
+              )}
+              <Box>
+                {loadingBusinessInfo ? (
+                  <>
+                    <Skeleton variant="text" width={200} height={40} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width={180} height={24} />
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="h6" fontSize={36}>
+                      {businessInfo?.BusinessName || "Business Name"}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      fontSize={18}
+                    >
+                      {businessInfo?.ShopNumber || ""}{" "}
+                      {businessInfo?.StreetAddress || ""}{", "}
+                      {businessInfo?.Region || ""}{", "}
+                      {businessInfo?.ZipCode || ""}
+                    </Typography>
+                  </>
+                )}
+              </Box>
+            </Box>
+            <Box>
+              {loadingBusinessInfo ? (
+                <Skeleton 
+                  variant="rectangular" 
+                  width={60} 
+                  height={30} 
+                  sx={{ borderRadius: 2 }} 
+                />
+              ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: "#1b4d69",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography variant="h6" fontSize={12} fontWeight="bold" sx={{ color: "white", mr: 1 }}>
+                    {businessInfo?.AverageRating || "4.5"}
+                  </Typography>
+                  <StarIcon sx={{ color: "#ffb400", fontSize: 16 }} />
+                </Box>
+              )}
+            </Box>
+          </Box>
           <Grid container spacing={6}>
             <Grid item xs={12} md={4}>
-              <Typography variant="h6" fontSize={16} sx={{ mb: 3 }}>Choose professional</Typography>
+              <Typography variant="h6" fontSize={16} sx={{ mb: 3 }}>
+                Choose professional
+              </Typography>
               <Box sx={{ mb: 4 }}>
-                <ServiceStaffSelect staffData={staffData} selectedStaff={setSelectedStaff} />
+                <ServiceStaffSelect
+                  staffData={staffData}
+                  selectedStaff={setSelectedStaff}
+                />
               </Box>
 
               <Calendar selectedSlotDate={setSelectedDate} />
@@ -586,11 +811,18 @@ const BookingInterface = React.memo(() => {
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={6}>
                   <Typography variant="h6" fontSize={16} sx={{ mb: 3 }}>
-                    {cartItems.length} {cartItems.length === 1 ? 'service' : 'services'} selected
+                    {cartItems.length}{" "}
+                    {cartItems.length === 1 ? "service" : "services"} selected
                   </Typography>
                 </Grid>
                 <Grid item xs={6} textAlign="right">
-                  <Typography variant="h6" onClick={() => navigate(-1)} fontSize={14} fontWeight="bold" sx={{ mb: 3, color: "#1b4d69", cursor: "pointer" }}>
+                  <Typography
+                    variant="h6"
+                    onClick={() => navigate(-1)}
+                    fontSize={14}
+                    fontWeight="bold"
+                    sx={{ mb: 3, color: "#1b4d69", cursor: "pointer" }}
+                  >
                     Add other services
                   </Typography>
                 </Grid>
@@ -600,19 +832,46 @@ const BookingInterface = React.memo(() => {
 
               <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>Offers</Typography>
+                  <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>
+                    Offers
+                  </Typography>
 
                   {/* Selected Promo Code Display */}
                   {selectedPromoCode && (
-                    <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: '#e8f5e8', borderRadius: '16px', border: '1px solid #4caf50' }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <LocalOfferIcon sx={{ color: '#4caf50' }} />
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        mb: 2,
+                        bgcolor: "#e8f5e8",
+                        borderRadius: "16px",
+                        border: "1px solid #4caf50",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                        >
+                          <LocalOfferIcon sx={{ color: "#4caf50" }} />
                           <Box>
-                            <Typography fontSize={16} fontWeight="bold" color="#4caf50">
+                            <Typography
+                              fontSize={16}
+                              fontWeight="bold"
+                              color="#4caf50"
+                            >
                               {selectedPromoCode.code} Applied
                             </Typography>
-                            <Typography variant="caption" color="#4caf50" fontSize={12}>
+                            <Typography
+                              variant="caption"
+                              color="#4caf50"
+                              fontSize={12}
+                            >
                               You saved ₹{discount}
                             </Typography>
                           </Box>
@@ -620,7 +879,7 @@ const BookingInterface = React.memo(() => {
                         <Button
                           size="small"
                           onClick={handleRemovePromoCode}
-                          sx={{ color: '#d32f2f', minWidth: 'auto' }}
+                          sx={{ color: "#d32f2f", minWidth: "auto" }}
                         >
                           Remove
                         </Button>
@@ -634,25 +893,45 @@ const BookingInterface = React.memo(() => {
                     sx={{
                       p: 2,
                       mb: 2,
-                      bgcolor: '#dce1e6',
-                      borderRadius: '16px',
-                      cursor: 'pointer',
-                      '&:hover': { bgcolor: '#d5dae0' }
+                      // bgcolor: "#dce1e6",
+                      bgcolor: "#d7dbdf",
+                      borderRadius: "16px",
+                      cursor: "pointer",
+                      "&:hover": { bgcolor: "#d5dae0" },
                     }}
                     onClick={() => setPromoModalOpen(true)}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box component="img" src={DiscountTicket} alt="Promo" sx={{ width: 40, height: 20, pl: "0.28rem" }} />
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Box
+                          component="img"
+                          src={DiscountTicket}
+                          alt="Promo"
+                          sx={{ width: 40, height: 20, pl: "0.28rem" }}
+                        />
                         <Box sx={{ pl: "0.28rem" }}>
                           <Typography fontSize={18}>
-                            {selectedPromoCode ? 'Change Promo Code' : 'Select offers/Use Promo Code'}
+                            {selectedPromoCode
+                              ? "Change Promo Code"
+                              : "Select offers/Use Promo Code"}
                           </Typography>
-                          <Typography variant="caption" color="#1b4d69" fontSize={10} fontWeight="bold">
+                          <Typography
+                            variant="caption"
+                            color="#1b4d69"
+                            fontSize={10}
+                            fontWeight="bold"
+                          >
                             {promoCode.length > 0
                               ? `${promoCode.length} promo codes available`
-                              : 'Get special discounts'
-                            }
+                              : "Get special discounts"}
                           </Typography>
                         </Box>
                       </Box>
@@ -662,37 +941,73 @@ const BookingInterface = React.memo(() => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>Price Details</Typography>
-                  <Paper elevation={0} sx={{ py: 2, px: 4, bgcolor: '#dce1e6', borderRadius: 4 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="h6" fontSize={16} sx={{ my: 3 }}>
+                    Price Details
+                  </Typography>
+                  <Paper
+                    elevation={0}
+                    sx={{ py: 2, px: 4, bgcolor: "#d7dbdf", borderRadius: 4 }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
                       <Typography color="gray">Sub Total</Typography>
                       <Typography color="gray">₹{subtotal}</Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
                       <Typography color="gray">Discount</Typography>
                       <Typography color="#ff716d">-₹{discount}</Typography>
                     </Box>
                     <Divider sx={{ my: 2 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 2,
+                      }}
+                    >
                       <Typography fontWeight="bold">Total</Typography>
-                      <Typography fontWeight="bold">₹{subtotal - discount}</Typography>
+                      <Typography fontWeight="bold">
+                        ₹{subtotal - discount}
+                      </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", mt: 5 }}
+                    >
                       <Button
                         variant="contained"
                         sx={{
-                          bgcolor: 'black',
+                          bgcolor: "black",
                           borderRadius: 2,
-                          '&:disabled': {
-                            bgcolor: 'gray',
-                            color: 'white',
-                            minWidth: '50px'
-                          }
+                          "&:disabled": {
+                            bgcolor: "gray",
+                            color: "white",
+                            minWidth: "50px",
+                          },
                         }}
                         onClick={handleCheckout}
-                        disabled={cartItems.length === 0 || !selectedTime || !selectedDate || isLoading}
+                        disabled={
+                          cartItems.length === 0 ||
+                          !selectedTime ||
+                          !selectedDate ||
+                          isLoading
+                        }
                       >
-                        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Checkout'}
+                        {isLoading ? (
+                          <CircularProgress size={24} color="inherit" />
+                        ) : (
+                          "Checkout"
+                        )}
                       </Button>
                     </Box>
                   </Paper>
@@ -702,12 +1017,13 @@ const BookingInterface = React.memo(() => {
           </Grid>
         </Box>
       ) : (
-        <Box sx={{ bgcolor: 'white', minHeight: '100vh', p: 3 }}>
+        <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 3 }}>
           <EmptyCart />
         </Box>
       )}
 
       <PromoCodeModal />
+      <SuccessCart open={successCartOpen} onClose={() => { setSuccessCartOpen(false); navigate("/"); }} />
     </Box>
   );
 });

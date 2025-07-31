@@ -143,7 +143,7 @@ export default function BusinessRoleSelection() {
                 }}
               >
                   
-                <Box sx={{ px:{xs:0, sm:12}}}>
+                <Box sx={{ px:{xs:0, sm:12}, mt:2}}>
                   <Typography component="h1" variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#1b4d69",textAlign:"center",  fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem', lg: '2rem' } }}>
                     Unlock New Potential: Identify Your Business Role!
                   </Typography>

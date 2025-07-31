@@ -181,9 +181,10 @@ export default function BusinessServiceInfo() {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  mt:10,
+                  mt:{xs:6},
                   maxWidth: "100%",
                   overflow: "hidden",
+                  // bgcolor:"red"
                 }}
               >
                 <Typography
@@ -195,10 +196,10 @@ export default function BusinessServiceInfo() {
                     color: "#1b4d69",
                     textAlign: "center",
                     fontSize: {
-                      xs: "1.2rem",
-                      sm: "1.5rem",
-                      md: "1.8rem",
-                      lg: "2rem",
+                      xs: "1.65rem",
+                      sm: "1.8rem",
+                      md: "2rem",
+                      lg: "2.2rem",
                     },
                   }}
                 >
@@ -208,12 +209,18 @@ export default function BusinessServiceInfo() {
                 <Typography
                   variant="subtitle1"
                   sx={{ 
-                    mb: 3, 
+                    mb: {xs:6, md:4}, 
                     textAlign: "center",
                     maxWidth: "100%",
                     wordWrap: "break-word",
                     wordBreak: "break-word",
                     px: { xs: 1, sm: 2 },
+                    fontSize: {
+                      xs: "0.8rem",
+                      sm: "0.9rem",
+                      md: "1rem",
+                      lg: "1.1rem",
+                    },
                   }}
                 >
                   Showcase your service offerings with details on pricing,{" "}

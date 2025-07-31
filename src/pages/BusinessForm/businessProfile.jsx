@@ -288,7 +288,7 @@ export default function BusinessProfileForm() {
                     fontWeight: "bold", 
                     color: "#1b4d69", 
                     textAlign: "center",
-                    fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem', lg: '2rem' },
+                    fontSize: { xs: '1.3rem', sm: '1.5rem', md: '1.8rem', lg: '2rem' },
                     px: { xs: 1, sm: 0 }
                   }}
                 >
@@ -308,7 +308,7 @@ export default function BusinessProfileForm() {
 
                 <Box component="form" noValidate onSubmit={handleSubmit} sx={{ maxWidth: { xs: '100%', sm: 500, lg: 600 }, width: '100%' }}>
                   <Grid container spacing={{ xs: 2, lg: 1 }}>
-                    <Grid container justifyContent="left" sx={{ my: { xs: 0.5, lg: 0.25 }, px: { xs: 1, sm: 2 } }}>
+                    <Grid container justifyContent="left" sx={{ my: { xs: 0.5, lg: 0.25 }, px: { xs: 2, sm: 2 } }}>
                       <Grid item>
                         <Typography variant="h6" sx={{ fontWeight: "bold", fontSize: { xs: '1rem', sm: '1.1rem', lg: '0.95rem' } }}>
                           Business Introduction
@@ -336,11 +336,11 @@ export default function BusinessProfileForm() {
                     </Grid>
 
                     <Grid item xs={12} sm={6}>
-                      <Grid container spacing={2} alignItems="center" sx={{ justifyContent: { xs: "center", sm: "right" } }}>
+                      <Grid container spacing={2} alignItems="center" sx={{ justifyContent: { xs: "left", sm: "right" } }}>
                         <Grid item>
                           <Avatar
-                            // src={formData.profilePicture?.s3Url?.url || ""}
-                            src={formData.profilePicture?.s3Url || ""}
+                            src={formData.profilePicture?.s3Url?.url || ""}
+                            // src={formData.profilePicture?.s3Url || ""}
                             alt="Profile"
                             sx={{ 
                               width: { xs: 48, sm: 56 }, 

@@ -66,6 +66,9 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
     const isToday = (date) =>
         format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
 
+    const isPastDate = (date) =>
+        date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
     const isSelected = (date) =>
         selected && format(date, 'yyyy-MM-dd') === format(selected, 'yyyy-MM-dd');
 
@@ -196,10 +199,13 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                             {day ? (
                                 <Button
                                     onClick={() => {
-                                        setSelected(day);
-                                        setSelectedQuick('');
+                                        if (!isPastDate(day)) {
+                                            setSelected(day);
+                                            setSelectedQuick('');
+                                        }
                                     }}
                                     fullWidth
+                                    disabled={isPastDate(day)}
                                     sx={{
                                         width: 36,
                                         height: 36,
@@ -207,10 +213,15 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                         p: 0,
                                         borderRadius: '50%',
                                         bgcolor: isSelected(day) ? '#1b4d69' : 'transparent',
-                                        color: isSelected(day) ? 'white' : 'black',
+                                        color: isPastDate(day) ? '#ccc' : (isSelected(day) ? 'white' : 'black'),
                                         border: isToday(day) ? '2px solid #1b4d69' : 'none',
+                                        cursor: isPastDate(day) ? 'not-allowed' : 'pointer',
                                         '&:hover': {
-                                            bgcolor: isSelected(day) ? '#1b4d69' : '#eee',
+                                            bgcolor: isPastDate(day) ? 'transparent' : (isSelected(day) ? '#1b4d69' : '#eee'),
+                                        },
+                                        '&:disabled': {
+                                            bgcolor: 'transparent',
+                                            color: '#ccc',
                                         },
                                     }}
                                 >

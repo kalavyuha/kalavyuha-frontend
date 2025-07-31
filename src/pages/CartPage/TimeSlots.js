@@ -45,7 +45,8 @@ const AvailableTimesComponent = ({selectedSlot}) => {
                 elevation={0}
                 sx={{
                     padding: "12px",
-                    bgcolor: "#dce1e6",
+                    // bgcolor: "#dce1e6",
+                    bgcolor: "#d7dbdf",
                     borderRadius: 3,
                     mt: 2
                 }}
@@ -61,7 +62,7 @@ const AvailableTimesComponent = ({selectedSlot}) => {
                                 key={time}
                                 variant={selectedTime === time ? 'contained' : 'outlined'}
                                 sx={{
-                                    bgcolor: selectedTime === time ? "#3498db" : "white",
+                                    bgcolor: selectedTime === time ? "#000" : "#c6cace",
                                     color: selectedTime === time ? "white" : "#333",
                                     borderRadius: "8px",
                                     padding: "0px",
@@ -70,7 +71,7 @@ const AvailableTimesComponent = ({selectedSlot}) => {
                                     fontWeight: 500,
                                     minHeight: '35px',
                                     '&:hover': {
-                                        bgcolor: selectedTime === time ? "#2980b9" : "#f5f5f5",
+                                        bgcolor: selectedTime === time ? "#000" : "#f8f8f8",
                                         border: selectedTime === time ? "none" : "1px solid #d0d0d0"
                                     },
                                     boxShadow: selectedTime === time ? '0 2px 4px rgba(52,152,219,0.2)' : 'none'

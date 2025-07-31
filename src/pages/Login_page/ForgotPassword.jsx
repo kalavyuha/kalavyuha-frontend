@@ -26,6 +26,7 @@ const ForgotPassword = ({ onBack }) => {
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [otpError, setOtpError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState("");
 
   const handleOtpChange = (e, idx) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
@@ -34,7 +35,7 @@ const ForgotPassword = ({ onBack }) => {
     newOtp[idx] = value;
     setOtp(newOtp);
     // Move to next input if value entered
-    if (value && idx < 3) {
+    if (value && idx < 5) {
       document.getElementById(`otp-input-${idx + 1}`).focus();
     }
   };
@@ -71,7 +72,10 @@ const ForgotPassword = ({ onBack }) => {
       const res = await fetch("http://127.0.0.1:8000/api/v1/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ PhoneNumber: phoneNumber }),
+        body: JSON.stringify({
+          PhoneNumber: phoneNumber,
+          UserType: "merchant",
+        }),
       });
       if (!res.ok) throw new Error("Failed to send reset request");
       setStep(2);
@@ -90,9 +94,16 @@ const ForgotPassword = ({ onBack }) => {
       const res = await fetch("http://127.0.0.1:8000/api/v1/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ PhoneNumber: phoneNumber, OTP: otp.join("") }),
+        body: JSON.stringify({
+          PhoneNumber: `+91${phoneNumber}`,
+          OTP: otp.join(""),
+          UserType: "merchant",
+        }),
       });
       if (!res.ok) throw new Error("Incorrect OTP");
+      const data = await res.json();
+      // console.log("OTP Verification Response:", data);
+      setUserId(data.Data?._id);
       setStep(3);
     } catch (err) {
       setOtpError("Incorrect OTP, Please try again.");
@@ -101,19 +112,24 @@ const ForgotPassword = ({ onBack }) => {
     }
   };
 
+  // console.log("User ID:", userId);
+
   const handlePasswordChange = async () => {
     setLoading(true);
     setOtpError("");
     try {
       const res = await fetch(
-        "http://127.0.0.1:8000/api/v1/BussinessMember/update/28629796",
+        `http://127.0.0.1:8000/api/v1/BussinessMember/update/${userId}`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer VIRoHdqUAtpklgKg`,
+          },
           body: JSON.stringify({
-            email,
-            phone: phoneNumber,
-            newPassword,
+            // email,
+            // phone: phoneNumber,
+            Password: newPassword,
           }),
         }
       );
@@ -134,7 +150,7 @@ const ForgotPassword = ({ onBack }) => {
   };
 
   const handlePhoneChange = (e) => {
-    const inputValue = e.target.value.replace("+91-", "");
+    const inputValue = e.target.value.replace("+91 ", "");
     const value = inputValue.replace(/\D/g, "");
     if (value.length <= 10) {
       setPhoneNumber(value);
@@ -230,15 +246,18 @@ const ForgotPassword = ({ onBack }) => {
                     borderRadius: 2.5,
                     "& .MuiOutlinedInput-root": {
                       "&:hover fieldset": {
-                        borderColor: !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
+                        borderColor:
+                          !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
                       },
                       "&.Mui-focused fieldset": {
-                        borderColor: !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
+                        borderColor:
+                          !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
                       },
                     },
                     "& .MuiInputLabel-root": {
                       "&.Mui-focused": {
-                        color: !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
+                        color:
+                          !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
                       },
                     },
                   }}
@@ -268,7 +287,7 @@ const ForgotPassword = ({ onBack }) => {
                   type="text"
                   label="Phone Number"
                   fullWidth
-                  value={`+91-${phoneNumber}`}
+                  value={`+91 ${phoneNumber}`}
                   onChange={handlePhoneChange}
                   error={!isPhoneValid && phoneNumber.length > 0}
                   helperText={
@@ -289,15 +308,24 @@ const ForgotPassword = ({ onBack }) => {
                             : "#dadada",
                       },
                       "&:hover fieldset": {
-                        borderColor: !isPhoneValid && phoneNumber.length > 0 ? "red" : "#1b4d69",
+                        borderColor:
+                          !isPhoneValid && phoneNumber.length > 0
+                            ? "red"
+                            : "#1b4d69",
                       },
                       "&.Mui-focused fieldset": {
-                        borderColor: !isPhoneValid && phoneNumber.length > 0 ? "red" : "#1b4d69",
+                        borderColor:
+                          !isPhoneValid && phoneNumber.length > 0
+                            ? "red"
+                            : "#1b4d69",
                       },
                     },
                     "& .MuiInputLabel-root": {
                       "&.Mui-focused": {
-                        color: !isPhoneValid && phoneNumber.length > 0 ? "red" : "#1b4d69",
+                        color:
+                          !isPhoneValid && phoneNumber.length > 0
+                            ? "red"
+                            : "#1b4d69",
                       },
                     },
                   }}
@@ -383,11 +411,11 @@ const ForgotPassword = ({ onBack }) => {
                 <Box
                   sx={{
                     display: "flex",
-                    gap: 2,
+                    gap: { xs: 1, sm: 2 },
                     mb: 3,
                   }}
                 >
-                  {[0, 1, 2, 3].map((idx) => (
+                  {[0, 1, 2, 3, 4, 5].map((idx) => (
                     <TextField
                       key={idx}
                       id={`otp-input-${idx}`}
@@ -410,9 +438,9 @@ const ForgotPassword = ({ onBack }) => {
                         maxLength: 1,
                         style: {
                           textAlign: "center",
-                          fontSize: 22,
-                          width: "30px",
-                          height: "30px",
+                          fontSize: { xs: 16, sm: 22 },
+                          width: { xs: "25px", sm: "30px" },
+                          height: { xs: "25px", sm: "30px" },
                           background: "#fbfbfb",
                         },
                       }}
@@ -453,7 +481,7 @@ const ForgotPassword = ({ onBack }) => {
                 </Typography>
                 <Button
                   sx={{
-                     bgcolor: "#1b4d69",
+                    bgcolor: "#1b4d69",
                     color: "white",
                     mt: 1,
                     textTransform: "none",
@@ -604,7 +632,7 @@ const ForgotPassword = ({ onBack }) => {
                 )}
                 <Button
                   sx={{
-                   bgcolor: "#1b4d69",
+                    bgcolor: "#1b4d69",
                     color: "white",
                     mt: 2,
                     textTransform: "none",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { uploadBusinessHours } from "../businessHoursApi";
 import { useNavigate } from "react-router-dom";
 import {
   Grid,
@@ -12,42 +13,44 @@ import {
 } from "@mui/material";
 import { Clock } from "lucide-react";
 import CustomSwitch from "./CustomSwitch";
+import { ArrowLeft } from "lucide-react";
 
 const BusinessHours = () => {
   const navigate = useNavigate();
-  
+
   const getStoredData = () => {
     try {
-      const storedData = localStorage.getItem('formData');
+      const storedData = localStorage.getItem("formData");
       return storedData ? JSON.parse(storedData) : {};
     } catch (error) {
-      console.error('Error parsing stored data:', error);
+      console.error("Error parsing stored data:", error);
       return {};
     }
   };
 
   const storedData = getStoredData();
+  console.log("Stored Data:", storedData);
   const existingBusinessHours = storedData.businessHours || {};
-  
+
   const [scheduleType, setScheduleType] = useState(
     existingBusinessHours.scheduleType || "selected_hours"
   );
-  
+
   const [daysStatus, setDaysStatus] = useState(
-    existingBusinessHours.daysStatus || 
-    WeekDays.reduce(
-      (acc, day) => ({
-        ...acc,
-        [day.id]: {
-          isOpen: true,
-          startTime: "09:00",
-          endTime: "06:00",
-          startMeridian: "AM",
-          endMeridian: "PM",
-        },
-      }),
-      {}
-    )
+    existingBusinessHours.daysStatus ||
+      WeekDays.reduce(
+        (acc, day) => ({
+          ...acc,
+          [day.id]: {
+            isOpen: true,
+            startTime: "09:00",
+            endTime: "06:00",
+            startMeridian: "AM",
+            endMeridian: "PM",
+          },
+        }),
+        {}
+      )
   );
 
   const handleToggle = (dayId) => {
@@ -82,15 +85,17 @@ const BusinessHours = () => {
       ...currentData,
       businessHours: {
         scheduleType,
-        daysStatus
-      }
+        daysStatus,
+      },
     };
-    localStorage.setItem('formData', JSON.stringify(updatedData));
-    
+    localStorage.setItem("formData", JSON.stringify(updatedData));
+
     // Dispatch custom event to notify parent component
-    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
-      detail: { key: 'formData', data: updatedData }
-    }));
+    window.dispatchEvent(
+      new CustomEvent("localStorageUpdate", {
+        detail: { key: "formData", data: updatedData },
+      })
+    );
   }, [scheduleType, daysStatus]);
 
   const handleGoBack = () => {
@@ -99,36 +104,98 @@ const BusinessHours = () => {
       ...previousData,
       businessHours: {
         scheduleType,
-        daysStatus
-      }
+        daysStatus,
+      },
     };
-    localStorage.setItem('formData', JSON.stringify(formData));
-    
+    localStorage.setItem("formData", JSON.stringify(formData));
+
     // Dispatch custom event to notify parent component
-    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
-      detail: { key: 'formData', data: formData }
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent("localStorageUpdate", {
+        detail: { key: "formData", data: formData },
+      })
+    );
+
     navigate("/business-service-info", { state: formData });
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
+    // Debug log to show current open/closed status for all days
+    console.log('Debug: daysStatus before building payload:', daysStatus);
     const previousData = getStoredData();
     const formData = {
       ...previousData,
       businessHours: {
         scheduleType,
-        daysStatus
-      }
+        daysStatus,
+      },
     };
-    localStorage.setItem('formData', JSON.stringify(formData));
-    
-    // Dispatch custom event to notify parent component
-    window.dispatchEvent(new CustomEvent('localStorageUpdate', {
-      detail: { key: 'formData', data: formData }
-    }));
-    
-    navigate("/business-document-uploads", { state: formData });
+    localStorage.setItem("formData", JSON.stringify(formData));
+
+    window.dispatchEvent(
+      new CustomEvent("localStorageUpdate", {
+        detail: { key: "formData", data: formData },
+      })
+    );
+
+    // Prepare API body
+
+    // Ensure businessId is a string (API expects string type)
+    const businessId = String(previousData.BusinessId || 55319888);
+    let apiScheduleType = scheduleType === "selected_hours"
+      ? "open_hours"
+      : scheduleType === "by_appointment"
+      ? "by_appointment"
+      : "always_open";
+
+    // Build BusinessHours array for API, only with required fields
+    const businessHoursArr = WeekDays.map((day) => {
+      const status = daysStatus[day.id];
+      let dayStatus = "closed";
+      let startTime = null;
+      let endTime = null;
+
+      if (status.isOpen) {
+        if (scheduleType === "selected_hours") {
+          dayStatus = "open";
+          startTime = `${status.startTime} ${status.startMeridian}`;
+          endTime = `${status.endTime} ${status.endMeridian}`;
+        } else if (scheduleType === "by_appointment") {
+          dayStatus = "appointment";
+        } else if (scheduleType === "always_open") {
+          dayStatus = "24hours";
+        }
+      } else {
+        // For closed days, status must always be 'closed' and times null
+        dayStatus = "closed";
+        startTime = null;
+        endTime = null;
+      }
+
+      const dayObj = {
+        day: day.name,
+        enabled: !!status.isOpen,
+        status: dayStatus,
+        startTime,
+        endTime,
+      };
+      return dayObj;
+    });
+
+    const apiBody = {
+      BusinessId: businessId,
+      ScheduleType: apiScheduleType,
+      BusinessHours: businessHoursArr,
+    };
+
+    // Call the upload API
+    try {
+      await uploadBusinessHours(apiBody);
+      navigate("/business-document-uploads", { state: formData });
+    } catch (error) {
+      console.error(error);
+      // Optionally show error message to user
+    }
   };
 
   const handlePreview = () => {
@@ -140,7 +207,7 @@ const BusinessHours = () => {
         hours: status.isOpen
           ? scheduleType === "selected_hours"
             ? `${status.startTime} ${status.startMeridian} to ${status.endTime} ${status.endMeridian}`
-            : scheduleType === "appointment"
+            : scheduleType === "by_appointment"
             ? "By appointments only"
             : "Open 24 hours"
           : "Closed",
@@ -152,12 +219,13 @@ const BusinessHours = () => {
     <Grid item size={{ xs: 12, sm: 12, md: 8, lg: 8 }}>
       <Box
         sx={{
-          my: 8,
-          mx: { xs: 1, sm: 4 },
+          my: 6,
+          // mx: { xs: 2, sm: 4 },
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          width: "100%",
         }}
       >
         <Typography
@@ -176,7 +244,7 @@ const BusinessHours = () => {
           component="p"
           variant="body1"
           sx={{
-            //   mb: 2,
+            mb: 2,
             color: "#555",
             fontSize: { xs: 11, sm: 14, md: 15 },
           }}
@@ -185,7 +253,7 @@ const BusinessHours = () => {
         </Typography>
         <Box
           sx={{
-            width: { xs: "300px", sm: "480px" },
+            width: { xs: "300px ", sm: "480px" },
             borderRadius: 2,
             mt: 3,
             display: "flex",
@@ -200,7 +268,8 @@ const BusinessHours = () => {
             sx={{
               mt: 0,
               mb: 1,
-              width: "100%",
+              px: { xs: 2, sm: 4 },
+               width: { xs: "95%", sm: "100%" },
               justifyContent: "space-between",
               display: "flex",
               alignItems: "center",
@@ -246,7 +315,6 @@ const BusinessHours = () => {
               <MenuItem value="selected_hours">
                 Open for selected hours
               </MenuItem>
-              <MenuItem value="appointment">By Appointment only</MenuItem>
               <MenuItem value="always_open">Always Open</MenuItem>
             </Select>
           </Box>
@@ -256,11 +324,11 @@ const BusinessHours = () => {
               key={day.id}
               sx={{
                 mb: 0,
-                width: { xs: "90%", sm: "100%" },
+                width: { xs: "95%", sm: "100%" },
                 justifyContent: "space-between",
                 display: "flex",
                 alignItems: "center",
-                px: 3,
+                mx: 4,
               }}
             >
               <Stack
@@ -313,7 +381,7 @@ const BusinessHours = () => {
                         }}
                         sx={{
                           width: { xs: 45, sm: 45 },
-                            fontSize: { xs: 12, sm: 14 },
+                          fontSize: { xs: 12, sm: 14 },
                           "& input::-webkit-calendar-picker-indicator": {
                             display: "none",
                           },
@@ -382,7 +450,7 @@ const BusinessHours = () => {
                         }}
                         sx={{
                           width: { xs: 45, sm: 45 },
-                            fontSize: { xs: 12, sm: 14 },
+                          fontSize: { xs: 12, sm: 14 },
                           "& input::-webkit-calendar-picker-indicator": {
                             display: "none",
                           },
@@ -429,7 +497,7 @@ const BusinessHours = () => {
                       </Select>
                     </Box>
                   </>
-                ) : scheduleType === "appointment" ? (
+                ) : scheduleType === "by_appointment" ? (
                   <Typography
                     sx={{ color: "grey", fontSize: { xs: 12, sm: 14, md: 15 } }}
                   >
@@ -449,35 +517,41 @@ const BusinessHours = () => {
           {/* ------------------BUTTONS------------------ */}
           <Box
             sx={{
-              mt: 0,
+              mt: 2,
               //   mb: 2,
               width: "100%",
               justifyContent: "space-evenly",
               display: "flex",
               alignItems: "center",
               //   px: 8,
+              gap: 2,
             }}
           >
             <Button
               onClick={handleGoBack}
               sx={{
                 textTransform: "none",
-                fontSize: { xs: 12, sm: 13 },
+                fontSize: { xs: 13, sm: 14 },
                 color: "black",
                 borderRadius: 10,
                 width: 100,
                 py: 0.5,
                 fontWeight: 600,
                 border: "1px solid #999",
+                width: "50%",
               }}
             >
+              <ArrowLeft
+                className="mr-2"
+                style={{ width: "26px", height: "16px" }}
+              />
               Go Back
             </Button>
             <Button
               onClick={handleNextStep}
               sx={{
                 textTransform: "none",
-                fontSize: { xs: 12, sm: 13 },
+                fontSize: { xs: 13, sm: 14 },
                 color: "white",
                 bgcolor: "black",
                 borderRadius: 10,
@@ -485,10 +559,11 @@ const BusinessHours = () => {
                 py: 0.5,
                 fontWeight: 600,
                 border: "1px solid #999",
+                width: "50%",
               }}
             >
               Next Step
-             </Button>
+            </Button>
           </Box>
         </Box>
       </Box>

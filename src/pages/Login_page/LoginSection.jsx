@@ -8,11 +8,18 @@ import {
   Button,
   Divider,
   Stack,
+  IconButton,
+  InputAdornment,
+  FormControlLabel,
+  Checkbox,
+  Link,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 // import { assets } from "../../assets/images/assets";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 // import { ENDPOINTS } from "../../constants/apiHandling";
@@ -26,10 +33,18 @@ const LoginSection = ({ onForgotPassword }) => {
   // const [timer, setTimer] = useState(60);
   // const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [countryCode] = useState("+91");
   // const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
   const [password, setPassword] = useState("");
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [merchantId, setMerchantId] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // const handleOtpChange = (e, idx) => {
   //   const value = e.target.value.replace(/[^0-9]/g, "");
@@ -69,7 +84,7 @@ const LoginSection = ({ onForgotPassword }) => {
   // };
 
   const maskPhone = (phone) => {
-    return phone.replace(/(\+\d{2}-)(\d{2})(\d{4})(\d{4})/, "$1**-****-$4");
+    return phone.replace(/(\+\d{2} )(\d{2})(\d{4})(\d{4})/, "$1**-****-$4");
   };
 
   // const validateEmail = (email) => {
@@ -78,26 +93,55 @@ const LoginSection = ({ onForgotPassword }) => {
   // };
 
   const validatePhone = (phone) => {
-    const phoneNumber = phone.replace("+91-", "");
+    const phoneNumber = phone.replace("+91 ", "");
     return phoneNumber.length === 10 && /^\d+$/.test(phoneNumber);
   };
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/BussinessMember/member/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ PhoneNumber: phone.replace("+91-", ""), Password: password }),
-      });
-      if (response.ok) {
-        setSnackbar({ open: true, message: "Login successful!", severity: "success" });
-        setTimeout(() => navigate("/"), 1200);
+      const formattedPhone = phone.replace(/\s/g, "");
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/BussinessMember/member/login/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            PhoneNumber: formattedPhone,
+            Password: password,
+          }),
+        }
+      );
+      const data = await response.json();
+      // console.log("Login response:", data); // Debug log
+      setMerchantId(data.Data?.MerchantId); // Use correct path for ID
+      if (response.ok && data.Status === 1) {
+        setSnackbar({
+          open: true,
+          message: data.Message || "Login successful!",
+          severity: "success",
+        });
+        setTimeout(() => {
+          window.location.replace(`http://localhost:3001/?id=${data.Data?.MerchantId}`);
+        }, 1200);
       } else {
-        setSnackbar({ open: true, message: "Failed to authenticate, please retry.", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: data.Message || "Failed to authenticate, please retry.",
+          severity: "error",
+        });
       }
     } catch (err) {
-      setSnackbar({ open: true, message: "Network error, please try again.", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "Network error, please try again.",
+        severity: "error",
+      });
     }
+  };
+  console.log("Merchant ID:", merchantId);
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -115,25 +159,25 @@ const LoginSection = ({ onForgotPassword }) => {
         >
           {/* LOGIN PAGE */}
           {/* {!showOtpOptions && !showOtpVerify && ( */}
-            <>
-              <Typography
-                component="h1"
-                variant="h4"
-                sx={{
-                  mb: 2,
-                  fontWeight: "bold",
-                  color: "#1b4d69",
-                  fontSize: { xs: 20, sm: 26, md: 32 },
-                }}
-              >
-                Login to Kalavyuha
-              </Typography>
-              <Box
-                sx={{ display: "flex", flexDirection: "column", mt: 4 }}
-                component="form"
-                noValidate
-              >
-                {/* <TextField
+          <>
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{
+                mb: 2,
+                fontWeight: "bold",
+                color: "#1b4d69",
+                fontSize: { xs: 20, sm: 26, md: 32 },
+              }}
+            >
+              Login to Kalavyuha
+            </Typography>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", mt: 4 }}
+              component="form"
+              noValidate
+            >
+              {/* <TextField
                   type="email"
                   placeholder="Email Address"
                   value={email}
@@ -170,278 +214,277 @@ const LoginSection = ({ onForgotPassword }) => {
                     },
                   }}
                 /> */}
-                <TextField
-                  type="text"
-                  label="Phone Number"
-                  // placeholder="Phone Number"
-                  value={phone}
-                  onChange={(e) => {
-                    let input = e.target.value;
-                    if (!input.startsWith("+91-")) {
-                      input = "+91-" + input;
-                    }
-                    // Remove any non-digit characters after the prefix
-                    const phoneNumber = input.slice(4).replace(/\D/g, "");
-                    // Limit to 10 digits
-                    const trimmedPhoneNumber = phoneNumber.slice(0, 10);
-                    const formattedInput = "+91-" + trimmedPhoneNumber;
-                    setPhone(formattedInput);
-                    setPhoneError(!validatePhone(formattedInput));
-                  }}
-                  fullWidth
-                  error={phoneError}
-                  sx={{
-                    width: { xs: "290px", sm: "400px" },
-                    bgcolor: "white",
+              <TextField
+                type="text"
+                label="Phone Number"
+                // placeholder="Phone Number"
+                value={phone}
+                onChange={(e) => {
+                  let input = e.target.value;
+                  if (!input.startsWith("+91 ")) {
+                    input = "+91 " + input;
+                  }
+                  // Remove any non-digit characters after the prefix
+                  const phoneNumber = input.slice(4).replace(/\D/g, "");
+                  // Limit to 10 digits
+                  const trimmedPhoneNumber = phoneNumber.slice(0, 10);
+                  const formattedInput = "+91 " + trimmedPhoneNumber;
+                  setPhone(formattedInput);
+                  setPhoneError(!validatePhone(formattedInput));
+                }}
+                fullWidth
+                error={phoneError}
+                sx={{
+                  width: { xs: "290px", sm: "400px" },
+                  bgcolor: "white",
+                  border: "none",
+                  borderRadius: 4,
+                  mt: 3,
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: phoneError ? "red" : "rgba(0, 0, 0, 0.23)",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: phoneError ? "red" : "rgba(0, 0, 0, 0.23)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: phoneError ? "red" : "#1b4d69",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    "&.Mui-focused": {
+                      color: phoneError ? "red" : "#1b4d69",
+                    },
+                  },
+                }}
+                InputProps={{
+                  sx: {
+                    height: 50,
+                    padding: 0,
+                    fontSize: 16,
                     border: "none",
-                    borderRadius: 4,
-                    mt: 3,
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: phoneError ? "red" : "rgba(0, 0, 0, 0.23)",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: phoneError ? "red" : "rgba(0, 0, 0, 0.23)",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: phoneError ? "red" : "#1b4d69",
-                      },
+                    borderRadius: 2.5,
+                  },
+                  style: {
+                    // borderRadius: "10px",
+                    background: "#fbfbfb",
+                  },
+                }}
+              />
+
+              {/* <Typography
+                sx={{
+                  mt: 3,
+                  ml: 1,
+                  p: 0,
+                  fontSize: { xs: 11, sm: 12 },
+                  lineHeight: 1.3,
+                }}
+              >
+                We will send a verification code to{" "}
+                <b>
+                  {countryCode}{" "}
+                  {phone.replace("+91 ", "") || "- - - - - - - - - -"}
+                </b>
+              </Typography> */}
+
+              <TextField
+                type={showPassword ? "text" : "password"}
+                label="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                fullWidth
+                sx={{
+                  width: { xs: "290px", sm: "400px" },
+                  bgcolor: "white",
+                  // border: "1px solid rgba(0, 0, 0, 0.23)",
+                  // borderRadius: 2.5,
+                  mt: 3,
+                  "& .MuiOutlinedInput-root": {
+                    background: "#fbfbfb",
+                    borderRadius: 2.5,
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1b4d69",
                     },
-                    "& .MuiInputLabel-root": {
-                      "&.Mui-focused": {
-                        color: phoneError ? "red" : "#1b4d69",
-                      },
+                  },
+                  "& .MuiInputLabel-root": {
+                    "&.Mui-focused": {
+                      color: "#1b4d69",
                     },
-                  }}
-                  InputProps={{
-                    sx: {
-                      height: 50,
-                      padding: 0,
-                      fontSize: 16,
-                      border: "none",
-                      borderRadius: 2.5,
-                    },
-                    style: {
-                      // borderRadius: "10px",
-                      background: "#fbfbfb",
-                    },
-                  }}
-                />
-                <TextField
-                  type="password"
-                  label="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  fullWidth
-                  sx={{
-                    width: { xs: "290px", sm: "400px" },
-                    bgcolor: "white",
-                    // border: "1px solid rgba(0, 0, 0, 0.23)",
-                    // borderRadius: 2.5,
-                    mt: 3,
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#1b4d69",
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      "&.Mui-focused": {
+                  },
+                }}
+                InputProps={{
+                  sx: {
+                    height: 50,
+                    paddingRight: 2,
+                    fontSize: 16,
+                    borderRadius: 2.5,
+                    marginBottom: 2,
+                    border: "none",
+                  },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleTogglePasswordVisibility}
+                        edge="end"
+                        sx={{
+                          color: "#666",
+                          // "&:hover": {
+                          //   color: "#1b4d69",
+                          // },
+                        }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="agreeTerms"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    color="primary"
+                    sx={{
+                      p: { xs: 0.2, sm: 1 },
+                      "&.Mui-checked": {
                         color: "#1b4d69",
                       },
-                    },
-                  }}
-                  InputProps={{
-                    sx: {
-                      height: 50,
-                      padding: 0,
-                      fontSize: 16,
-                      borderRadius: 2.5,
-                      border: "none",
-                      // "& .MuiOutlinedInput-notchedOutline": {
-                      //   border: "none",
-                      // },
-                    },
-                    style: {
-                      // borderRadius: "10px",
-                      background: "#fbfbfb",
-                    },
-                  }}
-                />
-                <Button
-                  sx={{
-                    bgcolor: "#1b4d69",
-                    color: "white",
-                    mt: 6,
-                    textTransform: "none",
-                     fontWeight: "bold",
-                     height: { xs: "44px", sm: "48px", md: "52px" },
-                      fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
-                    borderRadius: 1,
-                    "&:disabled": {
-                      bgcolor: "#e0e0e0",
-                    },
-                  }}
-                  disabled={!phone || !password}
-                  // disabled={!email || !phone || !password}
-                  // onClick={() => setShowOtpOptions(true)}
-                  //  onClick={() => navigate("/")}
-                   onClick={handleLogin}
-                >
-                  Log In
-                </Button>
-                <Snackbar
-                  open={snackbar.open}
-                  autoHideDuration={2000}
-                  onClose={() => setSnackbar({ ...snackbar, open: false })}
-                  anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                >
-                  <MuiAlert elevation={6} variant="filled" severity={snackbar.severity} sx={{ width: "100%" }}>
-                    {snackbar.message}
-                  </MuiAlert>
-                </Snackbar>
-                {/* <Divider sx={{ mt: 3 }}>
+                    }}
+                  />
+                }
+                label={
                   <Typography
-                    variant="subtitle2"
-                    sx={{ fontWeight: "bold", color: "gray" }}
-                  >
-                    OR
-                  </Typography>
-                </Divider> */}
-                {/* <Box
-                  sx={{
-                    width: { xs: "290px", sm: "400px" },
-                    height: 60,
-                    mt: 2,
-                    alignItems: "center",
-                    justifyContent: "space-evenly",
-                    display: "flex",
-                  }}
-                >
-                  <Box
+                    variant="body2"
                     sx={{
-                      width: 50,
-                      height: 50,
-                      transition: "transform 0.2s ease-in-out",
-                      "&:hover": {
-                        transform: "scale(1.1)",
-                      },
+                      fontSize: { xs: "0.65rem", sm: "0.875rem" },
+                      lineHeight: 1.4,
                     }}
                   >
-                    <img
-                      src={assets.google}
-                      alt=""
-                      style={{ width: 50, height: 50, cursor: "pointer" }}
-                    />
-                  </Box>
-                  <Box
-                    sx={{
-                      width: 50,
-                      height: 50,
-                      transition: "transform 0.2s ease-in-out",
-                      "&:hover": {
-                        transform: "scale(1.1)",
-                      },
-                    }}
-                  >
-                    <img
-                      src={assets.facebook}
-                      alt=""
-                      style={{ width: 50, height: 50, cursor: "pointer" }}
-                    />
-                  </Box>
-                  <Box
-                    sx={{
-                      width: 50,
-                      height: 50,
-                      transition: "transform 0.2s ease-in-out",
-                      "&:hover": {
-                        transform: "scale(1.1)",
-                      },
-                    }}
-                  >
-                    <img
-                      src={assets.twitter}
-                      alt=""
-                      style={{ width: 50, height: 50, cursor: "pointer" }}
-                    />
-                  </Box>
-                </Box> */}
-                <Box
-                  sx={{
-                    width: { xs: "290px", sm: "400px" },
-                    height: 40,
-                    mt: 2,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: 2,
-                  }}
-                >
-                  <Stack direction={"row"} gap={0.5}>
-                    <Typography
-                      sx={{ fontSize: 11, color: "grey", fontWeight: 600 }}
-                    >
-                      Not a Customer?
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: 11,
-                        textDecoration: "underline",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Get Started for free
-                    </Typography>
-                  </Stack>
-                  <Typography
-                    sx={{
-                      fontSize: 11,
-                      textDecoration: "underline",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    onClick={onForgotPassword}
-                  >
-                    Forgot Password?
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    width: { xs: "300px", sm: "400px" },
-
-                    height: 40,
-                    mt: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Stack direction={"row"} gap={0.5}>
-                    <Typography sx={{ fontSize: 9, color: "grey" }}>
-                      By continuing, you agree to our
-                    </Typography>
-                    <Typography
-                      sx={{ fontSize: 9.5, fontWeight: 600, cursor: "pointer" }}
-                      onClick={() => navigate("/privacy")}
-                    >
-                      Privacy Policy
-                    </Typography>
-                    <Typography sx={{ fontSize: 9, color: "grey" }}>
-                      and
-                    </Typography>
-                    <Typography
-                      sx={{ fontSize: 9.5, fontWeight: 600, cursor: "pointer" }}
-                      onClick={() => navigate("/terms&conditions")}
+                    I agree to the{" "}
+                    <Link
+                      href="/kalavyuha-frontend/terms&conditions"
+                      underline="always"
+                      color="#1b4d69"
                     >
                       Terms of Service
-                    </Typography>
-                  </Stack>
-                </Box>
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/kalavyuha-frontend/privacy" underline="always" color="#1b4d69">
+                      Privacy Policy
+                    </Link>
+                  </Typography>
+                }
+                sx={{
+                  alignItems: "center",
+                  ml: 0,
+                }}
+              />
+
+              <Button
+                sx={{
+                  bgcolor: "#1b4d69",
+                  color: "white",
+                  mt: 2,
+                  textTransform: "none",
+                  fontWeight: "bold",
+                  height: { xs: "44px", sm: "48px", md: "52px" },
+                  fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
+                  borderRadius: 1,
+                  "&:disabled": {
+                    bgcolor: "#e0e0e0",
+                  },
+                }}
+                disabled={!phone || !password || !agreeTerms}
+                // disabled={!email || !phone || !password}
+                // onClick={() => setShowOtpOptions(true)}
+                //  onClick={() => navigate("/")}
+                onClick={handleLogin}
+              >
+                Log In
+              </Button>
+              <Snackbar
+                open={snackbar.open}
+                autoHideDuration={2000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+              >
+                <MuiAlert
+                  elevation={6}
+                  variant="filled"
+                  severity={snackbar.severity}
+                  sx={{ width: "100%" }}
+                >
+                  {snackbar.message}
+                </MuiAlert>
+              </Snackbar>
+              <Divider sx={{ mb: 1, mt: 3 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: "bold",
+                    color: "gray",
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  }}
+                >
+                  or
+                </Typography>
+              </Divider>
+              <Box
+                sx={{
+                  width: { xs: "290px", sm: "400px" },
+                  height: 40,
+                  // mt: 2,
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 2,
+                }}
+              >
+                <Stack direction={"row"} gap={0.5}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      textAlign: "center",
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    }}
+                  >
+                    Don't have an account?&nbsp;
+                    <Link
+                      href="/kalavyuha-frontend/business-account"
+                      underline="always"
+                      sx={{
+                        color: "#1b4d69",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      }}
+                    >
+                      Sign-Up
+                    </Link>
+                  </Typography>
+                 
+                </Stack>
+                <Typography
+                  sx={{
+                   fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    textDecoration: "underline",
+                    // fontWeight: 600,
+                    cursor: "pointer",
+                    color: "#1b4d69",
+                  }}
+                  onClick={onForgotPassword}
+                >
+                  Forgot Password?
+                </Typography>
               </Box>
-            </>
-          {/* )} */}
+             
+            </Box>
+          </>
+        
 
           {/* OTP OPTION PAGE */}
           {/* {showOtpOptions && !showOtpVerify && (

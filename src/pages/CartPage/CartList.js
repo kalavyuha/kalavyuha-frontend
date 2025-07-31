@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, CardContent, Typography, Box, Button } from "@mui/material";
+import defaultServiceImage from "../../assets/image (9).png"; // Default fallback image
 
 const CartList = ({ cartItems, onRemove }) => {
   return (
@@ -8,7 +9,10 @@ const CartList = ({ cartItems, onRemove }) => {
         <Card
           elevation={0}
           key={index}
-          sx={{ mb: 2, bgcolor: "#dce1e6", borderRadius: 3 }}
+          sx={{ mb: 2,
+            //  bgcolor: "#dce1e6",
+             bgcolor: "#d7dbdf",
+             borderRadius: 3 }}
         >
           <CardContent
             sx={{
@@ -30,9 +34,9 @@ const CartList = ({ cartItems, onRemove }) => {
             >
               <Box
                 component="img"
-                src={item.img}
+                src={item.img || defaultServiceImage}
                 alt={item.serviceName}
-                sx={{ width: 80, height: 60, borderRadius: 2 }}
+                sx={{ width: 80, height: 60, borderRadius: 2, objectFit: 'cover' }}
               />
               <Box sx={{ ml: 1 }}>
                 <Typography variant="h6">{item.serviceName}</Typography>
