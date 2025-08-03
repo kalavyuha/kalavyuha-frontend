@@ -41,11 +41,10 @@ export default function BusinessDocumentUploads() {
     location.state || (storedData ? JSON.parse(storedData) : {});
   const navigate = useNavigate();
 
-  const [fileList, setFileList] = useState(
-    localStorage.getItem("documentUploads")
-      ? JSON.parse(localStorage.getItem("documentUploads"))
-      : {}
-  );
+  const [fileList, setFileList] = useState(() => {
+    const saved = localStorage.getItem("documentUploads");
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -110,15 +109,6 @@ export default function BusinessDocumentUploads() {
         setIsUploading(false);
         return;
       }
-      // ------------------------------
-      // Debug: Log the previousData structure
-      console.log("Previous Data:", previousData);
-      console.log("MerchantAccountID:", previousData.MerchantAccountID);
-      console.log("Business Role:", previousData.businessRole);
-      console.log("Form Data:", previousData.formData);
-      console.log("Team Members:", previousData.teamMembers);
-      console.log("Team Size:", previousData.teamSize);
-
       // Progress update
       setUploadProgress(5);
       setUploadStage("Creating business profile...");
@@ -132,9 +122,10 @@ export default function BusinessDocumentUploads() {
         Introduction: previousData.formData.introduction ?? null,
         ShopNumber: previousData.formData.shopNumber ?? null,
         StreetAddress: previousData.formData.streetAddress,
-        Nearby: null,
+        City: previousData.formData.city,
+        State: previousData.formData.state,
         ZipCode: previousData.formData.zipCode,
-        Region: `${previousData.formData.city}, ${previousData.formData.state}`,
+        Country: previousData.formData.country,
         Latitude: parseFloat(previousData.formData.adrsLatitude) || 0.0,
         Longitude: parseFloat(previousData.formData.adrsLongitude) || 0.0,
         LikesCount: 0,
@@ -157,7 +148,6 @@ export default function BusinessDocumentUploads() {
         "BusinessName",
         "StreetAddress",
         "ZipCode",
-        "Region",
         "TotalStaff",
       ];
       const missingFields = requiredFields.filter(
@@ -626,18 +616,7 @@ export default function BusinessDocumentUploads() {
       setUploadProgress(95);
       setUploadStage("Finalizing setup...");
 
-      // Clear all form-related data from localStorage and store only business ID
-      // localStorage.removeItem("documentUploads");
       localStorage.removeItem("formData");
-      // localStorage.removeItem("businessHours");
-      // localStorage.removeItem("teamMembers");
-      // localStorage.removeItem("services");
-      // localStorage.removeItem("businessDetails");
-      // localStorage.removeItem("businessProfile");
-      // localStorage.removeItem("businessRole");
-      // localStorage.removeItem("MerchantAccountID");
-
-      // Store only the business ID for the new application
       // localStorage.setItem("businessId", JSON.stringify(businessIdNum));
 
       // Clear browser history to prevent back navigation
@@ -674,7 +653,16 @@ export default function BusinessDocumentUploads() {
   };
 
   useEffect(() => {
-    localStorage.setItem("documentUploads", JSON.stringify(fileList));
+    const filesToSave = {};
+    Object.keys(fileList).forEach(docType => {
+      filesToSave[docType] = fileList[docType].map(file => ({
+        name: file.name,
+        type: file.type,
+        lastModified: file.lastModified,
+        size: file.size
+      }));
+    });
+    localStorage.setItem('documentUploads', JSON.stringify(filesToSave));
   }, [fileList]);
 
   return (

@@ -83,8 +83,8 @@ const Main = () => {
             <Banner />
             <ServiceDirectory/>
             <RecommendedSection category="Beauty" />
-            <RecommendedSection category="Wellness" />
-            <RecommendedSection category="Health" />
+            {/* <RecommendedSection category="Wellness" />
+            <RecommendedSection category="Health" /> */}
             <BusinessList/>
             <AppInfoSection />
             <Reviews />

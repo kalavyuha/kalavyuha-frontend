@@ -188,6 +188,7 @@ const BusinessHours = () => {
       BusinessHours: businessHoursArr,
     };
 
+    console.log(apiBody)
     // Call the upload API
     try {
       await uploadBusinessHours(apiBody);

@@ -14,7 +14,7 @@ const ServicesRecommendations = ({ category = 'Beauty' }) => {
             try {
                 setLoading(true);
                 const response = await fetch(
-                    `http://localhost:8000/api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=78.9897978&longitude=28.6767965&page=1`,
+                    `http://localhost:8000/api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=28.6767965&longitude=78.9897978&page=1`,
                     {
                         headers: {
                             'Authorization': 'Bearer VIRoHdqUAtpklgKg',
