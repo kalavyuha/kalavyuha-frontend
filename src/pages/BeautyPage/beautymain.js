@@ -53,6 +53,7 @@ import Reviews from "../HomePage/Reviews";
 
 import AboutUs from "./About/About";
 import ImageGallery from "./Gallery/Gallery";
+import AddReviews from "./AddReviews/AddReviews";
 
 const timing = [
   { day: "Monday", time: "9:30 am - 10:00 pm" },
@@ -301,6 +302,8 @@ function BeautyMain() {
           />
         )}
         <Reviews data={reviews} />
+        <AddReviews />
+
         <AboutUs
           timing={timing}
           facilities={amenities}

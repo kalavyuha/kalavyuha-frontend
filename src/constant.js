@@ -1,4 +1,5 @@
 export const constant={
     baseUrl:'http://localhost:8000/',
-    token: 'VIRoHdqUAtpklgKg'
+    token: 'VIRoHdqUAtpklgKg',
+    // merchantUrl:'http://localhost:3001/'
 }

@@ -20,6 +20,7 @@ const iconStyle = {
 }
 
 const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
+  console.log('CardList data:', data);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [favourites, setFavourites] = useState([])
@@ -248,10 +249,41 @@ const sampleApiData = [
 ];
 
 
+
   const listings = data && data.map(filter => {
     const { business_details, services, 'Business Facilities': apiAmenities, 'Average Rating': rating } = filter;
 
     const processedAmenities = processAmenities(apiAmenities);
+
+    // Extract first service from first two categories only
+
+    let mappedServices = [];
+    if (Array.isArray(services) && services.length > 0 && Array.isArray(services[0].Categories)) {
+      // Debug: log the actual structure of services
+      console.log('Business services:', services);
+      mappedServices = services[0].Categories.slice(0, 2).map(category => {
+        if (Array.isArray(category?.Services) && category.Services.length > 0) {
+          const service = category.Services[0];
+          return {
+            name: service?.Name || 'N/A',
+            duration: service?.Duration || 'N/A',
+            basePrice: service?.Price ? `₹${service.Price}` : 'N/A',
+            discountPrice:
+              service?.isDiscount && service?.DiscountedPrice
+                ? `₹${service.DiscountedPrice}`
+                : (service?.Price ? `₹${service.Price}` : 'N/A'),
+          };
+        } else {
+          // If no service, show N/A
+          return {
+            name: 'N/A',
+            duration: 'N/A',
+            basePrice: 'N/A',
+            discountPrice: 'N/A',
+          };
+        }
+      });
+    }
 
     return {
       name: business_details.BusinessName,
@@ -260,12 +292,7 @@ const sampleApiData = [
       reviews: business_details.LikesCount,
       distance: '0.5km Away',
       closeAt: business_details.ClosingTime,
-      services: services.map(service => ({
-        name: service.ServiceName,
-        duration: service.Duration,
-        basePrice: `₹${service.Price}`,
-        discountPrice: service.isDiscount ? `₹${service.DiscountedPrice}` : `₹${service.Price}`,
-      })),
+      services: mappedServices,
       amenities: processedAmenities, // Use the new processed amenities
       image: business_details.ProfileImage,
       _id: business_details._id
@@ -740,9 +767,9 @@ const sampleApiData = [
                                 </Typography>
 
                                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                                  <Typography variant="body2" color="textSecondary" sx={{ textDecoration: 'line-through' }}>
+                                  {/* <Typography variant="body2" color="textSecondary" sx={{ textDecoration: 'line-through' }}>
                                     {service.basePrice}
-                                  </Typography>
+                                  </Typography> */}
                                   <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                                     {service.discountPrice}
                                   </Typography>

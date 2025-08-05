@@ -38,6 +38,7 @@ const BeautyMain = lazy(() => import("./pages/BeautyPage/beautymain"));
 const Overview = lazy(() => import("./pages/Overview/Overview"));
 const CartMain = lazy(() => import("./pages/CartPage/Cart"));
 const SuccessCart = lazy(() => import("./pages/CartPage/SuccessCart"));
+const PaymentPage = lazy(() => import("./pages/CartPage/PaymentPage")); //-----ADDED PAYMENT PAGE
 const BusniessPage = lazy(() => import("./pages/BusniessPage/busniess"));
 const Support = lazy(() => import("./pages/SupportPage/Support"));  //-----ADDED SUPPORT PAGE
 const About = lazy(() => import("./pages/About/About"));  //-----ADDED ABOUT PAGE
@@ -91,6 +92,7 @@ function App() {
     "/business-document-uploads",
     "/cart",
     "/cart/success",
+    "/cart/payment",
     "/appointment-history-details"
   ];
 
@@ -107,6 +109,7 @@ function App() {
           <Route path="/detail/:id" element={<BeautyMain />} />
           <Route path="/cart" element={<CartMain />} />
           <Route path="/cart/success" element={<SuccessCart />} />
+          <Route path="/cart/payment" element={<PaymentPage />} />
           <Route path="/support" element={<Support />} />
           <Route path="/about" element={<About />} />
           <Route path="/terms&conditions" element={<TermsConditions />} />

@@ -653,7 +653,9 @@ export default function BusinessDocumentUploads() {
 
       // Small delay to show completion
       setTimeout(() => {
-        window.location.replace(`http://localhost:3001/?id=${businessIdNum}`);
+        // window.location.replace(`http://localhost:3001/?id=${businessIdNum}`);
+        localStorage.setItem("businessId", JSON.stringify(businessIdNum));
+        window.location.replace(`http://localhost:3001/`);
       }, 1000);
     } catch (error) {
       setIsUploading(false);
