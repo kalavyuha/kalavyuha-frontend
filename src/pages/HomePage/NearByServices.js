@@ -148,19 +148,20 @@ const ServiceDirectory = () => {
 
     if (!isManualScrolling) startAutoScroll();
 
-    scrollContainer?.addEventListener("scroll", stopAutoScroll);
-    scrollContainer?.addEventListener("touchstart", stopAutoScroll);
+    scrollContainer?.addEventListener("scroll", stopAutoScroll, { passive: true });
+    scrollContainer?.addEventListener("touchstart", stopAutoScroll, { passive: true });
     scrollContainer?.addEventListener("touchend", () => {
       setTimeout(() => setIsManualScrolling(false), 1000);
-    });
+    }, { passive: true });
+
     
     return () => {
       clearInterval(interval);
-      scrollContainer?.removeEventListener("scroll", stopAutoScroll);
-      scrollContainer?.removeEventListener("touchstart", stopAutoScroll);
+      scrollContainer?.removeEventListener("scroll", stopAutoScroll, { passive: true });
+      scrollContainer?.removeEventListener("touchstart", stopAutoScroll, { passive: true });
       scrollContainer?.removeEventListener("touchend", () => {
         setTimeout(() => setIsManualScrolling(false), 1000);
-      });
+      }, { passive: true });
     };
   }, [isManualScrolling]);
 
