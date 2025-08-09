@@ -1,4 +1,4 @@
 export const constant={
-    baseUrl:'http://localhost:8000/',
+    baseUrl:'http://13.215.159.104:8000/',
     token: 'VIRoHdqUAtpklgKg'
 }
