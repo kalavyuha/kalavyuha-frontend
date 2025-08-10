@@ -526,7 +526,7 @@ export default function SearchUI() {
     setLoading(true)
 
     const result = await apiget(
-      `api/v1/BussinessDetails/filter?ServiceName=${serviceName}&Location=${location}&BussinessType=${category}`,
+      `api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${category}`,
     )
 
     console.log(result)
