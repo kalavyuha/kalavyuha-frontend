@@ -458,7 +458,7 @@ export default function Navbar() {
           />
         </ListItem>
       </List>
-      <a href="/kalavyuha-frontend/business-page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+      <a href="/kalavyuha-frontend/#/business-page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
         <Box sx={{ p: 2 }}>
           <DownloadButton
             fullWidth
