@@ -2,13 +2,14 @@ import React, { useEffect, Suspense, lazy } from "react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Routes,
   Route,
   useLocation
 } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 import { MatchingSearchResultProvider } from "./Context/detailPageContext";
+// import { HashRouter as Router } from "react-router-dom";
 
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
