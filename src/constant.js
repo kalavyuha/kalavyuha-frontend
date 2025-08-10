@@ -1,4 +1,4 @@
 export const constant={
-    baseUrl:'https://api.slotwel.in',
+    baseUrl:'https://api.slotwel.in/',
     token: 'VIRoHdqUAtpklgKg'
 }
