@@ -30,6 +30,7 @@ import Signup from "../pages/Auth/Signup";
 import Login from "../pages/Auth/Login";
 import ColorLogo from "../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png";
 import { apiget } from "../pages/service/api";
+import { Link } from "react-router-dom";
 
 const StyledAppBar = styled(AppBar)({
   background: "#eaeef2",
@@ -512,9 +513,9 @@ export default function Navbar() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <NavButton startIcon={<Download />}>Download</NavButton>
 
-                <a href="/kalavyuha-frontend/business-page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                <Link to="/business-page" style={{ textDecoration: "none" }}>
                   <NavButton startIcon={<Store />}>List Your Business</NavButton>
-                </a>
+                </Link>
               </Box>
 
               <IconButton
