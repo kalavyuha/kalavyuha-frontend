@@ -7,19 +7,12 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
-import { useInView } from 'react-intersection-observer';
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNaturalOutlined';
 import FavoriteIcon from '@mui/icons-material/VolunteerActivismOutlined';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenterOutlined';
-import { motion } from 'framer-motion';
 
 const ServiceItem = ({ icon, title, description, isSmallScreen }) => (
-  <motion.div
-    whileHover={{ scale: 1.05 }}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, ease: 'easeOut' }}
-  >
+  <div>
     <Paper 
       elevation={0}
       sx={{
@@ -30,12 +23,9 @@ const ServiceItem = ({ icon, title, description, isSmallScreen }) => (
         textAlign: 'center',
         bgcolor: 'transparent',
         height: '100%',
-        transition: 'transform 0.3s ease-in-out',
       }}
     >
       <Box
-        component={motion.div}
-        whileHover={{ rotate: 10, scale: 1.1 }}
         sx={{
           width: { xs: 80, sm: 100, md: 120 },
           height: { xs: 80, sm: 100, md: 120 },
@@ -81,16 +71,12 @@ const ServiceItem = ({ icon, title, description, isSmallScreen }) => (
         {description}
       </Typography>
     </Paper>
-  </motion.div>
+  </div>
 );
 
 export default function BusinessAreaSection() {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const { ref, inView } = useInView({
-    triggerOnce: false,
-    threshold: 0.3,
-  });
 
   const services = [
     {
@@ -112,11 +98,6 @@ export default function BusinessAreaSection() {
 
   return (
     <Box 
-      ref={ref}
-      component={motion.div}
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: inView ? 1 : 0, y: inView ? 0 : 50 }}
-      transition={{ duration: 1, ease: 'easeOut' }}
       sx={{ py: { xs: 4, sm: 6, md: 8 } }}
     >
       <Typography 
@@ -129,10 +110,6 @@ export default function BusinessAreaSection() {
           px: 2,
           fontSize: { xs: 25, sm: 35, md: 48 },
         }}
-        component={motion.div}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: inView ? 1 : 0.8, opacity: inView ? 1 : 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
       >
         Technology Crafted for Your Success
       </Typography>

@@ -30,30 +30,6 @@ const fadeOut = keyframes`
 const FeaturesAvailable = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [isVisible, setIsVisible] = useState(false);
-
-
-  const { ref, inView } = useInView({
-    triggerOnce: false, 
-    threshold: 0.3, 
-  });
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.pageYOffset;
-      const componentPosition = document.getElementById('features-available').offsetTop;
-      const componentHeight = document.getElementById('features-available').offsetHeight;
-
-      if (scrollPosition >= componentPosition - componentHeight * 0.8) {
-        setIsVisible(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const features = [
     'Reduce no-shows with reminders',
@@ -65,13 +41,10 @@ const FeaturesAvailable = () => {
 
   return (
     <Box
-    ref={ref}
       id="features-available"
       sx={{
         py: 3,
         px: 2,
-        opacity: inView  ? 1 : 0,
-        animation: inView  ? `${fadeIn} 1s ease-in-out forwards` : `${fadeOut} .6s ease-in-out forwards`
       }}
       
     >
@@ -186,9 +159,6 @@ const FeaturesAvailable = () => {
             position: 'relative',
             overflow: 'hidden',
             background: 'linear-gradient(135deg, #E5D4F9 0%, #D1B7F4 100%)',
-            opacity: isVisible ? 1 : 0,
-            animation: isVisible ? `${fadeIn} 1s ease-in-out forwards` : 'none',
-            animationDelay: '0.2s'
           }}
         >
           <Box sx={{ position: 'relative', zIndex: 2 }}>
@@ -260,7 +230,6 @@ const FeaturesAvailable = () => {
                 position: 'absolute',
                 bottom: '0px',
                 right: '0px',
-                animation: `${float} 3s infinite ease-in-out`
               }}
             />
             <Box
@@ -272,8 +241,6 @@ const FeaturesAvailable = () => {
                 position: 'absolute',
                 bottom: '60px',
                 right: '40px',
-                animation: `${float} 3s infinite ease-in-out`,
-                animationDelay: '0.5s'
               }}
             />
           </Box>
@@ -289,9 +256,6 @@ const FeaturesAvailable = () => {
             p: 4,
             position: 'relative',
             overflow: 'hidden',
-            opacity: isVisible ? 1 : 0,
-            animation: isVisible ? `${fadeIn} 1s ease-in-out forwards` : 'none',
-            animationDelay: '0.4s'
           }}
         >
           <Box sx={{ mb: 4, maxWidth: '80%' }}>
@@ -365,8 +329,6 @@ const FeaturesAvailable = () => {
                   position: 'absolute',
                   top: position.top,
                   left: position.left,
-                  animation: `${float} 3s infinite ease-in-out`,
-                  animationDelay: position.delay,
                   fontSize: '0.8rem',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
                 }}

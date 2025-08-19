@@ -18,7 +18,6 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 import { styled } from '@mui/material/styles';
-import { useInView } from 'react-intersection-observer';
 
 import ColorLogo from "../../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png";
 import WhiteLogo from "../../assets/logo/kalavyuha-favicon/kalavyuha-favicon-white.png";
@@ -88,19 +87,6 @@ const CustomStepIcon = styled(Box, {
 
 export default function KalavyhuaOnboarding() {
   const [activeStep, setActiveStep] = useState(0);
-  const { ref, inView } = useInView({
-    triggerOnce: false, 
-    threshold: 0.3, 
-  });
-
-  const { ref: leftRef, inView: leftInView } = useInView({
-    triggerOnce: true,
-    threshold: 0.3,
-  });
-  const { ref: rightRef, inView: rightInView } = useInView({
-    triggerOnce: true,
-    threshold: 0.3,
-  });
 
   const handleStepClick = (step) => {
     setActiveStep(step);
@@ -109,14 +95,10 @@ export default function KalavyhuaOnboarding() {
   return (
     <ThemeProvider theme={theme}>
       <Box
-        ref={ref}
         sx={{
           display: 'flex',
           minHeight: 'fit-content',
           p: { xs: 2, md: 3 },
-          opacity: inView ? 1 : 0,
-          transform: inView ? 'translateY(0)' : 'translateY(50px)',
-          transition: 'opacity 1s, transform 1s',
         }}
       >
         <Paper
@@ -133,7 +115,6 @@ export default function KalavyhuaOnboarding() {
         >
           {/* Left Side */}
           <Box
-            ref={leftRef}
             sx={{
               width: { xs: '100%', md: '40%' },
               bgcolor: 'primary.main',
@@ -143,9 +124,6 @@ export default function KalavyhuaOnboarding() {
               display: 'flex',
               flexDirection: 'column',
               mb: { xs: 2, md: 0 },
-              transition: 'transform 1s ease-out',
-              transform: leftInView ? 'translateX(0)' : 'translateX(-50%)',
-              opacity: leftInView ? 1 : 0,
             }}
           >
             {/* Left side content */}
@@ -213,7 +191,6 @@ export default function KalavyhuaOnboarding() {
 
           {/* Right Side */}
           <Box
-            ref={rightRef}
             sx={{
               width: { xs: '100%', md: '60%' },
               p: { xs: '10px 0px', md: '10px 20px' },
@@ -223,9 +200,6 @@ export default function KalavyhuaOnboarding() {
               justifyContent: 'center',
               alignItems: 'center',
               background: 'transparent',
-              transition: 'transform 1s ease-out',
-              transform: rightInView ? 'translateX(0)' : 'translateX(50%)',
-              opacity: rightInView ? 1 : 0,
             }}
           >
             {/* Right side content */}

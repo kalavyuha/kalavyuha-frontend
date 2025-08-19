@@ -59,7 +59,7 @@ const BusniessPage = () => {
       {/* section three */}
       <Container style={{maxWidth: "none"}} sx={{ mt: 10 }}>
           <Container maxWidth="lg">
-            <BusinessAreaSection/>
+            <BusinessAreaSection/>                    {/* Loading */}
           </Container>
       </Container>
 
@@ -67,7 +67,7 @@ const BusniessPage = () => {
       {/* section four */}
       <Container style={{maxWidth: "none"}} sx={{ mt: 10 }}>
         <Container maxWidth="lg">
-            <BuniessSuccessStories/>
+            <BuniessSuccessStories/>                   {/* Loading */}
         </Container>
       </Container>
 

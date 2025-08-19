@@ -11,7 +11,7 @@ import {
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import MapComponent from './components/google.map';
+import MapComponent from './components/location.map';
 import LeftPanel from './components/leftpanel.js'; 
 import { uploadImages } from './Apis/uploadAPI.js'
 
@@ -29,6 +29,7 @@ const theme = createTheme({
 
 export default function BusinessProfileForm() {
   const navigate = useNavigate();
+  const [manualEditMode, setManualEditMode] = useState(false);
   
   const getStoredData = () => {
     try {
@@ -49,10 +50,10 @@ export default function BusinessProfileForm() {
     introduction: previousData.formData?.introduction || '',
     shopName: previousData.formData?.shopName || '',
     streetAddress: previousData.formData?.streetAddress || '',
-    nearBy: previousData.formData?.nearBy || '',
     zipCode: previousData.formData?.zipCode || '',
     city: previousData.formData?.city || '',
     state: previousData.formData?.state || '',
+    country: previousData.formData?.country || '',
     profilePicture: previousData.formData?.profilePicture || null,
     adrsLatitude: previousData.formData?.adrsLatitude || '',
     adrsLongitude: previousData.formData?.adrsLongitude || '',
@@ -113,23 +114,14 @@ export default function BusinessProfileForm() {
   };
 
   const handleLocationSelect = (selectedData) => {
-    const { address, lat, lng } = selectedData;
-  
-    const parts = address.split(", ").map(item => item.trim());
-    const totalParts = parts.length;
-  
-    if (totalParts < 3) return;
-  
-    const shopName = parts[0];
-    const lastPart = parts[totalParts - 1];
-    const zipStatePart = parts[totalParts - 2];
-  
-    const zipMatch = zipStatePart.match(/\d{6}$/);
-    const zipCode = zipMatch ? zipMatch[0] : "";
-  
-    const state = zipCode ? zipStatePart.replace(zipCode, "").trim() : zipStatePart;
-    const city = totalParts >= 4 ? parts[totalParts - 3] : "";
-    const streetAddress = totalParts >= 5 ? parts.slice(1, totalParts - 3).join(", ") : "";
+    const { address, display_name, lat, lng } = selectedData;
+    
+    const shopName = display_name?.split(",")[0] || "";  
+    const streetAddress = address.road || address.neighbourhood || address.suburb || "";
+    const city = address.city || address.town || address.village || "";
+    const state = address.state || "";
+    const zipCode = address.postcode || "";
+    const country = address.country || "";
   
     setFormData(prev => ({
       ...prev,
@@ -137,10 +129,13 @@ export default function BusinessProfileForm() {
       streetAddress,
       city,
       state,
+      country,
       zipCode,
       adrsLatitude: lat, 
       adrsLongitude: lng,
     }));
+    
+    setManualEditMode(true);
   };
 
  
@@ -174,55 +169,59 @@ export default function BusinessProfileForm() {
 //TESTING---------------------Rakshit
 
   const handleFileChange = async (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    alert('Please select an image file');
-    return;
-  }
-
-  // Validate file size (5MB limit)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('File size should be less than 5MB');
-    return;
-  }
-
-  try {
-    // TODO: Get token dynamically or from environment
-    const token = process.env.REACT_APP_UPLOAD_TOKEN || 'VIRoHdqUAtpklgKg'; 
-    
-    console.log('Uploading file:', file.name, file.size);
-    
-    const { data, error: uploadError } = await uploadImages([file], token);
-
-    if (uploadError) {
-      throw new Error(uploadError);
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
     }
 
-    const uploadedUrl = data?.Data?.[0];
-    if (!uploadedUrl) throw new Error('No URL returned from upload');
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size should be less than 5MB');
+      return;
+    }
 
-    console.log('Upload successful:', uploadedUrl);
+    try {
+      // TODO: Get token dynamically or from environment
+      const token = process.env.REACT_APP_UPLOAD_TOKEN || 'VIRoHdqUAtpklgKg'; 
+      
+      console.log('Uploading file:', file.name, file.size);
+      
+      const { data, error: uploadError } = await uploadImages([file], token);
 
-    setFormData((prev) => ({
-      ...prev,
-      profilePicture: {
-        s3Url: uploadedUrl,
-      },
-    }));
-  } catch (err) {
-    console.error('Upload failed:', err);
-    alert(`Image upload failed: ${err.message}`);
-  }
-};
+      if (uploadError) {
+        throw new Error(uploadError);
+      }
 
-//-----------------------------
+      const uploadedUrl = data?.Data?.[0];
+      if (!uploadedUrl) throw new Error('No URL returned from upload');
+
+      console.log('Upload successful:', uploadedUrl);
+
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture: {
+          s3Url: uploadedUrl,
+        },
+      }));
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert(`Image upload failed: ${err.message}`);
+    }
+  };
+
+  const handleAddressChange = (event) => {
+    if (!manualEditMode) {
+      alert("Please select a location on the map first");
+      return;
+    }
+    handleChange(event);
+  };
 
   useEffect(() => {
-    const { businessName, introduction, streetAddress, zipCode, city, state, profilePicture } = formData;
-    const isFormValid = businessName && introduction && streetAddress && zipCode && city && state;
+    const { businessName, introduction, streetAddress, zipCode, city, state, profilePicture, adrsLatitude, adrsLongitude } = formData;
+    const isFormValid = businessName && introduction && streetAddress && zipCode && city && state && adrsLatitude && adrsLongitude;
     setIsNextDisabled(!isFormValid);
   }, [formData]);
 
@@ -402,8 +401,14 @@ export default function BusinessProfileForm() {
                     </Grid>
 
                     {/* google map */}
-                    <MapComponent  onSelectLocation={handleLocationSelect} />
-
+                    <MapComponent 
+                      onSelectLocation={handleLocationSelect} 
+                      initialPosition={
+                        formData.adrsLatitude && formData.adrsLongitude 
+                          ? { lat: formData.adrsLatitude, lng: formData.adrsLongitude } 
+                          : null
+                      }
+                    />
 
                     <Grid item xs={12} sm={4}>
                       <TextField
@@ -429,7 +434,7 @@ export default function BusinessProfileForm() {
                         fullWidth
                         label="Street Address"
                         value={formData.streetAddress}
-                        onChange={handleChange}
+                        onChange={handleAddressChange}
                         sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
                         InputProps={{
                           style: {
@@ -447,7 +452,7 @@ export default function BusinessProfileForm() {
                         fullWidth
                         label="City"
                         value={formData.city}
-                        onChange={handleChange}
+                        onChange={handleAddressChange}
                         sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
                         InputProps={{
                           style: {
@@ -465,7 +470,7 @@ export default function BusinessProfileForm() {
                         fullWidth
                         label="State"
                         value={formData.state}
-                        onChange={handleChange}
+                        onChange={handleAddressChange}
                         sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
                         InputProps={{
                           style: {

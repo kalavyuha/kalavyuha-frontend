@@ -8,50 +8,15 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
-  Fade,
-  Zoom,
 } from '@mui/material';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import { useInView } from 'react-intersection-observer';
-import { keyframes } from '@mui/system';
 
 import TwitterIcon from '../../assets/images/busniess_images/twitter.png';
 import GetAppButton from "../../components/AppStoreButton";
 
-const floatAnimation = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-`;
-
 const Footer = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const [footerRef, footerInView] = useInView({
-    triggerOnce: false,
-    threshold: 0.1,
-  });
-
-  const [quickLinksRef, quickLinksInView] = useInView({
-    triggerOnce: false,
-    threshold: 0.2,
-  });
-
-  const [legalLinksRef, legalLinksInView] = useInView({
-    triggerOnce: false,
-    threshold: 0.2,
-  });
-
-  const [followLinksRef, followLinksInView] = useInView({
-    triggerOnce: false,
-    threshold: 0.2,
-  });
-
-  const [companyLinksRef, companyLinksInView] = useInView({
-    triggerOnce: false,
-    threshold: 0.2,
-  });
 
   const quickLinks = [
     { name: 'Home', url: '/' },
@@ -81,9 +46,8 @@ const Footer = () => {
   ];
 
   return (
-    <Box component="footer" sx={{ pb: 2, mt: 8 }} ref={footerRef}>
+    <Box component="footer" sx={{ pb: 2, mt: 8 }}>
       <Container maxWidth="lg">
-        <Fade in={footerInView} timeout={1000}>
           <Grid container spacing={4} sx={{ pt: 4 }}>
             <Grid 
               item
@@ -106,11 +70,6 @@ const Footer = () => {
                   aria-label="Twitter" 
                   component="a" 
                   href="https://twitter.com"
-                  sx={{
-                    '&:hover': {
-                      animation: `${floatAnimation} 1s ease-in-out infinite`
-                    }
-                  }}
                 >
                   <Box
                     component="img"
@@ -127,19 +86,13 @@ const Footer = () => {
                   aria-label="LinkedIn" 
                   component="a" 
                   href="https://linkedin.com"
-                  sx={{
-                    '&:hover': {
-                      animation: `${floatAnimation} 1s ease-in-out infinite`
-                    }
-                  }}
                 >
                   <LinkedInIcon sx={{ color: "#000", fontSize: "30px" }}/>
                 </IconButton>
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={6} ref={quickLinksRef}>
-              <Fade in={quickLinksInView} timeout={1000}>
+            <Grid item xs={12} md={6}>
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold", fontSize: "17px", mb: 2 }}>
                     Quick Links
@@ -147,117 +100,100 @@ const Footer = () => {
                   <Grid container>
                     <Grid item xs={12} sm={6}>
                       {quickLinks.map((link, index) => (
-                        <Zoom in={quickLinksInView} style={{ transitionDelay: `${index * 100}ms` }} key={link.name}>
                           <Link
+                            key={link.name}
                             href={link.url}
                             display="block"
                             color="textSecondary"
                             sx={{
                               mb: 1,
                               textDecoration: "none",
-                              transition: "color 0.3s ease, transform 0.3s ease",
                               "&:hover": {
                                 color: "#1b4d69", 
                                 textDecoration: "underline",
-                                transform: "translateX(5px)"
                               },
                             }}
                           >
                             {link.name}
                           </Link>
-                        </Zoom>
                       ))}
                     </Grid>
-                    <Grid item xs={12} sm={6} ref={legalLinksRef}>
+                    <Grid item xs={12} sm={6}>
                       {legalLinks.map((link, index) => (
-                        <Zoom in={legalLinksInView} style={{ transitionDelay: `${(index + quickLinks.length) * 100}ms` }} key={link.name}>
                           <Link
+                            key={link.name}
                             href={link.url}
                             display="block"
                             color="textSecondary"
                             sx={{
                               mb: 1,
                               textDecoration: "none",
-                              transition: "color 0.3s ease, transform 0.3s ease",
                               "&:hover": {
                                 color: "#1b4d69", 
                                 textDecoration: "underline",
-                                transform: "translateX(5px)"
                               },
                             }}
                           >
                             {link.name}
                           </Link>
-                        </Zoom>
                       ))}
                     </Grid>
                   </Grid>
                 </Box>
-              </Fade>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3} ref={followLinksRef}>
-              <Fade in={followLinksInView} timeout={1000}>
+            <Grid item xs={12} sm={6} md={3}>
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold", fontSize: "17px", mb: 2 }}>
                     Follow
                   </Typography>
                   {followLinks.map((link, index) => (
-                    <Zoom in={followLinksInView} style={{ transitionDelay: `${index * 100}ms` }} key={link.name}>
                       <Link 
+                        key={link.name}
                         href={link.url} 
                         display="block" 
                         color="textSecondary" 
                         sx={{ 
                           mb: 1, 
                           textDecoration: "none",
-                          transition: "color 0.3s ease, transform 0.3s ease",
                           "&:hover": {
                             color: "#1b4d69", 
                             textDecoration: "underline",
-                            transform: "translateX(5px)"
                           },
                         }}
                       >
                         {link.name}
                       </Link>
-                    </Zoom>
                   ))}
                 </Box>
-              </Fade>
             </Grid>
             
-            <Grid item xs={12} sm={6} md={3} ref={companyLinksRef}>
-              <Fade in={companyLinksInView} timeout={1000}>
+            <Grid item xs={12} sm={6} md={3}>
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold", fontSize: "17px", mb: 2 }}>
                     Company
                   </Typography>
                   {companyLinks.map((link, index) => (
-                    <Zoom in={companyLinksInView} style={{ transitionDelay: `${index * 100}ms` }} key={link.name}>
                       <Link 
+                        key={link.name}
                         href={link.url} 
                         display="block" 
                         color="textSecondary" 
                         sx={{ 
                           mb: 1,  
                           textDecoration: "none",
-                          transition: "color 0.3s ease, transform 0.3s ease",
                           "&:hover": {
                             color: "#1b4d69", 
                             textDecoration: "underline",
-                            transform: "translateX(5px)"
                           },
                         }}
                       >
                         {link.name}
                       </Link>
-                    </Zoom>
                   ))}
 
                   <GetAppButton/>
                 </Box>
-              </Fade>
             </Grid>
 
             <Grid item xs={12} sx={{ textAlign: "center" }}>
@@ -283,7 +219,6 @@ const Footer = () => {
                     transition: "color 0.3s ease, transform 0.3s ease",
                     "&:hover": {
                       textDecoration:"underline",
-                      transform: "translateY(-2px)"
                     } 
                   }}
                 >
@@ -292,7 +227,6 @@ const Footer = () => {
               </Box>
             </Grid>
           </Grid>
-        </Fade>
       </Container>
     </Box>
   );

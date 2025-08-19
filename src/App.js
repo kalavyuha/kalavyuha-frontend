@@ -47,6 +47,7 @@ const Privacy = lazy(() => import("./pages/Privacy/Privacy"));  //-----ADDED Pri
 const AppointmentHistory = lazy(() => import("./pages/AppointmentHistory/AppointmentHistory"));  //-----ADDED HISTORY PAGE
 const AppointmentHistoryDetail = lazy(() => import("./pages/AppointmentHistory/AppointmentHistoryDetail"));  //-----ADDED APPOINTMENT DETAIL PAGE
 const Enterprise = lazy(() => import("./pages/Enterprise/Enterprise"));  //-----ADDED ENTERPRISE PAGE
+const ConstructionPage = lazy(() => import("./pages/UnderConstructionPage/ConstructionPage"));  //-----ADDED CONSTRUCTION PAGE
 
 // Lazy load business form pages
 const CreateBusniessAccount = lazy(() => import("./pages/BusinessForm/createAccount"));
@@ -117,6 +118,7 @@ function App() {
           <Route path="/appointment-history" element={<AppointmentHistory />} />
           <Route path="/appointment-history-details" element={<AppointmentHistoryDetail />} />
           <Route path="/enterprise" element={<Enterprise />} />
+          <Route path="/under-construction" element={<ConstructionPage />} />
 
           {/* Business form routes */}
           <Route exact path="/business-page" element={<BusniessPage />} />
