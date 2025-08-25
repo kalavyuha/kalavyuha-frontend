@@ -1,4 +1,6 @@
 export const constant={
-    baseUrl:'https://api.slotwel.in/',
-    token: 'VIRoHdqUAtpklgKg'
+    baseUrl:'http://localhost:8000/',
+    merchantUrl: "http://localhost:3001/",
+    token: 'VIRoHdqUAtpklgKg',
+    REACT_APP_LOCATIONIQ_API: 'pk.6d7d86e11b6563f7e4896136668e71c5',
 }

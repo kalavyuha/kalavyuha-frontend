@@ -18,7 +18,6 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { useInView } from 'react-intersection-observer';
 
 export default function BenefitsSection() {
   const theme = useTheme();
@@ -35,15 +34,6 @@ export default function BenefitsSection() {
   const handleMobileNumberChange = (event) => {
     setMobileNumber(event.target.value);
   };
-
-  const { ref: containerRef, inView: containerInView } = useInView({
-    triggerOnce: true,
-    threshold: 0.3,
-  });
-  const { ref: cardRef, inView: cardInView } = useInView({
-    triggerOnce: false,
-    threshold: 0.3,
-  });
 
   const benefits = [
     '0% Commission for the First 2 Months',
@@ -69,14 +59,10 @@ export default function BenefitsSection() {
 
   return (
     <Box 
-      ref={containerRef} 
       sx={{ 
         background: 'linear-gradient(to right, #1b4d69, #000)', 
         color: 'white', 
         py: { xs: 2, md: 1 },
-        transition: 'opacity 1s ease, v',
-        opacity: containerInView ? 1 : 0,
-        transform: containerInView ? 'translateY(0)' : 'translateY(50px)'
       }}
     >
       <Container maxWidth="lg">
@@ -93,10 +79,6 @@ export default function BenefitsSection() {
             maxWidth: { xs: '100%', md: '50%' },
             mb: { xs: 3, md: 0 },
             textAlign: { xs: 'center', md: 'left' },
-            
-            transition: 'transform 1s ease, opacity 1s ease',
-            opacity: containerInView ? 1 : 0,
-            transform: containerInView ? 'translateX(0)' : 'translateX(-50px)',
           }}>
             <Typography 
               variant="overline" 
@@ -161,15 +143,12 @@ export default function BenefitsSection() {
           </Box>
 
           {/* Right Section - Card */}
-          <Card ref={cardRef} sx={{ 
+          <Card sx={{ 
             maxWidth: { xs: '100%', sm: 400, md: 350 },
             width: '100%',
             bgcolor: '#eaeef2',
             borderRadius: 0,
             color: 'black',
-            transition: 'opacity 1s ease, transform 1s ease',
-            opacity: cardInView ? 1 : 0,
-            transform: cardInView ? 'translateX(0)' : 'translateX(50px)',
           }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box sx={{ 
@@ -226,9 +205,6 @@ export default function BenefitsSection() {
                       <CheckIcon sx={{ 
                         color: '#000',
                         fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
-                        transition: 'opacity 1s ease',
-                        opacity: cardInView ? 1 : 0,
-                        transform: cardInView ? 'scale(1)' : 'scale(0.5)'
                       }} />
                     </ListItemIcon>
                     <ListItemText 

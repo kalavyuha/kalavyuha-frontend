@@ -203,9 +203,9 @@ const BookingInterface = React.memo(() => {
             const apiCartItems = cartData.services.map((service) => ({
               _id: service.service_id,
               serviceName: service.service_name,
-              duration: service.duration, // Use lowercase to match local format
-              price: service.price, // Use lowercase to match local format
-              img: service.img || service.image, // Add image field from API
+              duration: service.duration,
+              price: service.price,
+              img: service.img || service.image, 
             }));
 
             setCartItems(apiCartItems);
@@ -287,7 +287,7 @@ const BookingInterface = React.memo(() => {
   const handleAddServices = () => {
     // Always navigate with businessId in URL for persistence
     if (buisnes_id) {
-      navigate(`/cart/${buisnes_id}`, { state: { staff: staffData, _id: buisnes_id } });
+      navigate(`/detail/${buisnes_id}`, { state: { staff: staffData, _id: buisnes_id } });
     } else {
       navigate(-1);
     }
@@ -299,135 +299,47 @@ const BookingInterface = React.memo(() => {
       showError("Please select a time slot");
       return;
     }
-
     if (!selectedDate) {
       showError("Please select a date");
       return;
     }
-
     if (cartItems.length === 0) {
       showError("Your cart is empty");
       return;
     }
-
     if (!userId) {
-      // Directly open login pop/modal instead of showing toast
-      // Assuming a global function or context to open login modal
-      // Dispatch a custom event to trigger login popup in navbar
       window.dispatchEvent(new CustomEvent('open-login-modal'));
       return;
-      return;
     }
 
-    setIsLoading(true);
-
-    try {
-      // Create date object from selected date
-      const today = new Date();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth();
-
-      // Find the correct date - selectedDate is just the day number
-      let targetDate = new Date(currentYear, currentMonth, selectedDate);
-
-      // If the selected date is in the past, move to next month
-      if (targetDate < today) {
-        targetDate = new Date(currentYear, currentMonth + 1, selectedDate);
-      }
-
-      const formattedDate = targetDate.toISOString().split("T")[0];
-
-      // Transform cart items to match API expected format
-      const services = cartItems.map((item) => ({
-        ServiceId: String(item._id), // Convert to string as expected by API
-        ServiceName: item.serviceName,
-        Duration: item.duration || item.Duration, // Handle both lowercase and uppercase
-        Price: Number(item.price),
-      }));
-
-      // Build the request payload to match the API structure
-      const payload = {
-        BusinessId: Number(buisnes_id), // Convert to number and fix field name
-        CustomerId: Number(userId._id), // Convert to number
-        AssignedStaffs: selectedStaff.length > 0 ? selectedStaff : [], // Use empty array instead of null
-        SelectedDate: formattedDate,
-        SelectedTime: selectedTime,
-        Services: services,
-        TotalPrice: subtotal,
-        PaymentMethod: "online", // Add required PaymentMethod field
-        PaymentStatus: "pending",
-        SendSms: true,
-      };
-
-      console.log("Booking payload:", payload);
-
-      // Validate payload before sending
-      if (!payload.BusinessId || isNaN(payload.BusinessId)) {
-        showError("Invalid business ID");
-        return;
-      }
-
-      if (!payload.CustomerId || isNaN(payload.CustomerId)) {
-        showError("Invalid customer ID");
-        return;
-      }
-
-      if (!payload.Services || payload.Services.length === 0) {
-        showError("No services selected");
-        return;
-      }
-
-      // Call the booking API
-      const result = await apipost("api/v1/booking/book/", payload);
-
-      if (result && result.status === 200) {
-        // showSuccess("Appointment Booking successfully test");
-
-        // Show success cart popup
-        setSuccessCartOpen(true);
-
-        // Clear cart after successful booking
-        if (cartId) {
-          await apipatch(`api/v1/addToCart/service/update/${cartId}`, {
-            services: [],
-          });
-        }
-
-        // Clear local cart and promo code
-        localStorage.removeItem("cartItems");
-        setCartItems([]);
-        setSelectedPromoCode(null);
-        setDiscount(0);
-
-        // Notify navbar that cart has been cleared
-        notifyCartUpdate();
-
-        // Optionally, navigate after closing the success popup
-        // navigate("/", {
-        //   state: {
-        //     bookingId: result.data.Data._id,
-        //     date: formattedDate,
-        //     time: selectedTime,
-        //     services: services,
-        //     total: subtotal - discount,
-        //   },
-        // });
-      }
-    } catch (err) {
-      console.log("Error in booking", err);
-      console.log("Error response:", err.response?.data);
-
-      // Show specific API error message if available
-      const errorMessage =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.response?.data?.details ||
-        "Failed to create booking. Please try again.";
-
-      showError(errorMessage);
-    } finally {
-      setIsLoading(false);
+    // Prepare booking data to pass to payment page
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    let targetDate = new Date(currentYear, currentMonth, selectedDate);
+    if (targetDate < today) {
+      targetDate = new Date(currentYear, currentMonth + 1, selectedDate);
     }
+    const formattedDate = targetDate.toISOString().split("T")[0];
+    const services = cartItems.map((item) => ({
+      ServiceId: String(item._id),
+      ServiceName: item.serviceName,
+      Duration: item.duration || item.Duration,
+      Price: Number(item.price),
+    }));
+    const bookingData = {
+      BusinessId: Number(buisnes_id),
+      CustomerId: Number(userId._id),
+      AssignedStaffs: selectedStaff.length > 0 ? selectedStaff : [],
+      SelectedDate: formattedDate,
+      SelectedTime: selectedTime,
+      Services: services,
+      TotalPrice: subtotal,
+      Discount: discount,
+      PromoCode: selectedPromoCode,
+      CartId: cartId,
+    };
+    navigate("/cart/payment", { state: bookingData });
   };
 
   // Promo Code Modal Component

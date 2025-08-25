@@ -1,4 +1,4 @@
-// Business Hours Upload - Single API Call for all days is handled in businessHoursSection.js via uploadBusinessHours from businessHoursApi.js
+// Business Hours Upload - Single API Call for all days is handled HERE in businessDocumentUploads.js via createBusinessHours from businessHoursApi.js
 import React, { useRef, useState, useEffect } from "react";
 import {
   Box,
@@ -18,6 +18,7 @@ import LeftPanel from "./components/leftpanel";
 import { createBusinessDetails } from "./Apis/businessDetailsApi.js";
 import { createStaff } from "./Apis/staffApi.js";
 import { createServices } from "./Apis/servicesApi.js";
+import { constant } from "../../constant.js";
 import { uploadDocuments } from "./Apis/documentsApi.js";
 import { createBusinessHours } from "./Apis/businessHoursApi.js";
 
@@ -41,11 +42,10 @@ export default function BusinessDocumentUploads() {
     location.state || (storedData ? JSON.parse(storedData) : {});
   const navigate = useNavigate();
 
-  const [fileList, setFileList] = useState(
-    localStorage.getItem("documentUploads")
-      ? JSON.parse(localStorage.getItem("documentUploads"))
-      : {}
-  );
+  const [fileList, setFileList] = useState(() => {
+    const saved = localStorage.getItem("documentUploads");
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -62,8 +62,7 @@ export default function BusinessDocumentUploads() {
     services,
   } = previousData || {};
 
-   console.log("Previous Data:", previousData.businessHours
-); 
+  console.log("Previous Data:", previousData.businessHours);
 
   const handleBackTeamPresence = () => {
     localStorage.setItem(
@@ -110,15 +109,6 @@ export default function BusinessDocumentUploads() {
         setIsUploading(false);
         return;
       }
-      // ------------------------------
-      // Debug: Log the previousData structure
-      console.log("Previous Data:", previousData);
-      console.log("MerchantAccountID:", previousData.MerchantAccountID);
-      console.log("Business Role:", previousData.businessRole);
-      console.log("Form Data:", previousData.formData);
-      console.log("Team Members:", previousData.teamMembers);
-      console.log("Team Size:", previousData.teamSize);
-
       // Progress update
       setUploadProgress(5);
       setUploadStage("Creating business profile...");
@@ -132,9 +122,10 @@ export default function BusinessDocumentUploads() {
         Introduction: previousData.formData.introduction ?? null,
         ShopNumber: previousData.formData.shopNumber ?? null,
         StreetAddress: previousData.formData.streetAddress,
-        Nearby: null,
+        City: previousData.formData.city,
+        State: previousData.formData.state,
         ZipCode: previousData.formData.zipCode,
-        Region: `${previousData.formData.city}, ${previousData.formData.state}`,
+        Country: previousData.formData.country,
         Latitude: parseFloat(previousData.formData.adrsLatitude) || 0.0,
         Longitude: parseFloat(previousData.formData.adrsLongitude) || 0.0,
         LikesCount: 0,
@@ -157,7 +148,6 @@ export default function BusinessDocumentUploads() {
         "BusinessName",
         "StreetAddress",
         "ZipCode",
-        "Region",
         "TotalStaff",
       ];
       const missingFields = requiredFields.filter(
@@ -498,12 +488,12 @@ export default function BusinessDocumentUploads() {
         if (hours === 0) {
           return `12:${minutes} AM`;
         } else if (hours < 12) {
-          return `${hours.toString().padStart(2, '0')}:${minutes} AM`;
+          return `${hours.toString().padStart(2, "0")}:${minutes} AM`;
         } else if (hours === 12) {
           return `12:${minutes} PM`;
         } else {
           const hour12 = hours - 12;
-          return `${hour12.toString().padStart(2, '0')}:${minutes} PM`;
+          return `${hour12.toString().padStart(2, "0")}:${minutes} PM`;
         }
       };
 
@@ -525,18 +515,21 @@ export default function BusinessDocumentUploads() {
 
       // Process business hours for all days in a single payload
       try {
-        const scheduleType = previousData.businessHours?.scheduleType || "selected_hours";
+        const scheduleType =
+          previousData.businessHours?.scheduleType || "selected_hours";
         console.log("Raw business hours data:", previousData.businessHours);
         console.log("Schedule type:", scheduleType);
+
+        // Validate business hours data exists
+        if (!previousData.businessHours) {
+          console.warn("No business hours data found, using default 'closed' for all days");
+        }
 
         // Map schedule types to new API format
         let apiScheduleType;
         switch (scheduleType) {
           case "always_open":
             apiScheduleType = "always_open";
-            break;
-          case "appointment":
-            apiScheduleType = "by_appointment";
             break;
           case "selected_hours":
           default:
@@ -545,11 +538,21 @@ export default function BusinessDocumentUploads() {
         }
 
         const businessIdForHours = String(businessIdNum);
-        console.log('BusinessId for hours:', businessIdForHours, 'Type:', typeof businessIdForHours);
-        console.log('Original businessIdNum:', businessIdNum, 'MAX_SAFE_INTEGER:', Number.MAX_SAFE_INTEGER);
+        console.log(
+          "BusinessId for hours:",
+          businessIdForHours,
+          "Type:",
+          typeof businessIdForHours
+        );
+        console.log(
+          "Original businessIdNum:",
+          businessIdNum,
+          "MAX_SAFE_INTEGER:",
+          Number.MAX_SAFE_INTEGER
+        );
 
         // Build array for all days
-        const businessHoursArr = weekDays.map(day => {
+        const businessHoursArr = weekDays.map((day) => {
           const dayData = previousData.businessHours?.daysStatus?.[day.id];
           let status = "closed";
           let startTime = null;
@@ -563,14 +566,6 @@ export default function BusinessDocumentUploads() {
             } else {
               status = "closed";
               enabled = false;
-            }
-          } else if (scheduleType === "by_appointment" || scheduleType === "appointment") {
-            if (dayData?.isOpen) {
-              enabled = true;
-              status = "appointment";
-            } else {
-              enabled = false;
-              status = "closed";
             }
           } else {
             if (dayData?.isOpen) {
@@ -589,19 +584,25 @@ export default function BusinessDocumentUploads() {
             enabled,
             status,
             startTime: status === "open" ? startTime : null,
-            endTime: status === "open" ? endTime : null
+            endTime: status === "open" ? endTime : null,
           };
         });
 
         const payload = {
           BusinessId: businessIdForHours,
           ScheduleType: apiScheduleType,
-          BusinessHours: businessHoursArr
+          BusinessHours: businessHoursArr,
         };
 
-        console.log("Sending business hours payload:", JSON.stringify(payload, null, 2));
+        console.log(
+          "Sending business hours payload:",
+          JSON.stringify(payload, null, 2)
+        );
         try {
-          const businessHoursData = await createBusinessHours(payload, authToken);
+          const businessHoursData = await createBusinessHours(
+            payload,
+            authToken
+          );
           console.log("Business Hours Response:", businessHoursData);
         } catch (error) {
           console.error("Error creating business hours:", error);
@@ -626,19 +627,8 @@ export default function BusinessDocumentUploads() {
       setUploadProgress(95);
       setUploadStage("Finalizing setup...");
 
-      // Clear all form-related data from localStorage and store only business ID
-      // localStorage.removeItem("documentUploads");
-      localStorage.removeItem("formData");
-      // localStorage.removeItem("businessHours");
-      // localStorage.removeItem("teamMembers");
-      // localStorage.removeItem("services");
-      // localStorage.removeItem("businessDetails");
-      // localStorage.removeItem("businessProfile");
-      // localStorage.removeItem("businessRole");
-      // localStorage.removeItem("MerchantAccountID");
-
-      // Store only the business ID for the new application
       // localStorage.setItem("businessId", JSON.stringify(businessIdNum));
+      localStorage.removeItem("formData");
 
       // Clear browser history to prevent back navigation
       window.history.pushState(null, null, window.location.href);
@@ -653,7 +643,9 @@ export default function BusinessDocumentUploads() {
 
       // Small delay to show completion
       setTimeout(() => {
-        window.location.replace(`http://localhost:3001/?id=${businessIdNum}`);
+        // window.location.replace(`http://localhost:3001/?id=${businessIdNum}`);
+        // localStorage.setItem("businessId", JSON.stringify(businessIdNum));
+        window.location.replace(`${constant.merchantUrl}`);
       }, 1000);
     } catch (error) {
       setIsUploading(false);
@@ -674,7 +666,16 @@ export default function BusinessDocumentUploads() {
   };
 
   useEffect(() => {
-    localStorage.setItem("documentUploads", JSON.stringify(fileList));
+    const filesToSave = {};
+    Object.keys(fileList).forEach((docType) => {
+      filesToSave[docType] = fileList[docType].map((file) => ({
+        name: file.name,
+        type: file.type,
+        lastModified: file.lastModified,
+        size: file.size,
+      }));
+    });
+    localStorage.setItem("documentUploads", JSON.stringify(filesToSave));
   }, [fileList]);
 
   return (

@@ -9,9 +9,9 @@ import DailyOffers from './HomePage/DailyOffers'
 import RecommendedSection from './HomePage/RecommendedSection'
 import FAQSection from './HomePage/faqSection'
 import Footer from './BusniessPage/businessFooter'
-import {
-    Container,
-  } from '@mui/material';
+// import {
+//     Container,
+//   } from '@mui/material';
 import BusinessList from "./HomePage/BusinessList"
 
 const Main = () => {
@@ -21,13 +21,11 @@ const Main = () => {
             try {
                 const response = await fetch('https://ipapi.co/json/');
                 const data = await response.json();
-                console.log('IP-based location coordinates:', {
-                    latitude: data.latitude,
-                    longitude: data.longitude,
-                    city: data.city,
-                    region: data.region,
-                    country: data.country_name
-                });
+                // Save latitude and longitude to localStorage
+                if (data.latitude && data.longitude) {
+                    localStorage.setItem('latitude', data.latitude);
+                    localStorage.setItem('longitude', data.longitude);
+                }
             } catch (error) {
                 console.error('Error fetching IP-based location coordinates:', error);
             }
@@ -37,13 +35,9 @@ const Main = () => {
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        // User agreed to share location
-                        // console.log('User agreed to share exact location:', {
-                        //     latitude: position.coords.latitude,
-                        //     longitude: position.coords.longitude,
-                        //     accuracy: position.coords.accuracy,
-                        //     timestamp: new Date(position.timestamp).toLocaleString()
-                        // });
+                        // Save exact latitude and longitude to localStorage
+                        localStorage.setItem('latitude', position.coords.latitude);
+                        localStorage.setItem('longitude', position.coords.longitude);
                     },
                     (error) => {
                         // User declined or error occurred
@@ -83,8 +77,8 @@ const Main = () => {
             <Banner />
             <ServiceDirectory/>
             <RecommendedSection category="Beauty" />
-            <RecommendedSection category="Wellness" />
-            <RecommendedSection category="Health" />
+            {/* <RecommendedSection category="Wellness" />
+            <RecommendedSection category="Health" /> */}
             <BusinessList/>
             <AppInfoSection />
             <Reviews />

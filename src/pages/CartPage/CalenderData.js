@@ -261,7 +261,7 @@ const Calendar = ({ selectedSlotDate }) => {
                       selectedDate === date
                         ? "#1b4d69"
                         : isToday
-                        ? "#f0f8ff"
+                        ? "#eaeef2"
                         : "transparent",
                     color:
                       selectedDate === date
@@ -271,7 +271,7 @@ const Calendar = ({ selectedSlotDate }) => {
                         : "inherit",
                     cursor: "pointer",
                     mx: 0.5,
-                    border: isToday ? "1px solid #1b4d69" : "none",
+                    // border: isToday ? "1px solid #1b4d69" : "none",
                     fontWeight: isToday ? "bold" : "normal",
                     "&:hover": {
                       bgcolor: selectedDate !== date ? "#eaeef2" : "#1b4d69",

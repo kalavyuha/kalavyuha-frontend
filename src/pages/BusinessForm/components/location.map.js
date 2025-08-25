@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { useState, useRef, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap , useMapEvents} from "react-leaflet";
 import L from "leaflet";
 import { IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Button, Grid } from "@mui/material";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import "leaflet/dist/leaflet.css";
+import { constant } from '../../../constant';
 
 // Fix for default marker icons in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -25,26 +26,52 @@ const center = {
 };
 
 const MapEvents = ({ addMarker }) => {
+  const map = useMap();
+  
   useMapEvents({
     click(e) {
       addMarker(e.latlng);
+      // Zoom to the clicked location
+      map.setView(e.latlng, 16); // 16 is a good zoom level for street view
     },
   });
+  
   return null;
 };
 
-const MapComponent = ({ onSelectLocation }) => {
-  const [markerPosition, setMarkerPosition] = useState(null);
-  const [mapCenter, setMapCenter] = useState(center);
+const RecenterAutomatically = ({ center }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center) {
+      map.setView(center, 16); // Zoom to 16 when recentering
+    }
+  }, [center, map]);
+  
+  return null;
+};
+
+const MapComponent = ({ onSelectLocation, initialPosition  }) => {
+  const [markerPosition, setMarkerPosition] = useState(initialPosition || null);
+  const [mapCenter, setMapCenter] = useState(initialPosition || center);
   const [open, setOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [selectedCoords, setSelectedCoords] = useState({ lat: null, lng: null });
+  const [displayName, setDisplayName] = useState("");
+  const mapRef = useRef();
 
   const addMarker = async (latlng) => {
     const lat = latlng.lat;
     const lng = latlng.lng;
     updateLocation(lat, lng);
   };
+
+  useEffect(() => {
+    if (initialPosition) {
+      setMarkerPosition(initialPosition);
+      setMapCenter(initialPosition);
+    }
+  }, [initialPosition]);
 
   const handleUseMyLocation = () => {
     if (navigator.geolocation) {
@@ -53,6 +80,9 @@ const MapComponent = ({ onSelectLocation }) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           updateLocation(lat, lng);
+          
+          // Center and zoom on the current location
+          setMapCenter({ lat, lng });
         },
         (error) => {
           console.error("Error getting location:", error);
@@ -66,16 +96,20 @@ const MapComponent = ({ onSelectLocation }) => {
 
   const updateLocation = async (lat, lng) => {
     setMarkerPosition({ lat, lng });
-    setMapCenter({ lat, lng });
     setSelectedCoords({ lat, lng });
 
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+        `https://us1.locationiq.com/v1/reverse?key=${constant.REACT_APP_LOCATIONIQ_API}&lat=${lat}&lon=${lng}&format=json`
       );
       const data = await response.json();
-      if (data.display_name) {
-        setSelectedAddress(data.display_name);
+
+      const addr = data.address || {};
+      const display_name = data.display_name || "";
+
+      if (addr && display_name) {
+        setSelectedAddress(addr);
+        setDisplayName(display_name);
         setOpen(true);
       } else {
         console.error("No address found");
@@ -87,7 +121,8 @@ const MapComponent = ({ onSelectLocation }) => {
 
   const handleAddLocation = () => {
     onSelectLocation({
-      address: selectedAddress,
+      address: selectedAddress,      
+      display_name: displayName,
       lat: selectedCoords.lat,
       lng: selectedCoords.lng,
     });
@@ -106,15 +141,17 @@ const MapComponent = ({ onSelectLocation }) => {
           center={[mapCenter.lat, mapCenter.lng]}
           zoom={12}
           style={{ width: "100%", height: "100%", borderRadius: "12px" }}
+          whenCreated={(map) => { mapRef.current = map; }}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           <MapEvents addMarker={addMarker} />
+          <RecenterAutomatically center={markerPosition || mapCenter} />
           {markerPosition && (
             <Marker position={[markerPosition.lat, markerPosition.lng]}>
-              <Popup>{selectedAddress || "Selected location"}</Popup>
+              <Popup>{displayName || "Selected location"}</Popup>
             </Marker>
           )}
         </MapContainer>
@@ -140,7 +177,7 @@ const MapComponent = ({ onSelectLocation }) => {
       <Dialog open={open} onClose={handleReselect}>
         <DialogTitle>Confirm Location</DialogTitle>
         <DialogContent>
-          <p>{selectedAddress}</p>
+          <p>{displayName}</p>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleReselect} color="secondary">Reselect</Button>

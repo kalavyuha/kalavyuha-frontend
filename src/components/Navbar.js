@@ -136,6 +136,22 @@ export default function Navbar() {
     navigate('/cart');
   };
 
+  const handleDownloadClick = () => {
+    // Navigate to home page
+    navigate('/');
+    
+    // Wait for navigation to complete, then scroll to AppInfoSection
+    setTimeout(() => {
+      const appInfoSection = document.getElementById('app-info-section');
+      if (appInfoSection) {
+        appInfoSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
+  };
+
   useEffect(() => {
     const user_Id = JSON.parse(localStorage.getItem("userDetail"));
     if (user_Id) {
@@ -444,7 +460,13 @@ export default function Navbar() {
             </ListItem>
           </List>
         </Collapse>
-        <ListItem button>
+        <ListItem 
+          button
+          onClick={() => {
+            handleDownloadClick();
+            setMobileOpen(false);
+          }}
+        >
           <ListItemText
             primary="Download App"
             sx={{
@@ -511,14 +533,14 @@ export default function Navbar() {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <NavButton startIcon={<Download />}>Download</NavButton>
+                <NavButton startIcon={<Download />} onClick={handleDownloadClick}>Download</NavButton>
 
                 <Link to="/business-page" style={{ textDecoration: "none" }}>
                   <NavButton startIcon={<Store />}>List Your Business</NavButton>
                 </Link>
               </Box>
 
-              <IconButton
+              {/* <IconButton
                 size="small"
                 color="#000"
                 sx={{
@@ -527,7 +549,7 @@ export default function Navbar() {
                 }}
               >
                 <MoreVert />
-              </IconButton>
+              </IconButton> */}
 
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 2, mr: 2 }}
@@ -625,8 +647,8 @@ export default function Navbar() {
                 </>
               )}
             <DropdownItem onClick={() => navigate('/support')}>Support</DropdownItem>
-            <DropdownItem>Community</DropdownItem>
-              <DropdownItem>Download App</DropdownItem>
+            <DropdownItem onClick={() => navigate('/under-construction')}>Community</DropdownItem>
+            <DropdownItem onClick={handleDownloadClick}>Download App</DropdownItem>
             </Paper>
           </Fade>
         )}

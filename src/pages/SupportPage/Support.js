@@ -160,43 +160,41 @@ const Support = () => {
             px: { xs: 1, sm: 2, md: 3 },
           }}
         >
-          <Box
-            sx={{
-              margin: "auto",
-              paddingX: { xs: 3, sm: 3, md: 4 },
-              // overflow: "hidden",
-              minHeight: "20rem",
-              // alignItems: "center",
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              maxWidth: { xs: "100%", sm: 600, md: 800 }, // Responsive max width
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h3"
-                component="h1"
-                sx={{
-                  fontWeight: "bold",
-                  mt: { xs: 15, sm: 15, md: 15 },
-                  mb: { xs: 3, sm: 4, md: 4 },
-                  fontSize: { xs: "2.5rem", sm: "2rem", md: "2.5rem" },
-                  // textAlign: "center",
-                }}
-              >
-                Email Us
-              </Typography>
-            </Box>
+          <Box sx={{ margin: 'auto', padding: { xs: 2, md: 4 }, overflow: 'hidden' }}>
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={4}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    height: '100%',
+                  }}
+                >
+                  <Typography
+                    variant="h3"
+                    component="h1"
+                    sx={{
+                      fontWeight: "bold",
+                      mt: { xs: 15, sm: 15, md: 15 },
+                      mb: { xs: 2, sm: 2, md: 4 },
+                      fontSize: { xs: "2rem", sm: "2rem", md: "2.5rem" },
+                      textAlign: "left",
+                    }}
+                  >
+                    Email Us
+                  </Typography>
+                </Box>
+              </Grid>
 
-            <Box
-              sx={{
-                mt: { xs: 2, sm: 2, md: 15 },
-                maxWidth: { xs: "100%", sm: 450, md: 500 },
-                width: "100%",
-                mx: "auto",
-                px: { xs: 0, sm: 2 },
-              }}
-            >
+              <Grid item xs={12} md={8}>
+                <Box
+                  sx={{
+                    mt: { xs: 2, sm: 2, md: 15 },
+                    width: "100%",
+                    alignItems:"flex-start"
+                  }}
+                >
               <Typography
                 variant="h6"
                 component="h2"
@@ -593,7 +591,9 @@ const Support = () => {
                   </Typography>
                 </Box>
               </Collapse>
-            </Box>
+                </Box>
+              </Grid>
+            </Grid>
           </Box>
         </Container>
       </Container>

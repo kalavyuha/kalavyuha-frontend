@@ -11,21 +11,10 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
-import { styled, keyframes } from '@mui/system';
+import { styled } from '@mui/system';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { MoveRight } from 'lucide-react';
-import { useInView } from 'react-intersection-observer';
-
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const fadeOut = keyframes`
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(20px); }
-`;
 
 const StyledListItem = styled(ListItem)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
@@ -34,15 +23,6 @@ const StyledListItem = styled(ListItem)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'flex-start',
-  transition: 'all 0.3s ease-in-out',
-}));
-
-const AnimatedBox = styled(Box)(({ delay, inView }) => ({
-  opacity: inView ? 1 : 0,
-  transform: inView ? 'translateY(0)' : 'translateY(20px)',
-  animation: inView
-    ? `${fadeIn} 1s ease-in-out forwards ${delay}ms`
-    : `${fadeOut} 0.8s ease-in-out forwards`,
 }));
 
 const questions = [
@@ -72,24 +52,15 @@ export default function FAQSection() {
   const [expanded, setExpanded] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { ref, inView } = useInView({
-    triggerOnce: false,
-    threshold: 0.3,
-  });
 
   const handleToggle = (index) => {
     setExpanded(prev => (prev === index ? null : index)); 
   };
 
-  useEffect(() => {
-    if (inView) setExpanded(0); 
-  }, [inView]);
-
   return (
-    <Box ref={ref} sx={{ margin: 'auto', padding: { xs: 2, md: 4 }, overflow: 'hidden' }}>
+    <Box sx={{ margin: 'auto', padding: { xs: 2, md: 4 }, overflow: 'hidden' }}>
       <Grid container spacing={4}>
         <Grid item xs={12} md={4}>
-          <AnimatedBox delay={0} inView={inView}>
             <Box
               sx={{
                 display: 'flex',
@@ -102,13 +73,12 @@ export default function FAQSection() {
                 Frequently Asked Questions
               </Typography>
             </Box>
-          </AnimatedBox>
         </Grid>
 
         <Grid item xs={12} md={8}>
           <List>
             {questions.map((item, index) => (
-              <AnimatedBox key={index} delay={(index + 1) * 100} inView={inView}>
+              <Box key={index}>
                 <StyledListItem disablePadding>
                   <Typography variant="body1" sx={{ fontWeight: 'medium', flex: 1, pr: 2 }}>
                     {item.question}
@@ -132,7 +102,7 @@ export default function FAQSection() {
                   borderRadius: "4px", 
                   mb: 2 
                 }} />
-              </AnimatedBox>
+              </Box>
             ))}
           </List>
           {isMobile && (

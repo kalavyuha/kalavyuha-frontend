@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { uploadBusinessHours } from "../businessHoursApi";
 import { useNavigate } from "react-router-dom";
 import {
   Grid,
@@ -121,7 +120,7 @@ const BusinessHours = () => {
 
   const handleNextStep = async () => {
     // Debug log to show current open/closed status for all days
-    console.log('Debug: daysStatus before building payload:', daysStatus);
+    console.log('Debug: daysStatus before saving:', daysStatus);
     const previousData = getStoredData();
     const formData = {
       ...previousData,
@@ -138,64 +137,10 @@ const BusinessHours = () => {
       })
     );
 
-    // Prepare API body
-
-    // Ensure businessId is a string (API expects string type)
-    const businessId = String(previousData.BusinessId || 55319888);
-    let apiScheduleType = scheduleType === "selected_hours"
-      ? "open_hours"
-      : scheduleType === "by_appointment"
-      ? "by_appointment"
-      : "always_open";
-
-    // Build BusinessHours array for API, only with required fields
-    const businessHoursArr = WeekDays.map((day) => {
-      const status = daysStatus[day.id];
-      let dayStatus = "closed";
-      let startTime = null;
-      let endTime = null;
-
-      if (status.isOpen) {
-        if (scheduleType === "selected_hours") {
-          dayStatus = "open";
-          startTime = `${status.startTime} ${status.startMeridian}`;
-          endTime = `${status.endTime} ${status.endMeridian}`;
-        } else if (scheduleType === "by_appointment") {
-          dayStatus = "appointment";
-        } else if (scheduleType === "always_open") {
-          dayStatus = "24hours";
-        }
-      } else {
-        // For closed days, status must always be 'closed' and times null
-        dayStatus = "closed";
-        startTime = null;
-        endTime = null;
-      }
-
-      const dayObj = {
-        day: day.name,
-        enabled: !!status.isOpen,
-        status: dayStatus,
-        startTime,
-        endTime,
-      };
-      return dayObj;
-    });
-
-    const apiBody = {
-      BusinessId: businessId,
-      ScheduleType: apiScheduleType,
-      BusinessHours: businessHoursArr,
-    };
-
-    // Call the upload API
-    try {
-      await uploadBusinessHours(apiBody);
-      navigate("/business-document-uploads", { state: formData });
-    } catch (error) {
-      console.error(error);
-      // Optionally show error message to user
-    }
+    console.log("Business hours data saved to localStorage:", formData.businessHours);
+    
+    // Navigate to document uploads where the API call will be made
+    navigate("/business-document-uploads", { state: formData });
   };
 
   const handlePreview = () => {
@@ -207,8 +152,6 @@ const BusinessHours = () => {
         hours: status.isOpen
           ? scheduleType === "selected_hours"
             ? `${status.startTime} ${status.startMeridian} to ${status.endTime} ${status.endMeridian}`
-            : scheduleType === "by_appointment"
-            ? "By appointments only"
             : "Open 24 hours"
           : "Closed",
       });
@@ -497,12 +440,6 @@ const BusinessHours = () => {
                       </Select>
                     </Box>
                   </>
-                ) : scheduleType === "by_appointment" ? (
-                  <Typography
-                    sx={{ color: "grey", fontSize: { xs: 12, sm: 14, md: 15 } }}
-                  >
-                    By appointments only
-                  </Typography>
                 ) : (
                   <Typography
                     sx={{ color: "grey", fontSize: { xs: 12, sm: 14, md: 15 } }}

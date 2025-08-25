@@ -190,7 +190,7 @@ const GoogleImage = styled('img')({
   const finalReviewList = apiReviews.length > 0 ? apiReviews : (data ? data?.reviews : reviews);
 
   return (
-    <Container maxWidth="lg" sx={{ px: { xs: 4, sm: 8, md: 8, lg: 4 }, pb: 4, mt: 6 }} >
+    <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 8, md: 8, lg: 4 }, pb: 4, mt: 6 }} >
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
         <Stack direction="row" spacing={1} alignItems={{ xs: 'end', sm: 'center' }}>
           <Typography
@@ -319,7 +319,6 @@ const GoogleImage = styled('img')({
         </Grid>
       </Grid>
 
-      
     </Container>
   );
 })

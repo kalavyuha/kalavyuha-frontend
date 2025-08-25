@@ -42,12 +42,11 @@ const ServiceCard = ({
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'center', // Center both sides vertically
         padding: '10px',
         justifyContent: 'space-between',
         flexDirection: 'row',
-        // bgcolor:"#9f9f9f",
-        bgcolor:"#d7dbdf",
+        bgcolor: "#d7dbdf",
         borderRadius: '8px',
       }}
     >
@@ -56,6 +55,8 @@ const ServiceCard = ({
         gap={2}
         flexDirection={{ xs: 'column', sm: 'row', md: 'row' }}
         alignItems={'flex-start'}
+        flex={1}
+        minWidth={0}
       >
         {loading ? (
           <Skeleton variant="rectangular" width={90} height={60} sx={{ borderRadius: 1 }} />
@@ -95,7 +96,7 @@ const ServiceCard = ({
                   variant="body2" 
                   color="textSecondary"
                   sx={{
-                    width: '40vw',
+                    // width: '16rem',
                     textOverflow: 'ellipsis',
                     overflow: 'hidden',
                     whiteSpace: 'nowrap',
@@ -103,8 +104,8 @@ const ServiceCard = ({
                     mb: 0.5
                   }}
                 >
-                  {description}
-                </Typography>
+                  {description.length > 30 ? description.slice(0, 30) + '...' : description}
+                </Typography> 
               )}
               <Typography variant="body2" color="textSecondary">
                 {duration} {duration && !duration.includes('m') && !duration.includes('h') ? 'mins' : ''}
@@ -124,10 +125,11 @@ const ServiceCard = ({
 
       <Box
         sx={{
-          height: { xs: '116px', sm: 'unset', md: 'unset' },
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          flex: 'none',
+          minWidth: 0,
         }}
       >
         <Box
@@ -135,9 +137,8 @@ const ServiceCard = ({
             display: 'flex',
             gap: '16px',
             flexDirection: { xs: 'column', sm: 'row', md: 'row' },
-            alignItems: 'flex-end',
+            alignItems: 'center',
             justifyContent: { xs: 'space-between', sm: 'center', md: 'center' },
-            height: { xs: '100%', sm: 'unset', md: 'unset' }
           }}
         >
           {loading ? (
@@ -576,12 +577,16 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   };
 
   const handleNavigateCart = () => {
+    // Set business ID in localStorage before navigating to cart
+    if (params.id) {
+      localStorage.setItem('businessId', params.id);
+    }
     navigate(`/cart`, { state: { staff: staffData, _id: params.id } });
   };
 
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: {xs:0 , sm: 2} }}>
       <Stack
         direction={'row'}
         justifyContent={'space-between'}
@@ -591,7 +596,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
         <Typography
           variant="h4"
           fontSize={{ xs: '24px', sm: '28px', md: '28px' }}
-          fontWeight={600}
+          // fontWeight={600}
         >
           Services
         </Typography>
@@ -606,8 +611,8 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
               onClick={() => handleCategoryChange(category)}
               sx={{
                 cursor: 'pointer',
-                fontSize: '18px',
-                fontWeight: 600,
+                fontSize: { xs: '14px', sm: '16px', md: '18px' },
+                // fontWeight: 600,
                 color: selectedCategory === category ? '#1b4d69' : '#000',
                 position: 'relative',
                 transition: 'color 0.3s ease',

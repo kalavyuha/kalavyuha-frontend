@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from "react-router-dom";
-import { useInView } from 'react-intersection-observer';
 import {
   Box,
   Button,
@@ -9,8 +8,6 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Fade,
-  Grow,
 } from '@mui/material';
 import landingGroupImage from "../../assets/images/busniess_images/landing_page.png";
 import GmailLogo from "../../assets/images/busniess_images/gmail.png";
@@ -21,18 +18,11 @@ export default function BusinessLandingSection() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Use react-intersection-observer for scroll animations
-  const [ref, inView] = useInView({
-    threshold: 0.3,
-    triggerOnce: false,
-  });
-
   return (
-    <Box ref={ref} >
+    <Box >
       <Grid container spacing={4} alignItems="center" sx={{ py: { xs: 3, md: 6 } }}>
         {/* Section one Left side */}
         <Grid item xs={12} md={6}>
-          <Fade in={inView} timeout={1000}>
             <Box sx={{ px: { xs: 2, md: 0 } }}>
               <Typography 
                 variant="overline" 
@@ -94,12 +84,10 @@ export default function BusinessLandingSection() {
                 Register Your Business
               </Button>
             </Box>
-          </Fade>
         </Grid>
 
         {/* Section one right side */}
         <Grid item xs={12} md={6} sx={{marginTop:"32px"}}>
-          <Grow in={inView} timeout={1000}>
             <Box sx={{ 
               position: 'relative',
               display: 'flex',
@@ -130,12 +118,6 @@ export default function BusinessLandingSection() {
                   overflow: 'hidden',
                   top: { xs: -30, sm: -44 },
                   right: { xs: 4, sm: 8 },
-                  
-                  animation: 'float 3s ease-in-out infinite',
-                  '@keyframes float': {
-                    '0%, 100%': { transform: 'translateY(0)' },
-                    '50%': { transform: 'translateY(-10px)' },
-                  },
                 }}
               >
                 <Box sx={{
@@ -199,9 +181,7 @@ export default function BusinessLandingSection() {
                 </Box>
               </Card>
             </Box>
-          </Grow>
 
-          <Fade in={inView} timeout={1500}>
             <Box sx={{ 
               display: 'flex', 
               justifyContent: "center", 
@@ -228,7 +208,6 @@ export default function BusinessLandingSection() {
                 4.8 Stars
               </Typography>
             </Box>
-          </Fade>
 
           <Grid container justifyContent="space-between" sx={{ 
             mt: { xs: 3, md: 6 }, 
@@ -241,8 +220,7 @@ export default function BusinessLandingSection() {
               { value: '₹19M', label: 'Happy Customers' },
               
             ].map((stat, index) => (
-              <Grow in={inView} timeout={1000 + index * 500} key={index}>
-                <Grid item xs={4}>
+                <Grid item xs={4} key={index}>
                   <Box sx={{ 
                     width: { xs: 50, sm: 130 },
                     height: { xs: 2, sm: 3 },
@@ -275,7 +253,6 @@ export default function BusinessLandingSection() {
                     {stat.label}
                   </Typography>
                 </Grid>
-              </Grow>
             ))}
           </Grid>
         </Grid>

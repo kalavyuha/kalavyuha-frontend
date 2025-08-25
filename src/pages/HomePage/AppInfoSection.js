@@ -20,6 +20,7 @@ const BookingAppLanding = () => {
 
   return (
     <Box
+      id="app-info-section"
       sx={{
         my:10,
         width: "100%",

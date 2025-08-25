@@ -99,10 +99,8 @@ export default function OTPVerification() {
 
       console.log(data);
 
-      if (data.Status === 404) {
-      // if (response.ok && data.Status === 200) {
+      if (data.Status === 404 || data.Status === 200 ) {
         setMessage("Account Created Successfully!");
-
         const { firstName, lastName, email, countryCode, phone, password } =
           previousData.state || {};
 
