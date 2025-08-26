@@ -412,11 +412,11 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
               variant="body2"
             >
               By creating an account, you agree to our{" "}
-              <Link to="http://localhost:3000/kalavyuha-frontend/terms&conditions" style={{ textDecoration: "none" }}>
+              <Link to="https://api.slotwel.in/kalavyuha-frontend/terms&conditions" style={{ textDecoration: "none" }}>
                 Terms of Service{" "}
               </Link>{" "}
               and{" "}
-              <Link style={{ textDecoration: "none" }} to="http://localhost:3000/kalavyuha-frontend/privacy">
+              <Link style={{ textDecoration: "none" }} to="https://api.slotwel.in/kalavyuha-frontend/privacy">
                 Privacy Policy
               </Link>
             </Typography>

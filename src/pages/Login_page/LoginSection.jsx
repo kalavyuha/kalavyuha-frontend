@@ -101,7 +101,7 @@ const LoginSection = ({ onForgotPassword }) => {
     try {
       const formattedPhone = phone.replace(/\s/g, "");
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/BussinessMember/member/login/",
+        "https://api.slotwel.in/api/v1/BussinessMember/member/login/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

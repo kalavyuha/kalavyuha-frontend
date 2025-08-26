@@ -28,7 +28,7 @@ const ServicesRecommendations = ({ category = "Beauty" }) => {
         const longitude = localStorage.getItem("longitude");
 
         const response = await fetch(
-          `http://localhost:8000/api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=${latitude}&longitude=${longitude}&page=1`,
+          `https://api.slotwel.in/api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=${latitude}&longitude=${longitude}&page=1`,
           {
             headers: {
               Authorization: "Bearer VIRoHdqUAtpklgKg",
