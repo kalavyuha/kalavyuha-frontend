@@ -21,6 +21,8 @@ import { createServices } from "./Apis/servicesApi.js";
 import { constant } from "../../constant.js";
 import { uploadDocuments } from "./Apis/documentsApi.js";
 import { createBusinessHours } from "./Apis/businessHoursApi.js";
+import UploadErrorHandler from "../../utils/uploadErrorHandler";
+import UploadErrorDialog from "../../components/UploadErrorDialog";
 
 const theme = createTheme({
   palette: {
@@ -50,6 +52,7 @@ export default function BusinessDocumentUploads() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStage, setUploadStage] = useState("");
+  const [errorDialog, setErrorDialog] = useState({ open: false, error: null });
 
   const {
     firstName,
@@ -645,22 +648,35 @@ export default function BusinessDocumentUploads() {
       setTimeout(() => {
         // window.location.replace(`http://localhost:3001/?id=${businessIdNum}`);
         // localStorage.setItem("businessId", JSON.stringify(businessIdNum));
-        window.location.replace(`${constant.merchantUrl}`);
+        // window.location.replace(`${constant.merchantUrl}`);
+        navigate("/under-construction");
       }, 1000);
     } catch (error) {
       setIsUploading(false);
       setUploadProgress(0);
       setUploadStage("");
+      
+      // Use enhanced error handling
+      UploadErrorHandler.logError(error, 'Business Form Submission');
+      const userFriendlyError = UploadErrorHandler.createUserFriendlyMessage(error);
+      
       console.error("Error during submission:", error);
       localStorage.setItem("documentUploads", JSON.stringify(fileList));
 
-      if (error.message === "Document upload failed") {
-        alert(
-          "Document upload failed! Please reselect the documents and try again."
-        );
+      // Show user-friendly error dialog
+      setErrorDialog({
+        open: true,
+        error: userFriendlyError
+      });
+
+      // Handle specific error types
+      if (error.message.includes("413") || error.message.includes("too large")) {
+        // Clear the file list to force re-upload for large file errors
         setFileList({});
-      } else {
-        alert(`Error: ${error.message}`);
+        localStorage.removeItem("documentUploads");
+      } else if (error.message.includes("Document upload failed")) {
+        setFileList({});
+        localStorage.removeItem("documentUploads");
       }
     }
   };
@@ -971,6 +987,18 @@ export default function BusinessDocumentUploads() {
           </Grid>
         </Container>
       </Box>
+
+      {/* Enhanced Error Dialog */}
+      <UploadErrorDialog
+        open={errorDialog.open}
+        error={errorDialog.error}
+        onClose={() => setErrorDialog({ open: false, error: null })}
+        onRetry={() => {
+          setErrorDialog({ open: false, error: null });
+          handleSubmit();
+        }}
+        showTechnicalDetails={process.env.NODE_ENV === 'development'}
+      />
     </ThemeProvider>
   );
 }

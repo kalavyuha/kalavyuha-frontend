@@ -57,6 +57,16 @@ const ServicesRecommendations = ({Services=[]}) => {
     const [scrollPosition, setScrollPosition] = useState(0);
     const isSmallScreen = useMediaQuery('(max-width: 600px)');
 
+    // Normalize incoming `Services` prop to an array so .map is safe.
+    // Accept formats: array, { items: [...] }, { Data: { items: [...] } }, single object, or null.
+    const normalizedServices = (() => {
+        if (Array.isArray(Services)) return Services;
+        if (Services && Array.isArray(Services.items)) return Services.items;
+        if (Services && Services.Data && Array.isArray(Services.Data.items)) return Services.Data.items;
+        if (Services && typeof Services === 'object') return [Services];
+        return [];
+    })();
+
     const scroll = (direction) => {
         const container = carouselRef.current;
         if (!container) return;
@@ -106,9 +116,16 @@ const ServicesRecommendations = ({Services=[]}) => {
                         scrollBehavior: 'smooth'
                     }}
                 >
-                    {Services && Services.map((salon) => (
-                        <TypeOneCard key={salon.id} salon={salon} isSmallScreen={isSmallScreen} />
-                    ))}
+                    {normalizedServices.length > 0 ? (
+                        normalizedServices.map((salon, idx) => (
+                            <TypeOneCard key={salon.id || salon._id || idx} salon={salon} isSmallScreen={isSmallScreen} />
+                        ))
+                    ) : (
+                        // render placeholder sample salons when no services provided
+                        salons.map((salon) => (
+                            <TypeOneCard key={salon.id} salon={salon} isSmallScreen={isSmallScreen} />
+                        ))
+                    )}
                 </Box>
 
                 <Box

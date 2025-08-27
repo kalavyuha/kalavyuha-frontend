@@ -135,8 +135,10 @@ const KalavyuhaBusinessPage = () => {
               </List>
 
               <Link
+                component="button"
+                onClick={() => window.open('/kalavyuha-frontend/business-page#features-available', '_blank')}
                 underline="hover"
-                sx={{ mt: 'auto', color: 'text.primary', fontWeight: 300 }}
+                sx={{ mt: 'auto', color: 'text.primary', fontWeight: 300, cursor: 'pointer' }}
               >
                 See All
               </Link>

@@ -1,6 +1,6 @@
 // Business Hours API Functions
 
-const API_BASE_URL = 'https://api.slotwel.in/api/v1';
+import { constant } from "../../../constant";
 
 /**
  * Create business hours for a business
@@ -11,8 +11,8 @@ const API_BASE_URL = 'https://api.slotwel.in/api/v1';
 export const createBusinessHours = async (businessHoursData, authToken) => {
   try {
     console.log('Sending business hours data:', JSON.stringify(businessHoursData, null, 2));
-    
-    const response = await fetch(`${API_BASE_URL}/BussinessHours/create`, {
+
+    const response = await fetch(`${constant.baseUrl}api/v1/BussinessHours/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -6,6 +6,7 @@ import MapComponent from './Map';
 import { useLocation, useNavigate } from 'react-router-dom';
 import RecommendedSection from './OtherServices';
 import { apiget } from '../service/api';
+import { constant } from '../../constant';
 
 const Overview = () => {
     const [data, setData] = useState(null);
@@ -20,14 +21,14 @@ const Overview = () => {
     const searchBarData = previousData?.state?.search
 
     // Log the search data to see what's being passed
-    useEffect(() => {
-        if (searchBarData) {
-            console.log('Search data received in Overview:', searchBarData);
-            console.log('Date:', searchBarData?.date);
-            console.log('Time:', searchBarData?.time);
-            console.log('Selected Date Data:', searchBarData?.selectedDateData);
-        }
-    }, [searchBarData])
+    // useEffect(() => {
+    //     if (searchBarData) {
+    //         console.log('Search data received in Overview:', searchBarData);
+    //         console.log('Date:', searchBarData?.date);
+    //         console.log('Time:', searchBarData?.time);
+    //         console.log('Selected Date Data:', searchBarData?.selectedDateData);
+    //     }
+    // }, [searchBarData])
 
 
     const handleDataChange = (newData) => {
@@ -36,9 +37,9 @@ const Overview = () => {
 
     const fetchPopularServices = async () => {
         try {
-            const result = await apiget(`api/v1/Service/popularServices/?max_distance_km=15&limit=5&MinPrice=50&SortBy=Price&user_latitude=28.466296&user_longitude=77.011864&new_businesses=true`);
+            const result = await apiget(`${constant.baseUrl}api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&Category=Beauty&latitude=78.9897978&longitude=28.6767965&page=1`);
             if (result && result.data?.Status === 200) {
-                 console.log(result?.data?.Data)
+                 console.log("TESTING:",result?.data?.Data)
                 setPopularServices(result?.data?.Data)
             }
         } catch (err) {

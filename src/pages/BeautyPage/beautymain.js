@@ -106,12 +106,11 @@ function BeautyMain() {
   const fetchDetailData = async () => {
     setLoading(true);
     const result = await apiget(`api/v1/BussinessDetails/alldetails/${id}`);
-    console.log("TESTING", result);
+    // console.log("TESTING", result);
     if (result && result?.data?.Status === 200) {
       setBuisnessInfo(result?.data?.Data?.BusinessInfo);
       setServices(result?.data?.Data?.Services);
-      // setimages(result?.data?.Data?.BussinessImages);
-      setimages(result?.data?.Data?.BussinessImages || []); //---------changes made by Rakshit
+      setimages(result?.data?.Data?.BussinessImages || []);
       setBuisnessProduct(result?.data?.Data?.BussinessProducts);
       setAmenities(result?.data?.Data?.BussinessFacilities);
       setReviews(result?.data?.Data?.CustomerReview);

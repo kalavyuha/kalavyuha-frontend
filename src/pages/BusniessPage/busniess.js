@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React,{useState, useEffect} from 'react';
 import {
   Box,
   Container,
@@ -28,6 +28,23 @@ const BusniessPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm')); 
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // On mount, if URL contains hash #features-available, scroll to that element
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const id = window.location.hash.substring(1);
+      if (id) {
+        // wait briefly to ensure content is mounted
+        const t = setTimeout(() => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+        return () => clearTimeout(t);
+      }
+    }
+  }, []);
 
   
   return (
@@ -59,7 +76,7 @@ const BusniessPage = () => {
       {/* section three */}
       <Container style={{maxWidth: "none"}} sx={{ mt: 10 }}>
           <Container maxWidth="lg">
-            <BusinessAreaSection/>                    {/* Loading */}
+            <BusinessAreaSection/>
           </Container>
       </Container>
 
@@ -67,7 +84,7 @@ const BusniessPage = () => {
       {/* section four */}
       <Container style={{maxWidth: "none"}} sx={{ mt: 10 }}>
         <Container maxWidth="lg">
-            <BuniessSuccessStories/>                   {/* Loading */}
+            <BuniessSuccessStories/> 
         </Container>
       </Container>
 

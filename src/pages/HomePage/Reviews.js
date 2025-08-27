@@ -14,7 +14,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-
+import { constant } from '../../constant';
 import RecommendedImgPath from '../../assets/images/recommended/recommended.png';
 
 const reviews = [
@@ -103,7 +103,7 @@ const GoogleImage = styled('img')({
     setError(null);
     try {
       const response = await fetch(
-        `https://api.slotwel.in/api/v1/Reviews/get/?businessId=${businessId}&customerId=${customerId}`,
+        `${constant.baseUrl}api/v1/Reviews/get/?businessId=${businessId}&customerId=${customerId}`,
         {
           method: 'GET',
           headers: {

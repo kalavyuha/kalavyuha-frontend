@@ -11,7 +11,7 @@ import {
   Paper,
   IconButton
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import sample from "../../assets/image (9).png";
 import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -27,44 +27,547 @@ import RescheduleIcon from "@mui/icons-material/Schedule";
 
 const AppointmentHistoryDetail = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
 
-  const appointmentData = {
-    id: "APT123456",
-    businessName: "Batbox | Indoor Cricket Nets",
-    businessAddress: "Grab Mall, Sector 18, Chandigarh",
-    businessPhone: "+91 98765 43210",
-    businessEmail: "batbox@gmail.com",
-    rating: 4.8,
-    appointmentDate: "December 15, 2024",
-    appointmentTime: "10:00 AM - 11:00 AM",
-    status: "Pending",
-    services: [
-      {
-        name: "5 Over Plan",
-        duration: "60 minutes",
-        price: 800,
-        description: "Complete cricket practice session with 5 overs"
-      },
-      {
-        name: "Hair Cut",
-        duration: "30 minutes", 
-        price: 300,
-        description: "Professional hair styling service"
-      },
-      {
-        name: "Equipment Rental",
-        duration: "60 minutes",
-        price: 200,
-        description: "Cricket bat and protective gear rental"
-      }
+  // Helper function to get status color
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+      case 'confirmed':
+        return { backgroundColor: "#d4edda", color: "#155724" };
+      case 'pending':
+        return { backgroundColor: "#fff3cd", color: "#856404" };
+      case 'cancelled':
+        return { backgroundColor: "#f8d7da", color: "#721c24" };
+      default:
+        return { backgroundColor: "#e2e3e5", color: "#383d41" };
+    }
+  };
+  
+  // Get appointment data from navigation state or use default
+  const rawAppointmentData = location.state?.appointment || {
+    BookingId: "APT123456",
+    SelectedDate: "2024-02-07",
+    SelectedTime: "11:00 AM",
+    Services: [
+      { ServiceName: "Sample Service", Duration: "30 min", Price: 500 }
     ],
-    subtotal: 1300,
-    tax: 100,
+    TotalPrice: 500,
+    PaymentStatus: "paid",
+    PaymentMethod: "online"
+  };
+
+  // Convert new API format to legacy format for template compatibility
+  const appointmentData = {
+    // New API format properties
+    ...rawAppointmentData,
+    // Legacy properties for existing template compatibility
+    id: rawAppointmentData.BookingId || "APT123456",
+    businessName: "Business Appointment",
+    businessAddress: "Business Location",
+    businessPhone: "+91 98765 43210",
+    businessEmail: "contact@business.com",
+    rating: 4.8,
+    appointmentDate: formatDate(rawAppointmentData.SelectedDate),
+    appointmentTime: rawAppointmentData.SelectedTime,
+    status: rawAppointmentData.PaymentStatus || "pending",
+    services: rawAppointmentData.Services?.map(service => ({
+      name: service.ServiceName,
+      duration: service.Duration,
+      price: service.Price,
+      description: `${service.ServiceName} - ${service.Duration}`
+    })) || [],
+    subtotal: rawAppointmentData.TotalPrice || 0,
+    tax: 0,
     discount: 0,
-    total: 1400,
-    bookingDate: "December 10, 2024",
-    paymentMethod: "Online Payment",
-    paymentStatus: "Paid"
+    total: rawAppointmentData.TotalPrice || 0,
+    bookingDate: formatDate(rawAppointmentData.SelectedDate),
+    paymentMethod: rawAppointmentData.PaymentMethod === "online" ? "Online Payment" : "Cash",
+    paymentStatus: rawAppointmentData.PaymentStatus === "paid" ? "Paid" : "Pending"
+  };
+
+  const generateInvoice = () => {
+    // Create invoice content
+    const invoiceContent = `
+      <html>
+        <head>
+          <title>Invoice - ${appointmentData.BookingId}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 20px;
+              background: white;
+            }
+            .invoice-header {
+              text-align: center;
+              border-bottom: 2px solid #1b4d69;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .invoice-title {
+              color: #1b4d69;
+              font-size: 28px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+              .invoice-title2 {
+              color: #1b4d69;
+              font-size: 20px;
+              font-weight: bold;
+              margin: 0;
+            }
+            .invoice-subtitle {
+              color: #666;
+              font-size: 14px;
+              margin-top: 5px;
+            }
+            .business-info {
+              background: #f1f1f1;
+              padding: 20px;
+              border-radius: 8px;
+              margin-bottom: 30px;
+            }
+            .business-name {
+              font-size: 20px;
+              font-weight: bold;
+              color: #1b4d69;
+              margin-bottom: 10px;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 15px;
+            }
+            .info-label {
+              font-weight: bold;
+              color: #333;
+              width: 150px;
+            }
+            .services-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+            }
+            .services-table th,
+            .services-table td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+            }
+            .services-table th {
+              background-color: #1b4d69;
+              color: white;
+              font-weight: bold;
+            }
+            .services-table tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            .total-section {
+              background: #f8f9fa;
+              padding: 20px;
+              border-radius: 8px;
+              margin-top: 20px;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+            }
+            .total-final {
+              font-size: 18px;
+              font-weight: bold;
+              color: #1b4d69;
+              border-top: 2px solid #1b4d69;
+              padding-top: 10px;
+              margin-top: 10px;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #ddd;
+              color: #666;
+              font-size: 12px;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-header">
+            <h1 class="invoice-title">Kalavyuha</h1>
+            <h3 class="invoice-title2">Invoice</h3>
+            <p class="invoice-subtitle">Appointment ID: ${appointmentData.id}</p>
+          </div>
+
+          <div class="business-info">
+            <div class="business-name">${appointmentData.businessName}</div>
+            <div>${appointmentData.businessAddress}</div>
+            <div>Phone: ${appointmentData.businessPhone}</div>
+            <div>Email: ${appointmentData.businessEmail}</div>
+          </div>
+
+          <div class="info-row">
+            <div>
+              <div class="info-label">Appointment Date:</div>
+              <div>${appointmentData.appointmentDate}</div>
+            </div>
+            <div>
+              <div class="info-label">Appointment Time:</div>
+              <div>${appointmentData.appointmentTime}</div>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div>
+              <div class="info-label">Booking Date:</div>
+              <div>${appointmentData.bookingDate}</div>
+            </div>
+            <div>
+              <div class="info-label">Payment Status:</div>
+              <div>${appointmentData.paymentStatus}</div>
+            </div>
+          </div>
+
+          <table class="services-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Description</th>
+                <th>Duration</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${appointmentData.services.map(service => `
+                <tr>
+                  <td>${service.name}</td>
+                  <td>${service.description}</td>
+                  <td>${service.duration}</td>
+                  <td>₹${service.price}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="total-section">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>₹${appointmentData.subtotal}</span>
+            </div>
+            <div class="total-row">
+              <span>Tax & Fees:</span>
+              <span>₹${appointmentData.tax}</span>
+            </div>
+            ${appointmentData.discount > 0 ? `
+            <div class="total-row">
+              <span>Discount:</span>
+              <span>-₹${appointmentData.discount}</span>
+            </div>
+            ` : ''}
+            <div class="total-row total-final">
+              <span>Total Amount:</span>
+              <span>₹${appointmentData.total}</span>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing ${appointmentData.businessName}</p>
+            <p>Generated on ${new Date().toLocaleDateString()}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Open print window
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(invoiceContent);
+    printWindow.document.close();
+    
+    // Wait for content to load then trigger print with printer selection
+    printWindow.onload = () => {
+      printWindow.focus();
+      
+      // Try to use the modern print API if available
+      if ('print' in printWindow) {
+        printWindow.print();
+      }
+    };
+  };
+
+  const downloadPDF = () => {
+    // Create invoice content with PDF-specific styling and instructions
+    const invoiceContent = `
+      <html>
+        <head>
+          <title>Invoice - ${appointmentData.id}</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 15mm;
+            }
+            @media print {
+              @page {
+                size: A4;
+                margin: 15mm;
+              }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 20px;
+              background: white;
+            }
+            .invoice-header {
+              text-align: center;
+              border-bottom: 2px solid #1b4d69;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .invoice-title {
+              color: #1b4d69;
+              font-size: 28px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+              .invoice-title2 {
+              color: #1b4d69;
+              font-size: 20px;
+              font-weight: bold;
+              margin: 0;
+            }
+            .invoice-subtitle {
+              color: #666;
+              font-size: 14px;
+              margin-top: 5px;
+            }
+            .business-info {
+              background: #f1f1f1;
+              padding: 20px;
+              border-radius: 8px;
+              margin-bottom: 30px;
+            }
+            .business-name {
+              font-size: 20px;
+              font-weight: bold;
+              color: #1b4d69;
+              margin-bottom: 10px;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 15px;
+            }
+            .info-label {
+              font-weight: bold;
+              color: #333;
+              width: 150px;
+            }
+            .services-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+            }
+            .services-table th,
+            .services-table td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+            }
+            .services-table th {
+              background-color: #1b4d69;
+              color: white;
+              font-weight: bold;
+            }
+            .services-table tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            .total-section {
+              background: #f8f9fa;
+              padding: 20px;
+              border-radius: 8px;
+              margin-top: 20px;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+            }
+            .total-final {
+              font-size: 18px;
+              font-weight: bold;
+              color: #1b4d69;
+              border-top: 2px solid #1b4d69;
+              padding-top: 10px;
+              margin-top: 10px;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #ddd;
+              color: #666;
+              font-size: 12px;
+            }
+            .pdf-instructions {
+              position: fixed;
+              top: 10px;
+              right: 10px;
+              background: #1b4d69;
+              color: white;
+              padding: 15px;
+              border-radius: 8px;
+              font-size: 14px;
+              z-index: 1000;
+              max-width: 300px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+            .pdf-instructions h4 {
+              margin: 0 0 10px 0;
+              font-size: 16px;
+            }
+            .pdf-instructions ol {
+              margin: 10px 0;
+              padding-left: 20px;
+            }
+            .pdf-instructions li {
+              margin-bottom: 5px;
+            }
+            @media print {
+              .pdf-instructions { display: none; }
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+
+          <div class="invoice-header">
+            <h1 class="invoice-title">Kalavyuha</h1>
+            <h3 class="invoice-title2">Invoice</h3>
+            <p class="invoice-subtitle">Appointment ID: ${appointmentData.id}</p>
+          </div>
+
+          <div class="business-info">
+            <div class="business-name">${appointmentData.businessName}</div>
+            <div>${appointmentData.businessAddress}</div>
+            <div>Phone: ${appointmentData.businessPhone}</div>
+            <div>Email: ${appointmentData.businessEmail}</div>
+          </div>
+
+          <div class="info-row">
+            <div>
+              <div class="info-label">Appointment Date:</div>
+              <div>${appointmentData.appointmentDate}</div>
+            </div>
+            <div>
+              <div class="info-label">Appointment Time:</div>
+              <div>${appointmentData.appointmentTime}</div>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div>
+              <div class="info-label">Booking Date:</div>
+              <div>${appointmentData.bookingDate}</div>
+            </div>
+            <div>
+              <div class="info-label">Payment Status:</div>
+              <div>${appointmentData.paymentStatus}</div>
+            </div>
+          </div>
+
+          <table class="services-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Description</th>
+                <th>Duration</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${appointmentData.services.map(service => `
+                <tr>
+                  <td>${service.name}</td>
+                  <td>${service.description}</td>
+                  <td>${service.duration}</td>
+                  <td>₹${service.price}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="total-section">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>₹${appointmentData.subtotal}</span>
+            </div>
+            <div class="total-row">
+              <span>Tax & Fees:</span>
+              <span>₹${appointmentData.tax}</span>
+            </div>
+            ${appointmentData.discount > 0 ? `
+            <div class="total-row">
+              <span>Discount:</span>
+              <span>-₹${appointmentData.discount}</span>
+            </div>
+            ` : ''}
+            <div class="total-row total-final">
+              <span>Total Amount:</span>
+              <span>₹${appointmentData.total}</span>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing ${appointmentData.businessName}</p>
+            <p>Generated on ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          <script>
+            // Auto-trigger print dialog with PDF destination preference
+            setTimeout(() => {
+              window.focus();
+              
+              // Try to set PDF as default destination using modern browser APIs
+              if (window.print) {
+                // Add metadata to hint PDF preference
+                const meta = document.createElement('meta');
+                meta.name = 'print-destination';
+                meta.content = 'pdf';
+                document.head.appendChild(meta);
+                
+                window.print();
+              }
+            }, 1000);
+            
+            // Listen for beforeprint event to set PDF preference
+            window.addEventListener('beforeprint', function() {
+              // This helps browsers understand the intent is PDF
+              document.title = 'Invoice-' + '${appointmentData.id}' + '.pdf';
+            });
+          </script>
+        </body>
+      </html>
+    `;
+
+    // Open new window for PDF download
+    const pdfWindow = window.open('', '_blank', 'width=800,height=600');
+    pdfWindow.document.write(invoiceContent);
+    pdfWindow.document.close();
   };
 
   const handleBack = () => {
@@ -516,6 +1019,7 @@ const AppointmentHistoryDetail = () => {
                   <Button
                     variant="contained"
                     startIcon={<PrintIcon />}
+                    onClick={generateInvoice}
                     sx={{
                       backgroundColor: "#1b4d69",
                       color: "white",
@@ -532,6 +1036,7 @@ const AppointmentHistoryDetail = () => {
                   <Button
                     variant="outlined"
                     startIcon={<DownloadIcon />}
+                    onClick={downloadPDF}
                     sx={{
                       borderColor: "#1b4d69",
                       color: "#1b4d69",
