@@ -2,7 +2,7 @@ import React from 'react'
 import { Box, Paper, Typography } from '@mui/material'
 
 const Map = () => {
-  const center = { lat: 51.505, lng: -0.09 }
+  const center = { lat: 30.3350139, lng:78.0446632 }
   const GOOGLE_API_KEY='AIzaSyCYmK7_q9luqg3YaFAxxWjNW4-zzoWF3KI';
   const googleMapsEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_API_KEY}&q=${center.lat},${center.lng}&zoom=15`;
 

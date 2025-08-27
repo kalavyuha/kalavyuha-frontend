@@ -13,6 +13,7 @@ import { NavigateBefore, NavigateNext, LocationOn } from "@mui/icons-material";
 import RecommendedImgPath from "../../assets/images/recommended/recommended.png";
 import { useMediaQuery } from "@mui/material";
 import TypeOneCard from "../../components/cardtypeone";
+import { constant } from "../../constant";
 
 const ServicesRecommendations = ({ category = "Beauty" }) => {
   const [salons, setSalons] = useState([]);
@@ -28,7 +29,7 @@ const ServicesRecommendations = ({ category = "Beauty" }) => {
         const longitude = localStorage.getItem("longitude");
 
         const response = await fetch(
-          `http://localhost:8000/api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=${latitude}&longitude=${longitude}&page=1`,
+          `${constant.baseUrl}api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=${latitude}&longitude=${longitude}&page=1`,
           {
             headers: {
               Authorization: "Bearer VIRoHdqUAtpklgKg",
@@ -46,7 +47,8 @@ const ServicesRecommendations = ({ category = "Beauty" }) => {
             Business: {
               Name: item.BusinessName || "Unknown Business",
               Address:
-                item.Region || `${item.Nearby}, ${item.Region}` || "Location",
+                // item.Region || `${item.City}, ${item.State}` || "Location",
+                item.Region || `${item.City}` || "Location",
               Rating: item.Rating || 4.8,
               Image: item.ProfileImage || RecommendedImgPath,
               Distance: item.Distance ? `${item.Distance} Km` : "0.0 Km",

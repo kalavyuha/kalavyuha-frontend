@@ -221,7 +221,7 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
           background: 'linear-gradient(to bottom, #467d9b, #002c5c)',
           position: 'absolute',
           // height: '35vh',
-          height: '19rem', //----CHANGES DONE BY RAKSHIT
+          height: '19rem',
           width: '100%',
           zIndex: -1,
           top: 0,
@@ -274,7 +274,7 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
                         variant="body2"
                         sx={{ color: "#666", marginTop: "8px", fontSize: "14px" }}
                       >
-                        {`${buisnessInfo.StreetAddress}, ${buisnessInfo.Region || ''}`}
+                        {`${buisnessInfo.StreetAddress}, ${buisnessInfo.City || ''}`}
                       </Typography>
 
                       <Typography

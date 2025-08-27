@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardMedia, Typography, Box } from '@mui/material';
+import NearMeOutlinedIcon from '@mui/icons-material/NearMeOutlined';
 import { useNavigate } from 'react-router-dom';
 import ImageIcon from '../assets/images/Overview_Images/image.png'
 
@@ -69,6 +70,7 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
 
             <CardContent sx={{ px: 0 }}>
                 <Box sx={{ mb: 1 }}>
+                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography
                         variant="body2"
                         color="text.secondary"
@@ -76,6 +78,17 @@ const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
                     >
                         {Business?.Address || 'TEST'}
                     </Typography>
+                     <Box sx={{ display: 'flex', alignItems: 'center' , gap: 0.5 }}>
+                    <NearMeOutlinedIcon sx={{ color: 'text.secondary', fontSize: '0.95rem' }} />
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: isSmallScreen ? '0.75rem' : '0.9rem' }}
+                    >
+                        {Business?.Distance || '0 Km'}
+                    </Typography>
+                    </Box>
+                    </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography
                             variant="h6"

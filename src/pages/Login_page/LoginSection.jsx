@@ -22,6 +22,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import { constant } from "../../constant";
 // import { ENDPOINTS } from "../../constants/apiHandling";
 
 const LoginSection = ({ onForgotPassword }) => {
@@ -101,7 +102,7 @@ const LoginSection = ({ onForgotPassword }) => {
     try {
       const formattedPhone = phone.replace(/\s/g, "");
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/BussinessMember/member/login/",
+        `${constant.baseUrl}api/v1/BussinessMember/member/login/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

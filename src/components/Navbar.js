@@ -283,7 +283,16 @@ export default function Navbar() {
           alignItems: "center",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: 1, 
+            mt: 1,
+            cursor: "pointer"
+          }}
+          onClick={() => navigate("/")}
+        >
           <Box
             component="img"
             src={ColorLogo}
@@ -506,7 +515,15 @@ export default function Navbar() {
         >
           <Toolbar sx={{ justifyContent: "space-between", padding: "8px 0" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box 
+                sx={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 1,
+                  cursor: "pointer"
+                }}
+                onClick={() => navigate("/")}
+              >
                 <Box
                   component="img"
                   src={ColorLogo}

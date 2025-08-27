@@ -10,47 +10,16 @@ import {
   CardActions,
   Container
 } from '@mui/material';
+import { constant } from '../../constant';
 
 import MusiceTherapy from '../../assets/images/nearby/music_therapy.jpeg';
 import Makeup from '../../assets/images/nearby/makeup_service.jpeg';
 import SkinIssue from '../../assets/images/nearby/skin_issue.jpeg';
 import DisPersonFitness from '../../assets/images/nearby/disabled_person_fitness.jpeg';
 
-const services = [
-  {
-    title: "Hair fall, skin issue or allergy",
-    image: MusiceTherapy,
-    action: "CONSULT NOW",
-    link: "/consult"
-  },
-  {
-    title: "Cycling, dance or gym",
-    image: Makeup,
-    action: "GET MEMBERSHIP",
-    link: "/membership"
-  },
-  {
-    title: "Hair cut, tattoos or pre-bridal",
-    image: SkinIssue,
-    action: "BOOK NOW",
-    link: "/book"
-  },
-  {
-    title: "Spa, Massage or Therapy",
-    image: DisPersonFitness,
-    action: "BOOK NOW",
-    link: "/spa"
-  },
-  {
-    title: "Spa, Therapy",
-    image: SkinIssue,
-    action: "BOOK NOW",
-    link: "/therapy"
-  }
-];
-
-// Duplicate services for seamless infinite scroll
-const extendedServices = [...services, ...services];
+// Dynamic services will be fetched from API and stored here
+// We keep these images as possible fallbacks if the API doesn't return an image
+const FALLBACK_IMAGE = MusiceTherapy;
 
 const ServiceCard = ({ service }) => {
   const navigate = useNavigate();
@@ -118,6 +87,88 @@ const ServiceCard = ({ service }) => {
 const ServiceDirectory = () => {
   const scrollRef = useRef(null);
   const [isManualScrolling, setIsManualScrolling] = useState(false);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
+
+  // Configure API details
+  const API_URL = `${constant.baseUrl}api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&latitude=78.9897978&longitude=28.6767965&page=1`;
+  const AUTH_TOKEN = 'VIRoHdqUAtpklgKg';
+
+  useEffect(() => {
+    let mounted = true;
+
+    const headerVariants = [
+      { 'Authorization': `Bearer ${AUTH_TOKEN}` },
+    ];
+
+    const tryFetchWithHeaders = async (headers) => {
+      try {
+        const resp = await fetch(API_URL, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          // mode: 'cors' // browser will select; uncomment to force if needed
+        });
+        const text = await resp.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { json = text; }
+        console.log('NearByServices fetch result', { headers, status: resp.status, body: json });
+        return { resp, body: json };
+      } catch (err) {
+        console.error('NearByServices fetch error', err, headers);
+        return { error: err };
+      }
+    };
+
+    const fetchServices = async () => {
+      setLoading(true);
+      setError(null);
+      setDebugInfo(null);
+      try {
+        let finalJson = null;
+        let finalStatus = null;
+        // iterate header variants until we get items or exhaust options
+        for (const hdr of headerVariants) {
+          const { resp, body, error: fetchErr } = await tryFetchWithHeaders(hdr);
+          if (fetchErr) {
+            // network error, try next
+            continue;
+          }
+          finalStatus = resp?.status;
+          // prefer structured JSON
+          const items = body?.Data?.items || (body && body.Data && body.Data.items) || [];
+          if (Array.isArray(items) && items.length > 0) {
+            finalJson = body;
+            // map items and break
+            const mapped = items.map(it => ({
+              title: it.ServiceName  || 'Service',
+              image: it.ServiceImage || FALLBACK_IMAGE,
+              action: 'BOOK NOW',
+              link: `/business/${it.BussinessId || ''}`
+            }));
+            if (mounted) setServices([...mapped, ...mapped]);
+            setDebugInfo({ usedHeaders: hdr, status: finalStatus, itemCount: items.length });
+            return;
+          }
+
+          // keep last response for debug if none returned items
+          setDebugInfo({ triedHeaders: hdr, status: finalStatus, body });
+        }
+
+        // If we got here, no header variant returned items
+        setError('No services available.');
+      } catch (err) {
+        if (mounted) setError(err.message || 'Failed to load');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchServices();
+
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     const scrollContainer = scrollRef.current;
@@ -214,7 +265,18 @@ const ServiceDirectory = () => {
             pb: 1
           }}
         >
-          {extendedServices.map((service, index) => (
+          {loading && (
+            <Typography sx={{ color: 'white', p: 2 }}>Loading services...</Typography>
+          )}
+          {error && (
+            <Typography sx={{ color: 'white', p: 2 }}>{error}</Typography>
+          )}
+
+          {!loading && !error && services.length === 0 && (
+            <Typography sx={{ color: 'white', p: 2 }}>No services found.</Typography>
+          )}
+
+          {!loading && !error && services.map((service, index) => (
             <ServiceCard key={index} service={service} />
           ))}
         </Box>
