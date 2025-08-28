@@ -87,7 +87,7 @@ function App() {
   const hideFooterRoutes = [
     "/business-page",
     "/business-account",
-     "/login-business",
+    "/login-business",
     "/otp-verification",
     "/business-role-selection",
     "/business-info-selection",
