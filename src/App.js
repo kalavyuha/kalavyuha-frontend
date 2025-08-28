@@ -144,6 +144,42 @@ const MinimalLayout = () => (
 );
 
 function App() {
+  const location = useLocation();
+  const hideNavbarRoutes = [
+    "/business-page",
+    "/business-account",
+    "/login-business",
+    "/otp-verification",
+    "/business-role-selection",
+    "/business-info-selection",
+    "/business-profile-form",
+    "/business-team-presence",
+    "/business-service-info",
+    "/business-hours",
+    "/business-document-uploads"
+  ];
+
+  const hideFooterRoutes = [
+    "/business-page",
+    "/business-account",
+    "/login-business",
+    "/otp-verification",
+    "/business-role-selection",
+    "/business-info-selection",
+    "/business-profile-form",
+    "/business-team-presence",
+    "/business-service-info",
+    "/business-hours",
+    "/business-document-uploads",
+    "/cart",
+    "/cart/success",
+    "/cart/payment",
+    "/appointment-history-details"
+  ];
+
+  const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
+  const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
+
   return (
     <ErrorBoundary fallback={ErrorPage}>
       <Suspense fallback={<MaterialLoadingFallback />}>
