@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/kalavyuha-frontend/static/css/main.4526839c.css",
-    "main.js": "/kalavyuha-frontend/static/js/main.00f49762.js",
+    "main.js": "/kalavyuha-frontend/static/js/main.83f750da.js",
     "static/js/303.10daf4cd.chunk.js": "/kalavyuha-frontend/static/js/303.10daf4cd.chunk.js",
     "static/js/2533.d727ff51.chunk.js": "/kalavyuha-frontend/static/js/2533.d727ff51.chunk.js",
     "static/js/3904.d40faa89.chunk.js": "/kalavyuha-frontend/static/js/3904.d40faa89.chunk.js",
@@ -86,7 +86,7 @@
     "static/media/slick.woff": "/kalavyuha-frontend/static/media/slick.295183786cd8a1389865.woff",
     "index.html": "/kalavyuha-frontend/index.html",
     "main.4526839c.css.map": "/kalavyuha-frontend/static/css/main.4526839c.css.map",
-    "main.00f49762.js.map": "/kalavyuha-frontend/static/js/main.00f49762.js.map",
+    "main.83f750da.js.map": "/kalavyuha-frontend/static/js/main.83f750da.js.map",
     "303.10daf4cd.chunk.js.map": "/kalavyuha-frontend/static/js/303.10daf4cd.chunk.js.map",
     "2533.d727ff51.chunk.js.map": "/kalavyuha-frontend/static/js/2533.d727ff51.chunk.js.map",
     "3904.d40faa89.chunk.js.map": "/kalavyuha-frontend/static/js/3904.d40faa89.chunk.js.map",
@@ -143,6 +143,6 @@
   },
   "entrypoints": [
     "static/css/main.4526839c.css",
-    "static/js/main.00f49762.js"
+    "static/js/main.83f750da.js"
   ]
 }
