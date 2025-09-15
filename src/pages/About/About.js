@@ -216,12 +216,10 @@ const About = () => {
 
         {/* Mission Section */}
         <Box
-          // elevation={2}
           sx={{
             p: { xs: 3, md: 5 },
             borderRadius: 3,
             backgroundColor: '#eaeef2',
-            // border: '2px solid #e2e8f0',
             mb: 6
           }}
         >
@@ -312,13 +310,6 @@ const About = () => {
                 sx={{
                   p: 3,
                   bgcolor:"#eaeef2",
-                  // borderRadius: 3,
-                  // boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  // transition: 'transform 0.3s ease',
-                  // '&:hover': {
-                  //   transform: 'translateY(-2px)',
-                  //   boxShadow: '0 8px 24px rgba(27, 77, 105, 0.15)'
-                  // }
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
@@ -353,84 +344,6 @@ const About = () => {
             </Grid>
           ))}
         </Grid>
-
-        {/* Timeline Section */}
-        {/* <Paper
-          elevation={2}
-          sx={{
-            p: { xs: 3, md: 5 },
-            borderRadius: 3,
-            backgroundColor: 'white',
-            border: '2px solid #e2e8f0',
-            mb: 6
-          }}
-        >
-          <Typography
-            variant="h4"
-            sx={{
-              fontSize: { xs: '1.2rem', md: '1.8rem' },
-              fontWeight: 600,
-              color: '#1b4d69',
-              mb: 4,
-              textAlign: 'center'
-            }}
-          >
-            Our Journey
-          </Typography>
-          
-          <Grid container spacing={4}>
-            {milestones.map((milestone, index) => (
-              <Grid item xs={12} md={6} key={index}>
-                <Card
-                  sx={{
-                    p: 3,
-                    borderRadius: 2,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    borderLeft: '4px solid #1b4d69',
-                    transition: 'transform 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 16px rgba(27, 77, 105, 0.15)'
-                    }
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Chip
-                      label={milestone.year}
-                      sx={{
-                        backgroundColor: '#1b4d69',
-                        color: 'white',
-                        fontWeight: 600,
-                        fontSize: { xs: '0.8rem', md: '0.9rem' }
-                      }}
-                    />
-                  </Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontSize: { xs: '0.9rem', md: '1.1rem' },
-                      fontWeight: 600,
-                      color: '#2d3748',
-                      mb: 1
-                    }}
-                  >
-                    {milestone.title}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: { xs: '0.7rem', md: '0.9rem' },
-                      color: '#4a5568',
-                      lineHeight: 1.6
-                    }}
-                  >
-                    {milestone.description}
-                  </Typography>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Paper> */}
 
         {/* Values Section */}
         <Box
@@ -498,7 +411,6 @@ const About = () => {
             p: { xs: 3, md: 4 },
             borderRadius: 3,
             backgroundColor: '#eaeef2',
-            // border: '2px solid #e2e8f0'
           }}
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>

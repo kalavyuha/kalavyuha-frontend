@@ -5,6 +5,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  Outlet,
   useLocation
 } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
@@ -16,6 +17,8 @@ import Navbar from "./components/Navbar";
 import CookiePopup from "./components/Cookies";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { SearchBarProvider } from "./Context/searchBarContext";
+import { AuthProvider } from "./Context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 const MaterialLoadingFallback = () => (
@@ -41,6 +44,7 @@ const Overview = lazy(() => import("./pages/Overview/Overview"));
 const CartMain = lazy(() => import("./pages/CartPage/Cart"));
 const SuccessCart = lazy(() => import("./pages/CartPage/SuccessCart"));
 const PaymentPage = lazy(() => import("./pages/CartPage/PaymentPage")); //-----ADDED PAYMENT PAGE
+const BookingSuccessPage = lazy(() => import("./pages/CartPage/BookingSuccessPage"));
 const BusniessPage = lazy(() => import("./pages/BusniessPage/busniess"));
 const Support = lazy(() => import("./pages/SupportPage/Support"));  //-----ADDED SUPPORT PAGE
 const About = lazy(() => import("./pages/About/About"));  //-----ADDED ABOUT PAGE
@@ -48,6 +52,7 @@ const TermsConditions = lazy(() => import("./pages/TermsConditions/termsConditio
 const Privacy = lazy(() => import("./pages/Privacy/Privacy"));  //-----ADDED Privacy PAGE
 const AppointmentHistory = lazy(() => import("./pages/AppointmentHistory/AppointmentHistory"));  //-----ADDED HISTORY PAGE
 const AppointmentHistoryDetail = lazy(() => import("./pages/AppointmentHistory/AppointmentHistoryDetail"));  //-----ADDED APPOINTMENT DETAIL PAGE
+const Profile = lazy(() => import("./pages/Profile/Profile"));  //-----ADDED PROFILE PAGE
 const Enterprise = lazy(() => import("./pages/Enterprise/Enterprise"));  //-----ADDED ENTERPRISE PAGE
 const ConstructionPage = lazy(() => import("./pages/UnderConstructionPage/ConstructionPage"));  //-----ADDED CONSTRUCTION PAGE
 const ErrorPage = lazy(() => import("./pages/ErrorPage/ErrorPage"));  //-----ADDED ERROR PAGE
@@ -68,7 +73,8 @@ const BusinessServiceInfo = lazy(() => import("./pages/BusinessForm/businessServ
 const BusinessHoursSection = lazy(() => import("./pages/BusinessForm/businessHours")); //-----------ADDED BUSINESS HOURS SECTION
 const BusinessDocumentUploads = lazy(() => import("./pages/BusinessForm/businessDocumentUploads"));
 
-function App() {
+// Layout Components
+const MainLayout = () => {
   const location = useLocation();
   const hideNavbarRoutes = [
     "/business-page",
@@ -81,7 +87,7 @@ function App() {
     "/business-team-presence",
     "/business-service-info",
     "/business-hours",
-    "/business-document-uploads"
+    "/business-document-uploads",
   ];
 
   const hideFooterRoutes = [
@@ -99,58 +105,120 @@ function App() {
     "/cart",
     "/cart/success",
     "/cart/payment",
-    "/appointment-history-details"
+    "/appointment-history-details",
   ];
 
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
   const shouldShowFooter = !hideFooterRoutes.includes(location.pathname);
 
   return (
-    // <React.StrictMode>
     <>
       {shouldShowNavbar && <Navbar />}
-      <ErrorBoundary fallback={ErrorPage}>
-        <Suspense fallback={<MaterialLoadingFallback />}>
-          <Routes basename="/kalavyuha-frontend">
-            <Route exact path="/" element={<Home />} />
-            <Route exact path="/overview" element={<Overview />} />
-            <Route path="/detail/:id" element={<BeautyMain />} />
-            <Route path="/cart" element={<CartMain />} />
-            <Route path="/cart/success" element={<SuccessCart />} />
-            <Route path="/cart/payment" element={<PaymentPage />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/terms&conditions" element={<TermsConditions />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/appointment-history" element={<AppointmentHistory />} />
-            <Route path="/appointment-history-details" element={<AppointmentHistoryDetail />} />
-            <Route path="/enterprise" element={<Enterprise />} />
-            <Route path="/under-construction" element={<ConstructionPage />} />
-            <Route path="/error" element={<ErrorPage />} />
-            <Route path="/error-demo" element={<ErrorHandlingDemo />} />
-
-            {/* Business form routes */}
-            <Route exact path="/business-page" element={<BusniessPage />} />
-            <Route exact path="/business-account" element={<CreateBusniessAccount />} />
-            <Route exact path="/login-business" element={<LoginBusinessAccount />} />
-            <Route exact path="/otp-verification" element={<OTPVerification />} />
-            <Route exact path="/business-role-selection" element={<BusinessRoleSelection />} />
-            <Route exact path="/business-info-selection" element={<BusinessInfoSelection />} />
-            <Route exact path="/business-profile-form" element={<BusinessProfileForm />} />
-            <Route exact path="/business-team-presence" element={<TeamPresence />} />
-            <Route exact path="/business-service-info" element={<BusinessServiceInfo />} />
-            <Route exact path="/business-hours" element={<BusinessHoursSection />} />  
-            <Route exact path="/business-document-uploads" element={<BusinessDocumentUploads />} />
-            
-            {/* 404 Catch-all route - must be last */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
-      </ErrorBoundary>
-      {shouldShowNavbar && shouldShowFooter && <Footer />}
+      <Outlet />
+      {shouldShowFooter && <Footer />}
       <CookiePopup />
-    {/* </React.StrictMode> */}
     </>
+  );
+};
+
+const BusinessLayout = () => (
+  <>
+    <Outlet />
+    <CookiePopup />
+  </>
+);
+
+const CartLayout = () => (
+  <>
+    <Navbar />
+    <Outlet />
+    <CookiePopup />
+  </>
+);
+
+const MinimalLayout = () => (
+  <>
+    <Outlet />
+    <CookiePopup />
+  </>
+);
+
+function App() {
+  return (
+    <ErrorBoundary fallback={ErrorPage}>
+      <Suspense fallback={<MaterialLoadingFallback />}>
+        <Routes>
+          {/* Main layout routes - with navbar and footer */}
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path="overview" element={<Overview />} />
+            <Route path="detail/:id" element={<BeautyMain />} />
+            <Route path="support" element={<Support />} />
+            <Route path="about" element={<About />} />
+            <Route path="terms&conditions" element={<TermsConditions />} />
+            <Route path="privacy" element={<Privacy />} />
+            <Route 
+              path="profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="appointment-history" 
+              element={
+                <ProtectedRoute>
+                  <AppointmentHistory />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="enterprise" element={<Enterprise />} />
+            <Route path="under-construction" element={<ConstructionPage />} />
+            <Route path="error" element={<ErrorPage />} />
+            <Route path="error-demo" element={<ErrorHandlingDemo />} />
+          </Route>
+
+          {/* Cart layout routes - navbar only, no footer */}
+          <Route path="/cart" element={<CartLayout />}>
+            <Route index element={<CartMain />} />
+            <Route path="success" element={<SuccessCart />} />
+            <Route path="payment" element={<PaymentPage />} />
+          </Route>
+
+          {/* Business layout routes - no navbar, no footer */}
+          <Route path="/business" element={<BusinessLayout />}>
+            <Route path="page" element={<BusniessPage />} />
+            <Route path="account" element={<CreateBusniessAccount />} />
+            <Route path="login" element={<LoginBusinessAccount />} />
+            <Route path="otp-verification" element={<OTPVerification />} />
+            <Route path="role-selection" element={<BusinessRoleSelection />} />
+            <Route path="info-selection" element={<BusinessInfoSelection />} />
+            <Route path="profile-form" element={<BusinessProfileForm />} />
+            <Route path="team-presence" element={<TeamPresence />} />
+            <Route path="service-info" element={<BusinessServiceInfo />} />
+            <Route path="hours" element={<BusinessHoursSection />} />
+            <Route path="document-uploads" element={<BusinessDocumentUploads />} />
+          </Route>
+
+          {/* Special routes with minimal layout */}
+          <Route path="/" element={<MinimalLayout />}>
+            <Route path="booking/success" element={<BookingSuccessPage />} />
+            <Route 
+              path="appointment-history-details" 
+              element={
+                <ProtectedRoute>
+                  <AppointmentHistoryDetail />
+                </ProtectedRoute>
+              } 
+            />
+          </Route>
+          
+          {/* 404 Catch-all route */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -167,12 +235,14 @@ const ScrollToTop = () => {
 function AppWrapper() {
   return (
     <Router basename="/kalavyuha-frontend">
-      <SearchBarProvider>
-        <MatchingSearchResultProvider>
-          <ScrollToTop />
-          <App />
-        </MatchingSearchResultProvider>
-      </SearchBarProvider>
+      <AuthProvider>
+        <SearchBarProvider>
+          <MatchingSearchResultProvider>
+            <ScrollToTop />
+            <App />
+          </MatchingSearchResultProvider>
+        </SearchBarProvider>
+      </AuthProvider>
     </Router>
   );
 }

@@ -102,7 +102,6 @@ const ForgotPassword = ({ onBack }) => {
       });
       if (!res.ok) throw new Error("Incorrect OTP");
       const data = await res.json();
-      // console.log("OTP Verification Response:", data);
       setUserId(data.Data?._id);
       setStep(3);
     } catch (err) {
@@ -111,8 +110,6 @@ const ForgotPassword = ({ onBack }) => {
       setLoading(false);
     }
   };
-
-  // console.log("User ID:", userId);
 
   const handlePasswordChange = async () => {
     setLoading(true);

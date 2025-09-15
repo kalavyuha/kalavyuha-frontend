@@ -103,7 +103,7 @@ const KalavyuhaBusinessPage = () => {
                     backgroundColor: "grey.800",
                   },
                 }}
-                onClick={() => window.open('/kalavyuha-frontend/business-page', '_blank')}
+                onClick={() => window.open('/kalavyuha-frontend/business/page', '_blank')}
               >
                 LIST YOUR BUSINESS
               </Button>
@@ -136,7 +136,7 @@ const KalavyuhaBusinessPage = () => {
 
               <Link
                 component="button"
-                onClick={() => window.open('/kalavyuha-frontend/business-page#features-available', '_blank')}
+                onClick={() => window.open('/kalavyuha-frontend/business/page#features-available', '_blank')}
                 underline="hover"
                 sx={{ mt: 'auto', color: 'text.primary', fontWeight: 300, cursor: 'pointer' }}
               >

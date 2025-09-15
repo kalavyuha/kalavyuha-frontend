@@ -2,8 +2,6 @@ import { constant } from '../../../constant';
 
 export const createServices = async (servicesData, authToken) => {
   try {
-    console.log("Sending services data:", servicesData);
-    
     const response = await fetch(`${constant.baseUrl}api/v1/Service/create/`, {
       method: 'POST',
       headers: { 
@@ -15,7 +13,6 @@ export const createServices = async (servicesData, authToken) => {
     
     if (!response.ok) {
       const errorResponse = await response.json().catch(() => null);
-      console.error("Detailed error response:", errorResponse);
       
       // Handle 422 validation errors specifically
       if (response.status === 422 && errorResponse?.detail) {
@@ -30,7 +27,6 @@ export const createServices = async (servicesData, authToken) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Error in createServices:', error);
     throw error;
   }
 };

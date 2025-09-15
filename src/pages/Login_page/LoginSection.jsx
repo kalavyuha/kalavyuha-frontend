@@ -113,7 +113,6 @@ const LoginSection = ({ onForgotPassword }) => {
         }
       );
       const data = await response.json();
-      // console.log("Login response:", data); // Debug log
       setMerchantId(data.Data?.MerchantId); // Use correct path for ID
       if (response.ok && data.Status === 1) {
         setSnackbar({
@@ -139,7 +138,6 @@ const LoginSection = ({ onForgotPassword }) => {
       });
     }
   };
-  console.log("Merchant ID:", merchantId);
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -457,7 +455,7 @@ const LoginSection = ({ onForgotPassword }) => {
                   >
                     Don't have an account?&nbsp;
                     <Link
-                      href="/kalavyuha-frontend/business-account"
+                      href="/kalavyuha-frontend/business/account"
                       underline="always"
                       sx={{
                         color: "#1b4d69",

@@ -85,12 +85,11 @@ const MapComponent = ({ onSelectLocation, initialPosition  }) => {
           setMapCenter({ lat, lng });
         },
         (error) => {
-          console.error("Error getting location:", error);
-          alert("Unable to fetch location. Please enable location services.");
+          // Handle location error silently
         }
       );
     } else {
-      alert("Geolocation is not supported by this browser.");
+      // Handle geolocation not supported
     }
   };
 
@@ -112,10 +111,10 @@ const MapComponent = ({ onSelectLocation, initialPosition  }) => {
         setDisplayName(display_name);
         setOpen(true);
       } else {
-        console.error("No address found");
+        // No address found, handle silently
       }
     } catch (error) {
-      console.error("Reverse geocoding failed:", error);
+      // Reverse geocoding failed, handle silently
     }
   };
 

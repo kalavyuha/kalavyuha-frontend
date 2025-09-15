@@ -218,7 +218,6 @@ const Enterprise = () => {
   const handlePlanSelect = (planId) => {
     setSelectedPlan(planId);
     // Add your plan selection logic here
-    console.log('Selected plan:', planId);
   };
 
   return (

@@ -14,8 +14,10 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { apipost } from "../service/api";
 import { showError, showSuccess } from "../../components/toast";
+import { useAuth } from "../../Context/AuthContext";
 
 const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
+  const { login } = useAuth();
   const [isVerified, setIsVerified] = useState(false);
   const [isOTPSent, setIsOTPSent] = useState(false);
   const [verifyotp, setVerifyotp] = useState(false);
@@ -81,7 +83,6 @@ const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
     });
 
     const data = response.data || response;
-    // console.log("OTP Verification Login Response:", data);
 
     if (data.Status === 200) {
       setIsVerified(true);
@@ -91,7 +92,10 @@ const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
         Token: data?.Data?.Token,
         ...data?.Data,
       };
-      localStorage.setItem("userDetail", JSON.stringify(userDetail));
+
+      // Use auth context login method
+      login(userDetail);
+
       formik.resetForm();
       setLoginOpen(false);
       setUserAction(userDetail);
@@ -119,16 +123,10 @@ const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
         sx={{
           padding: "16px",
           borderRadius: "2px",
-          // border: '2px solid #fff',
           width: { xs: "90%", sm: "550px" },
-          // backgroundColor: 'rgba(0,0,0,0.5)',
           position: "relative",
         }}
       >
-        {/* <Box sx={{ ...commonBoxStyle, top: '-5px', left: '-5px' }} />
-                <Box sx={{ ...commonBoxStyle, top: '-5px', right: '-5px' }} />
-                <Box sx={{ ...commonBoxStyle, bottom: '-5px', left: '-5px' }} />
-                <Box sx={{ ...commonBoxStyle, bottom: '-5px', right: '-5px' }} /> */}
         <Box
           sx={{
             backgroundColor: "white",
@@ -141,7 +139,7 @@ const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
             fontWeight="bold"
             sx={{
               textAlign: "center",
-              fontSize: { xs: "28px", sm: "28px", md: "32px" },
+              fontSize: { xs: "20px", sm: "24px", md: "28px" },
             }}
           >
             It&apos;s more than an appointment.
@@ -149,7 +147,11 @@ const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
           <Typography
             variant="h6"
             color="text.secondary"
-            sx={{ mb: 4, textAlign: "center" }}
+            sx={{
+              mb: 4,
+              textAlign: "center",
+              fontSize: { xs: "16px", sm: "18px", md: "20px" }
+            }}
           >
             It&apos;s your time saving.
           </Typography>
@@ -313,9 +315,6 @@ const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
                   flexDirection="column"
                   alignItems="center"
                 >
-                    {/* <Link href="#" variant="body2">
-                      Forget password?
-                    </Link> */}
                   <Box component="span">
                     Didn&apos;t have an account ?{" "}
                     <Link
@@ -325,8 +324,8 @@ const LoginPage = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
                         cursor: "pointer",
                       }}
                       onClick={() => {
-                        setLoginOpen(false); // Close Login Popup
-                        setSignupOpen(true); // Open Signup Popup
+                        setLoginOpen(false);
+                        setSignupOpen(true);
                       }}
                       variant="body2"
                     >

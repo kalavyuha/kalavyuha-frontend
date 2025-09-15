@@ -85,7 +85,7 @@ export default function BusinessServiceInfo() {
   }, [services, previousData]);
 
   const handleBackTeamPresence = () => {
-    navigate("/business-team-presence", {
+    navigate("/business/team-presence", {
       state: { ...previousData, services },
     });
   };
@@ -125,7 +125,7 @@ export default function BusinessServiceInfo() {
     };
 
     localStorage.setItem("formData", JSON.stringify(formData));
-    navigate("/business-hours", { state: formData });
+    navigate("/business/hours", { state: formData });
   };
 
   const handleServicesChange = (updatedCategories) => {

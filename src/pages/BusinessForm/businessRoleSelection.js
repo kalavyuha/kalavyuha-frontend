@@ -82,7 +82,6 @@ export default function BusinessRoleSelection() {
   
   const handleNextInfoSection = () => {
     if (!selected) {
-      console.warn('No option selected');
       return;
     }
 
@@ -96,7 +95,7 @@ export default function BusinessRoleSelection() {
         teamInfoCompleted: false
       };
       localStorage.setItem('formData', JSON.stringify(formData));
-      navigate('/business-profile-form');
+      navigate('/business/profile-form');
     } catch (error) {
       console.error('Error saving form data:', error);
     }

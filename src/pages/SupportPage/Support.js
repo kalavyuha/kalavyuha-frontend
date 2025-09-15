@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -16,11 +16,16 @@ import {
   Paper,
   Fade,
   ListItem,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { styled } from "@mui/system";
 
 import FAQSection from "../BusniessPage/faqSection";
+import LoginPage from "../Auth/Login";
+import Signup from "../Auth/Signup";
+import { useAuth } from "../../Context/AuthContext";
 
 // responsive
 import { useTheme } from "@mui/material/styles";
@@ -52,6 +57,8 @@ const DropdownItem = styled(ListItem)({
 const Support = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { isAuthenticated, user: authUser, login } = useAuth();
+  
   const [selectedOption, setSelectedOption] = useState("");
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
@@ -62,11 +69,36 @@ const Support = () => {
   const [joinBusinessQuery, setJoinBusinessQuery] = useState("");
   const [joinBusinessScreenshot, setJoinBusinessScreenshot] = useState(null);
 
+  // Loading and alert states
+  const [isLoading, setIsLoading] = useState(false);
+  const [alert, setAlert] = useState({ show: false, type: 'success', message: '' });
+
+  // Authentication states
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
+
   // Dropdown state
   const [anchorEl, setAnchorEl] = useState(null);
   const [timeoutId, setTimeoutId] = useState(null);
 
   const open = Boolean(anchorEl);
+
+  // Update email fields when user changes
+  useEffect(() => {
+    if (authUser && (authUser.Email || authUser.email)) {
+      setEmail(authUser.Email || authUser.email);
+      setJoinBusinessEmail(authUser.Email || authUser.email);
+    }
+  }, [authUser]);
+
+  // Function to check if user is authenticated
+  const checkAuthentication = () => {
+    if (!isAuthenticated || !authUser) {
+      setLoginOpen(true);
+      return false;
+    }
+    return true;
+  };
 
   const dropdownOptions = [
     {
@@ -113,12 +145,102 @@ const Support = () => {
     setDescription(event.target.value);
   };
 
-  const handleSendEmail = () => {
-    // Handle email sending logic here
-    console.log("Email:", email);
-    console.log("Reason:", reason);
-    console.log("Description:", description);
-    // Add your email sending logic here
+  // Function to upload image and get URL
+  const uploadImage = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // You'll need to replace this with your actual image upload endpoint
+      const response = await fetch('YOUR_IMAGE_UPLOAD_ENDPOINT', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const result = await response.json();
+      return result.imageUrl; // Adjust based on your API response structure
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
+  // Function to submit support request
+  const submitSupportRequest = async (requestData) => {
+    try {
+      const response = await fetch('https://api.slotwel.in/api/v1/HelpSupportService/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit support request');
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error submitting support request:', error);
+      throw error;
+    }
+  };
+
+  const handleSendEmail = async () => {
+    // Check authentication first
+    if (!checkAuthentication()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setAlert({ show: false, type: 'success', message: '' });
+
+    try {
+      const requestData = {
+        UserType: "merchant",
+        Name: authUser.Name || authUser.PhoneNumber || "Unknown User",
+        Email: email,
+        PhoneNumber: authUser.PhoneNumber || "",
+        Subject: reason,
+        Description: description,
+        ImageUrl: "", // No image for business support form
+        Category: "Business Support",
+        CreatedBy: authUser._id || authUser.id || 0
+      };
+
+      await submitSupportRequest(requestData);
+      
+      setAlert({ 
+        show: true, 
+        type: 'success', 
+        message: 'Support request submitted successfully!' 
+      });
+      
+      // Auto-hide success alert after 3 seconds
+      setTimeout(() => {
+        setAlert({ show: false, type: 'success', message: '' });
+      }, 3000);
+      
+      // Reset form
+      setEmail("");
+      setReason("");
+      setDescription("");
+      
+    } catch (error) {
+      setAlert({ 
+        show: true, 
+        type: 'error', 
+        message: 'Failed to submit support request. Please try again.' 
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleJoinBusinessEmailChange = (event) => {
@@ -136,12 +258,98 @@ const Support = () => {
     }
   };
 
-  const handleJoinBusinessSubmit = () => {
-    // Handle join business form submission
-    console.log("Join Business Email:", joinBusinessEmail);
-    console.log("Join Business Query:", joinBusinessQuery);
-    console.log("Screenshot:", joinBusinessScreenshot);
-    // Add your email sending logic here
+  // Authentication modal handlers
+  const handleUserAction = (userData) => {
+    login(userData); // Use AuthContext login method
+    // Update email fields with user's email if available
+    if (userData.Email || userData.email) {
+      setEmail(userData.Email || userData.email);
+      setJoinBusinessEmail(userData.Email || userData.email);
+    }
+    // Close auth modals
+    setLoginOpen(false);
+    setSignupOpen(false);
+  };
+
+  const handleCloseAuthModals = () => {
+    setLoginOpen(false);
+    setSignupOpen(false);
+  };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleCloseAuthModals();
+    }
+  };
+
+  // Lock body scroll when modals are open
+  useEffect(() => {
+    if (loginOpen || signupOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [loginOpen, signupOpen]);
+
+  const handleJoinBusinessSubmit = async () => {
+    // Check authentication first
+    if (!checkAuthentication()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setAlert({ show: false, type: 'success', message: '' });
+
+    try {
+      let imageUrl = "";
+      
+      // Upload image if provided
+      if (joinBusinessScreenshot) {
+        imageUrl = await uploadImage(joinBusinessScreenshot);
+      }
+
+      const requestData = {
+        UserType: "merchant",
+        Name: authUser.Name || authUser.PhoneNumber || "Unknown User",
+        Email: joinBusinessEmail,
+        PhoneNumber: authUser.PhoneNumber || "",
+        Subject: "Difficulty in joining Kalavyuha as a business",
+        Description: joinBusinessQuery,
+        ImageUrl: imageUrl,
+        Category: "Join Business",
+        CreatedBy: authUser._id || authUser.id || 0
+      };
+
+      await submitSupportRequest(requestData);
+      
+      setAlert({ 
+        show: true, 
+        type: 'success', 
+        message: 'Support request submitted successfully!' 
+      });
+      
+      // Auto-hide success alert after 3 seconds
+      setTimeout(() => {
+        setAlert({ show: false, type: 'success', message: '' });
+      }, 3000);
+      
+      // Reset form
+      setJoinBusinessEmail("");
+      setJoinBusinessQuery("");
+      setJoinBusinessScreenshot(null);
+      
+    } catch (error) {
+      setAlert({ 
+        show: true, 
+        type: 'error', 
+        message: 'Failed to submit support request. Please try again.' 
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -195,6 +403,31 @@ const Support = () => {
                     alignItems:"flex-start"
                   }}
                 >
+              {/* Alert Message */}
+              {alert.show && (
+                <Alert 
+                  severity={alert.type} 
+                  sx={{ mb: 2 }}
+                  onClose={() => setAlert({ show: false, type: 'success', message: '' })}
+                >
+                  {alert.message}
+                </Alert>
+              )}
+
+              {/* User Status - Only show if not logged in */}
+              {/* {!user && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  You need to be logged in to submit support requests.{" "}
+                  <Button
+                    size="small"
+                    onClick={() => setSignupOpen(true)}
+                    sx={{ textTransform: "none", ml: 1 }}
+                  >
+                    Sign Up / Login
+                  </Button>
+                </Alert>
+              )} */}
+
               <Typography
                 variant="h6"
                 component="h2"
@@ -379,7 +612,7 @@ const Support = () => {
                     variant="contained"
                     fullWidth
                     onClick={handleSendEmail}
-                    disabled={!email || !reason || !description}
+                    disabled={!email || !reason || !description || isLoading}
                     sx={{
                       backgroundColor: "#1b4d69",
                       color: "white",
@@ -396,7 +629,11 @@ const Support = () => {
                       },
                     }}
                   >
-                    Send Email
+                    {isLoading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "Send Email"
+                    )}
                   </Button>
                 </Box>
               </Collapse>
@@ -531,7 +768,7 @@ const Support = () => {
                     variant="contained"
                     fullWidth
                     onClick={handleJoinBusinessSubmit}
-                    disabled={!joinBusinessEmail || !joinBusinessQuery}
+                    disabled={!joinBusinessEmail || !joinBusinessQuery || isLoading}
                     sx={{
                       backgroundColor: "#1b4d69",
                       color: "white",
@@ -548,7 +785,11 @@ const Support = () => {
                       },
                     }}
                   >
-                    Send Email
+                    {isLoading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "Send Email"
+                    )}
                   </Button>
                 </Box>
               </Collapse>
@@ -617,6 +858,54 @@ const Support = () => {
           </Container>
         </Container>
       </Box>
+
+      {/* Authentication Modals - Navbar Style */}
+      {(loginOpen || signupOpen) && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1300,
+          }}
+          onClick={handleBackdropClick}
+        >
+          <Box
+            sx={{
+              position: "relative",
+              backgroundColor: "white",
+              padding: "24px",
+              borderRadius: "12px",
+              minWidth: "300px",
+              background: "transparent",
+              zIndex: 1500,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {signupOpen && (
+              <Signup
+                setLoginOpen={setLoginOpen}
+                setSignupOpen={setSignupOpen}
+                setUserAction={handleUserAction}
+              />
+            )}
+
+            {loginOpen && (
+              <LoginPage
+                setLoginOpen={setLoginOpen}
+                setSignupOpen={setSignupOpen}
+                setUserAction={handleUserAction}
+              />
+            )}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

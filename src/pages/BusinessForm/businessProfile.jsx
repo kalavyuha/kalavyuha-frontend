@@ -84,7 +84,7 @@ export default function BusinessProfileForm() {
       formData,
     };
     localStorage.setItem('formData', JSON.stringify(combinedData));
-    navigate('/business-role-selection', { state: combinedData });
+    navigate('/business/role-selection', { state: combinedData });
   };
 
   const handleNextTeamPresence = () => {
@@ -100,9 +100,8 @@ export default function BusinessProfileForm() {
       teamInfoCompleted: false
     };
     
-    console.log(dataToStore)
     localStorage.setItem('formData', JSON.stringify(dataToStore));
-    navigate('/business-team-presence', { state: dataToStore });
+    navigate('/business/team-presence', { state: dataToStore });
   };
 
   const handleChange = (event) => {
@@ -138,36 +137,6 @@ export default function BusinessProfileForm() {
     setManualEditMode(true);
   };
 
- 
-  // const handleFileChange = async (event) => {
-  //   const file = event.target.files?.[0];
-  //   if (!file) return;
-
-  //   try {
-  //     const token = 'VIRoHdqUAtpklgKg'; 
-  //     const { data, error: uploadError } = await uploadImages([file], token);
-
-  //     if (uploadError) {
-  //       throw new Error(uploadError);
-  //     }
-
-  //     const uploadedUrl = data?.Data?.[0];
-  //     if (!uploadedUrl) throw new Error('No URL returned from upload');
-
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       profilePicture: {
-  //         s3Url: uploadedUrl,
-  //       },
-  //     }));
-  //   } catch (err) {
-  //     console.error('Upload failed:', err);
-  //     alert(`Image upload failed: ${err.message}`);
-  //   }
-  // };
-
-//TESTING---------------------Rakshit
-
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -183,10 +152,7 @@ export default function BusinessProfileForm() {
     }
 
     try {
-      // TODO: Get token dynamically or from environment
       const token = process.env.REACT_APP_UPLOAD_TOKEN || 'VIRoHdqUAtpklgKg'; 
-      
-      console.log('Uploading file:', file.name, file.size);
       
       const { data, error: uploadError } = await uploadImages([file], token);
 
@@ -197,8 +163,6 @@ export default function BusinessProfileForm() {
       const uploadedUrl = data?.Data?.[0];
       if (!uploadedUrl) throw new Error('No URL returned from upload');
 
-      console.log('Upload successful:', uploadedUrl);
-
       setFormData((prev) => ({
         ...prev,
         profilePicture: {
@@ -206,7 +170,6 @@ export default function BusinessProfileForm() {
         },
       }));
     } catch (err) {
-      console.error('Upload failed:', err);
       alert(`Image upload failed: ${err.message}`);
     }
   };
@@ -227,7 +190,6 @@ export default function BusinessProfileForm() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log('Form submitted:', formData);
   };
 
   return (

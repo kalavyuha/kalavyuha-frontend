@@ -1,19 +1,19 @@
 import React from 'react';
-import { 
-  Box, 
-  Container, 
-  Grid, 
-  Typography, 
-  Link, 
+import {
+  Box,
+  Container,
+  Grid,
+  Typography,
+  Link,
   IconButton,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from 'react-router-dom';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 
 import TwitterIcon from '../assets/images/busniess_images/twitter.png';
-import GetAppButton from "../components/AppStoreButton";
+import GetAppButton from './AppStoreButton';
 import CookiePopup from './Cookies';
 import { useCookieSettings } from '../hooks/useCookieSettings';
 
@@ -51,16 +51,15 @@ const Footer = () => {
 
   const handleLinkClick = (link, e) => {
     if (link.action === 'cookie-settings') {
-      e.preventDefault();
+      e && e.preventDefault();
       openCookieSettings();
     }
   };
 
-  // 🔧 helper: choose correct link behavior
-  const renderLink = (link, special = false) => {
-    const isExternal = link.url.startsWith("http");
+  const renderLink = (link) => {
+    const isExternal = link.url && link.url.startsWith('http');
 
-    if (link.action === "cookie-settings") {
+    if (link.action === 'cookie-settings') {
       return (
         <Link
           key={link.name}
@@ -68,12 +67,7 @@ const Footer = () => {
           onClick={(e) => handleLinkClick(link, e)}
           display="block"
           color="textSecondary"
-          sx={{
-            mb: 1,
-            textDecoration: "none",
-            cursor: "pointer",
-            "&:hover": { color: "#1b4d69", textDecoration: "underline" },
-          }}
+          sx={{ mb: 1, textDecoration: 'none', cursor: 'pointer', '&:hover': { color: '#1b4d69', textDecoration: 'underline' } }}
         >
           {link.name}
         </Link>
@@ -83,18 +77,14 @@ const Footer = () => {
     return (
       <Link
         key={link.name}
-        component={isExternal ? "a" : RouterLink}
+        component={isExternal ? 'a' : RouterLink}
         to={isExternal ? undefined : link.url}
         href={isExternal ? link.url : undefined}
-        target={link.name === "Enterprise" ? "_blank" : undefined}
-        rel={link.name === "Enterprise" ? "noopener noreferrer" : undefined}
+        target={link.name === 'Enterprise' ? '_blank' : undefined}
+        rel={link.name === 'Enterprise' ? 'noopener noreferrer' : undefined}
         display="block"
         color="textSecondary"
-        sx={{
-          mb: 1,
-          textDecoration: "none",
-          "&:hover": { color: "#1b4d69", textDecoration: "underline" },
-        }}
+        sx={{ mb: 1, textDecoration: 'none', '&:hover': { color: '#1b4d69', textDecoration: 'underline' } }}
       >
         {link.name}
       </Link>
@@ -102,47 +92,27 @@ const Footer = () => {
   };
 
   return (
-    <Container style={{maxWidth: "none"}} sx={{ mt: 5, background:"white"}}>
+    <Container style={{ maxWidth: 'none' }} sx={{ mt: 5, background: 'white' }}>
       <Container maxWidth="lg">
         <Box component="footer" sx={{ pb: 2, mt: 8 }}>
           <Container maxWidth="lg">
             <Grid container spacing={4} sx={{ pt: 4 }}>
               {/* Brand + social icons */}
-              <Grid 
+              <Grid
                 item
-                xs={12} 
-                sx={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
-                  alignItems: "center",
-                  pb: 1,
-                  mb: 4, 
-                  borderBottom: "3px solid #e0e0e0" 
-                }}
+                xs={12}
+                sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, mb: 4, borderBottom: '3px solid #e0e0e0' }}
               >
                 <Typography variant="h6" color="#1b4d69" sx={{ fontWeight: 'bold' }}>
                   Kalavyuha
                 </Typography>
-                
+
                 <Box>
-                  <IconButton 
-                    aria-label="Twitter" 
-                    component="a" 
-                    href="https://twitter.com"
-                  >
-                    <Box
-                      component="img"
-                      src={TwitterIcon}
-                      alt="Twitter"
-                      sx={{ width: 24, height: 24 }}
-                    />
+                  <IconButton aria-label="Twitter" component="a" href="https://twitter.com">
+                    <Box component="img" src={TwitterIcon} alt="Twitter" sx={{ width: 24, height: 24 }} />
                   </IconButton>
-                  <IconButton 
-                    aria-label="LinkedIn" 
-                    component="a" 
-                    href="https://linkedin.com"
-                  >
-                    <LinkedInIcon sx={{ color: "#000", fontSize: "30px" }}/>
+                  <IconButton aria-label="LinkedIn" component="a" href="https://linkedin.com">
+                    <LinkedInIcon sx={{ color: '#000', fontSize: '30px' }} />
                   </IconButton>
                 </Box>
               </Grid>
@@ -150,7 +120,7 @@ const Footer = () => {
               {/* Quick + Legal links */}
               <Grid item xs={12} md={6}>
                 <Box>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold", fontSize: "17px", mb: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontSize: '17px', mb: 2 }}>
                     Quick Links
                   </Typography>
                   <Grid container>
@@ -167,49 +137,34 @@ const Footer = () => {
               {/* Follow */}
               <Grid item xs={12} sm={6} md={3}>
                 <Box>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold", fontSize: "17px", mb: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontSize: '17px', mb: 2 }}>
                     Follow
                   </Typography>
                   {followLinks.map((link) => renderLink(link))}
                 </Box>
               </Grid>
-              
+
               {/* Company */}
               <Grid item xs={12} sm={6} md={3}>
                 <Box>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold", fontSize: "17px", mb: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontSize: '17px', mb: 2 }}>
                     Company
                   </Typography>
                   {companyLinks.map((link) => renderLink(link))}
-                  <GetAppButton/>
+                  <GetAppButton />
                 </Box>
               </Grid>
 
               {/* Bottom bar */}
-              <Grid item xs={12} sx={{ textAlign: "center" }}>
-                <Box 
-                  mt={4} 
-                  display="flex" 
-                  justifyContent={isMobile ? 'center' : 'flex-end'} 
-                  flexDirection={isMobile ? 'column' : 'row'} 
-                  alignItems="center"
-                >
+              <Grid item xs={12} sx={{ textAlign: 'center' }}>
+                <Box mt={4} display="flex" justifyContent={isMobile ? 'center' : 'flex-end'} flexDirection={isMobile ? 'column' : 'row'} alignItems="center">
                   <Typography variant="body2" color="textSecondary">
-                    © 2024 kalavyuha.com  
+                    © 2024 kalavyuha.com
                   </Typography>
-                  <Typography sx={{mx:1}} color="textSecondary">
+                  <Typography sx={{ mx: 1 }} color="textSecondary">
                     |
                   </Typography>
-                  <Link 
-                    component={RouterLink}
-                    to="/faq" 
-                    color="#1b4d69" 
-                    sx={{ 
-                      mt: isMobile ? 1 : 0, 
-                      textDecoration:"none", 
-                      "&:hover": { textDecoration:"underline" } 
-                    }}
-                  >
+                  <Link component={RouterLink} to="/faq" color="#1b4d69" sx={{ mt: isMobile ? 1 : 0, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
                     FAQ
                   </Link>
                 </Box>
@@ -218,14 +173,11 @@ const Footer = () => {
           </Container>
         </Box>
       </Container>
-      
+
       {/* Cookie Settings Popup */}
-      <CookiePopup 
-        forceShowSettings={showCookieSettings}
-        onSettingsClose={closeCookieSettings}
-      />
+      <CookiePopup forceShowSettings={showCookieSettings} onSettingsClose={closeCookieSettings} />
     </Container>
   );
-}
+};
 
 export default Footer;

@@ -146,14 +146,12 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate, initialData }
                     {[
                         {
                             label: 'Any date', key: '24 Hours', action: () => {
-                                // onSelectDate(null); // Removed this line to prevent closing
                                 setSelected(null);
                                 setSelectedQuick('24 Hours');
                             }
                         },
                         {
                             label: 'Today', key: 'today', action: () => {
-                                // onSelectDate(today); // Removed this line to prevent closing
                                 setSelected(today);
                                 setSelectedQuick('today');
                             }
@@ -162,7 +160,6 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate, initialData }
                             label: 'Tomorrow', key: 'tomorrow', action: () => {
                                 const tmr = new Date();
                                 tmr.setDate(today.getDate() + 1);
-                                // onSelectDate(tmr); // Removed this line to prevent closing
                                 setSelected(tmr);
                                 setSelectedQuick('tomorrow');
                             }

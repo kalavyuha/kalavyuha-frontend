@@ -42,7 +42,7 @@ const UploadImageAvatar = ({ handleImageUpload, handleAvatarSelect, handleCancel
                       color: 'white',
                       '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' },
                     }}
-                    onClick={handleSave} // Call handleSave on button click
+                    onClick={handleSave}
                   >
                     Save
                   </Button>

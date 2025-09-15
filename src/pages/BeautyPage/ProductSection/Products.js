@@ -65,12 +65,6 @@ const Products = ({ products, location }) => {
       
     };
 
-    // Calculate discounted price
-    // const calculateDiscountedPrice = (price, discountPercentage) => {
-    //     if (!price || !discountPercentage) return price;
-    //     return Math.round(price - (price * discountPercentage / 100));
-    // };
-
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto', p: 2 }}>
             <Typography

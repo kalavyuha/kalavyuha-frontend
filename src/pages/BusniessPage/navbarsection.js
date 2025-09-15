@@ -154,7 +154,7 @@ export default function Navbar() {
       </Box>
       
       <List sx={{ flexGrow: 1, overflowY: 'auto' }}>
-        <ListItem component={Link} to="/business-account" sx={{ textDecoration: 'none' }}>
+        <ListItem component={Link} to="/business/account" sx={{ textDecoration: 'none' }}>
           <ListItemText
             primary="Signup"
             sx={{
@@ -279,7 +279,7 @@ export default function Navbar() {
                 </Box>
 
                 <Box sx={{ display: { xs: 'none', md: 'flex' } , gap: 2, alignItems: 'center' }}>
-                    <NavButton component={Link} to="/business-account">
+                    <NavButton component={Link} to="/business/account">
                       Signup
                     </NavButton>
                     <NavButton>Login</NavButton>
@@ -299,7 +299,7 @@ export default function Navbar() {
             <Box sx={{ display: { xs: 'none', md: 'block' } }}>
               <DownloadButton 
                 component={Link} 
-                to="/business-account"
+                to="/business/account"
                 variant="contained"
               >
                 List Your Business In Free

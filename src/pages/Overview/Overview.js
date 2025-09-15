@@ -15,21 +15,26 @@ const Overview = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [buisnessType, setBuisnessType] = useState('');
     const [popularServices, setPopularServices] = useState([]);
-
+    const [userLocation, setUserLocation] = useState({
+        latitude: 28.466296,
+        longitude: 77.011864
+    });
 
     const IndexFilterData = previousData?.state?.data;
     const searchBarData = previousData?.state?.search
 
-    // Log the search data to see what's being passed
-    // useEffect(() => {
-    //     if (searchBarData) {
-    //         console.log('Search data received in Overview:', searchBarData);
-    //         console.log('Date:', searchBarData?.date);
-    //         console.log('Time:', searchBarData?.time);
-    //         console.log('Selected Date Data:', searchBarData?.selectedDateData);
-    //     }
-    // }, [searchBarData])
-
+    // Get user location from localStorage or default coordinates
+    useEffect(() => {
+        const storedLat = localStorage.getItem('latitude');
+        const storedLng = localStorage.getItem('longitude');
+        
+        if (storedLat && storedLng) {
+            setUserLocation({
+                latitude: parseFloat(storedLat),
+                longitude: parseFloat(storedLng)
+            });
+        }
+    }, []);
 
     const handleDataChange = (newData) => {
         setData(newData);
@@ -39,11 +44,10 @@ const Overview = () => {
         try {
             const result = await apiget(`${constant.baseUrl}api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&Category=Beauty&latitude=78.9897978&longitude=28.6767965&page=1`);
             if (result && result.data?.Status === 200) {
-                 console.log("TESTING:",result?.data?.Data)
                 setPopularServices(result?.data?.Data)
             }
         } catch (err) {
-            console.log(err)
+            // Handle error silently or with proper error handling
         }
     }
 
@@ -64,7 +68,15 @@ const Overview = () => {
 
             <Navigation setShowMap={setShowMap} setIsLoading={setIsLoading} showMap={showMap} setBuisnessType={setBuisnessType} onDataChange={handleDataChange} searchData={searchBarData} />
             {showMap && <Container maxWidth="lg">
-                <MapComponent />
+                <MapComponent 
+                    latitude={userLocation.latitude}
+                    longitude={userLocation.longitude}
+                    businessName={searchBarData?.location || "Search Results"}
+                    region={searchBarData?.category || buisnessType || ""}
+                    streetAddress={searchBarData?.location || ""}
+                    showBusinessInfo={true}
+                    businessData={data} // Pass the search results data
+                />
             </Container>}
 
             <Container maxWidth="lg">

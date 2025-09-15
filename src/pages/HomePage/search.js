@@ -50,6 +50,8 @@ const generateCalendar = (year, month) => {
 
 const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
     const today = new Date();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [currentDate, setCurrentDate] = useState(today);
     const [selected, setSelected] = useState(null);
     const [selectedQuick, setSelectedQuick] = useState('24 Hours');
@@ -121,16 +123,58 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
     }, [selectedSlot]);
 
     return (
-        <Popper open={open} anchorEl={anchorEl} disablePortal={true} placement="bottom-start" style={{ zIndex: 1300 }}>
-            <Paper elevation={3} sx={{ p: 2, borderRadius: 2, width: 400 }}>
+        <Popper 
+            open={open} 
+            anchorEl={anchorEl} 
+            disablePortal={false} 
+            placement={isMobile ? "bottom" : "bottom-start"}
+            style={{ zIndex: 10000 }}
+            modifiers={[
+                {
+                    name: 'preventOverflow',
+                    options: {
+                        boundary: 'viewport',
+                        padding: { xs: 4, sm: 8 },
+                    },
+                },
+                {
+                    name: 'flip',
+                    options: {
+                        fallbackPlacements: isMobile ? ['top', 'bottom'] : ['top-start', 'bottom-end', 'top-end'],
+                    },
+                },
+                {
+                    name: 'offset',
+                    options: {
+                        offset: isMobile ? [0, 4] : [0, 8],
+                    },
+                },
+            ]}
+        >
+            <Paper 
+                elevation={8} 
+                sx={{ 
+                    p: { xs: 1, sm: 2 }, 
+                    borderRadius: 2, 
+                    width: { xs: '95vw', sm: 400 },
+                    maxWidth: { xs: '320px', sm: '400px' },
+                    minWidth: { xs: '280px', sm: '350px' },
+                    maxHeight: { xs: '80vh', sm: 'auto' },
+                    overflowY: 'auto',
+                    position: 'relative',
+                    margin: { xs: '0 auto', sm: 'initial' },
+                    left: { xs: '50%', sm: 'initial' },
+                    transform: { xs: 'translateX(-50%)', sm: 'none' },
+                }}
+            >
                 <IconButton
                     onClick={onClose}
-                    sx={{ position: 'absolute', top: 8, right: 8 }}
+                    sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
                     size="small"
                 >
                     <CloseIcon fontSize="small" />
                 </IconButton>
-                <Box display="flex" gap={1} mb={2}>
+                <Box display="flex" gap={0.5} mb={2} flexWrap="wrap" justifyContent="center">
                     {[
                         {
                             label: 'Any date', key: '24 Hours', action: () => {
@@ -158,14 +202,15 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                             size="small"
                             onClick={action}
                             sx={{
-                                fontSize: '12px',
+                                fontSize: { xs: '10px', sm: '12px' },
                                 fontWeight: 600,
-                                p: "0 10px",
+                                p: { xs: "0 6px", sm: "0 10px" },
                                 borderRadius: '20px',
                                 backgroundColor: selectedQuick === key ? '#1b4d69' : '#f0f0f0',
                                 color: selectedQuick === key ? '#fff' : '#1b4e6c',
                                 border: selectedQuick === key ? 'none' : '1px solid #ccc',
                                 textTransform: 'none',
+                                minWidth: 'fit-content',
                                 '&:hover': {
                                     backgroundColor: selectedQuick === key ? '#1b4d69' : '#e0e0e0',
                                 },
@@ -178,20 +223,34 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
 
                 {/* Month Navigation */}
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                    <IconButton onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
-                        <ChevronLeftIcon />
+                    <IconButton 
+                        onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+                        size="small"
+                        sx={{ p: { xs: 0.5, sm: 1 } }}
+                    >
+                        <ChevronLeftIcon fontSize={isMobile ? "small" : "medium"} />
                     </IconButton>
-                    <Typography fontWeight="bold">{format(currentDate, 'MMMM yyyy')}</Typography>
-                    <IconButton onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
-                        <ChevronRightIcon />
+                    <Typography 
+                        fontWeight="bold" 
+                        fontSize={{ xs: '14px', sm: '16px' }}
+                        textAlign="center"
+                    >
+                        {format(currentDate, 'MMMM yyyy')}
+                    </Typography>
+                    <IconButton 
+                        onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+                        size="small"
+                        sx={{ p: { xs: 0.5, sm: 1 } }}
+                    >
+                        <ChevronRightIcon fontSize={isMobile ? "small" : "medium"} />
                     </IconButton>
                 </Box>
 
                 {/* Calendar Grid */}
-                <Grid container spacing={1}>
+                <Grid container spacing={{ xs: 0.3, sm: 0.5 }}>
                     {weekDays.map((day) => (
                         <Grid item xs={1.7} key={day}>
-                            <Typography align="center" fontSize={12} color="grey">{day}</Typography>
+                            <Typography align="center" fontSize={{ xs: 9, sm: 12 }} color="grey">{day}</Typography>
                         </Grid>
                     ))}
                     {days.map((day, idx) => (
@@ -207,8 +266,8 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                     fullWidth
                                     disabled={isPastDate(day)}
                                     sx={{
-                                        width: 36,
-                                        height: 36,
+                                        width: { xs: 24, sm: 36 },
+                                        height: { xs: 24, sm: 36 },
                                         minWidth: 0,
                                         p: 0,
                                         borderRadius: '50%',
@@ -216,6 +275,7 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                         color: isPastDate(day) ? '#ccc' : (isSelected(day) ? 'white' : 'black'),
                                         border: isToday(day) ? '2px solid #1b4d69' : 'none',
                                         cursor: isPastDate(day) ? 'not-allowed' : 'pointer',
+                                        fontSize: { xs: '10px', sm: '14px' },
                                         '&:hover': {
                                             bgcolor: isPastDate(day) ? 'transparent' : (isSelected(day) ? '#1b4d69' : '#eee'),
                                         },
@@ -228,29 +288,30 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                     {day.getDate()}
                                 </Button>
                             ) : (
-                                <Box height={36} />
+                                <Box height={{ xs: 24, sm: 36 }} />
                             )}
                         </Grid>
                     ))}
                 </Grid>
 
-                <Box sx={{ p: 2, fontFamily: 'Arial' }}>
-                    <Box sx={{ mb: 2 }}>
+                <Box sx={{ p: { xs: 1, sm: 2 }, fontFamily: 'Arial' }}>
+                    <Box sx={{ mb: 1.5, display: 'flex', flexWrap: 'wrap', gap: { xs: 0.3, sm: 0.5 }, justifyContent: 'center' }}>
                         {slots.map(slot => (
                             <Button
                                 key={slot}
                                 variant="outlined"
                                 onClick={() => setSelectedSlot(slot)}
                                 sx={{
-                                    mr: '4px',
-                                    fontSize: '13px',
+                                    fontSize: { xs: '9px', sm: '13px' },
                                     fontWeight: 600,
-                                    p: "0 10px",
+                                    p: { xs: "0 4px", sm: "0 10px" },
                                     textTransform: 'capitalize',
                                     borderRadius: '20px',
                                     backgroundColor: selectedSlot === slot ? '#1b4d69' : '#f0f0f0',
                                     color: selectedSlot === slot ? '#fff' : '#1b4e6c',
                                     border: selectedSlot === slot ? 'none' : '1px solid #ccc',
+                                    minWidth: 'fit-content',
+                                    height: { xs: 24, sm: 'auto' },
                                     '&:hover': {
                                         backgroundColor: selectedSlot === slot ? '#1b4d69' : '#e0e0e0',
                                     }
@@ -263,7 +324,7 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
 
                     {/* Time Selection - Only show when not 24 Hours */}
                     {selectedSlot !== '24 Hours' && (
-                        <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 2 }, flexDirection: { xs: 'column', sm: 'row' }, mb: 1 }}>
                             <Select
                                 value={startTime}
                                 onChange={(e) => setStartTime(e.target.value)}
@@ -271,15 +332,15 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                 fullWidth
                                 size="small"
                                 sx={{
-                                    px: 1,
+                                    px: { xs: 0.5, sm: 1 },
                                     py: 0.5,
-                                    fontSize: '14px',
-                                    height: 36,
+                                    fontSize: { xs: '11px', sm: '14px' },
+                                    height: { xs: 28, sm: 36 },
                                 }}
                             >
-                                <MenuItem value="" disabled>Select Start Time</MenuItem>
+                                <MenuItem value="" disabled>Start Time</MenuItem>
                                 {availableTimes.map(time => (
-                                    <MenuItem key={time} value={time}>{time}</MenuItem>
+                                    <MenuItem key={time} value={time} sx={{ fontSize: { xs: '11px', sm: '14px' } }}>{time}</MenuItem>
                                 ))}
                             </Select>
 
@@ -290,22 +351,22 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                 fullWidth
                                 size="small"
                                 sx={{
-                                    px: 1,
+                                    px: { xs: 0.5, sm: 1 },
                                     py: 0.5,
-                                    fontSize: '14px',
-                                    height: 36,
+                                    fontSize: { xs: '11px', sm: '14px' },
+                                    height: { xs: 28, sm: 36 },
                                 }}
                             >
-                                <MenuItem value="" >Select End Time</MenuItem>
+                                <MenuItem value="" >End Time</MenuItem>
                                 {availableTimes.map(time => (
-                                    <MenuItem key={time} value={time}>{time}</MenuItem>
+                                    <MenuItem key={time} value={time} sx={{ fontSize: { xs: '11px', sm: '14px' } }}>{time}</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     )}
 
                     {/* Done Button */}
-                    <Box mt={2} display="flex" justifyContent="flex-end">
+                    <Box mt={{ xs: 1, sm: 2 }} display="flex" justifyContent="flex-end">
                         <Button
                             variant="contained"
                             size="small"
@@ -326,7 +387,10 @@ const CustomDatePicker = ({ anchorEl, open, onClose, onSelectDate }) => {
                                 textTransform: 'none',
                                 fontWeight: 'bold',
                                 borderRadius: '20px',
-                                px: 3,
+                                px: { xs: 2, sm: 3 },
+                                py: { xs: 0.5, sm: 1 },
+                                fontSize: { xs: '11px', sm: '14px' },
+                                height: { xs: 28, sm: 'auto' },
                                 '&:hover': {
                                     backgroundColor: '#154157',
                                 }
@@ -479,23 +543,23 @@ export default function SearchUI() {
     const newAnchorEl = anchorEl ? null : e.currentTarget;
     setAnchorEl(newAnchorEl);
     
-    // If opening the calendar, scroll to ensure it's visible
+    // If opening the calendar, ensure it's visible on mobile
     if (newAnchorEl) {
       // Store the element reference before the timeout
       const element = e.currentTarget;
       
       setTimeout(() => {
-        if (element) {
+        if (element && isSmallScreen) {
           const rect = element.getBoundingClientRect();
           const viewportHeight = window.innerHeight;
           
-          // Calculate if calendar would be visible (calendar height is approximately 400px)
-          const calendarHeight = 450; // Approximate height including padding
+          // Calculate if calendar would be visible (calendar height is approximately 450px on mobile)
+          const calendarHeight = 450;
           const spaceBelow = viewportHeight - rect.bottom;
           
           if (spaceBelow < calendarHeight) {
             // Calculate how much to scroll to make calendar fully visible
-            const scrollAmount = calendarHeight - spaceBelow + 20; // 20px buffer
+            const scrollAmount = Math.max(0, calendarHeight - spaceBelow + 50); // 50px buffer
             
             window.scrollBy({
               top: scrollAmount,
@@ -528,8 +592,6 @@ export default function SearchUI() {
     const result = await apiget(
       `api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${category}`,
     )
-
-    console.log(result)
 
     if (result && result.status === 200) {
       navigate("/overview", {
@@ -633,7 +695,7 @@ export default function SearchUI() {
                   open={true}
                   anchorEl={serviceAnchorEl} 
                   placement="bottom-start"
-                  style={{ zIndex: 9999 }}
+                  style={{ zIndex: 10001 }}
                   modifiers={[
                     {
                       name: 'offset',
@@ -730,7 +792,7 @@ export default function SearchUI() {
                   open={true}
                   anchorEl={locationAnchorEl} 
                   placement="bottom-start"
-                  style={{ zIndex: 9999 }}
+                  style={{ zIndex: 10001 }}
                   modifiers={[
                     {
                       name: 'offset',
@@ -892,12 +954,30 @@ export default function SearchUI() {
         </Box>
 
         {/* Custom Date Picker for Mobile */}
-        <CustomDatePicker
-          open={Boolean(anchorEl)}
-          anchorEl={anchorEl}
-          onClose={() => setAnchorEl(null)}
-          onSelectDate={handleDateSelect}
-        />
+        <Box>
+          {/* Backdrop for mobile */}
+          {Boolean(anchorEl) && isSmallScreen && (
+            <Box
+              sx={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                zIndex: 9999,
+              }}
+              onClick={() => setAnchorEl(null)}
+            />
+          )}
+          
+          <CustomDatePicker
+            open={Boolean(anchorEl)}
+            anchorEl={anchorEl}
+            onClose={() => setAnchorEl(null)}
+            onSelectDate={handleDateSelect}
+          />
+        </Box>
       </Box>
     )
   }
@@ -995,7 +1075,7 @@ export default function SearchUI() {
               open={true}
               anchorEl={serviceAnchorEl} 
               placement="bottom-start"
-              style={{ zIndex: 9999 }}
+              style={{ zIndex: 10001 }}
               modifiers={[
                 {
                   name: 'offset',
@@ -1081,7 +1161,7 @@ export default function SearchUI() {
               open={true}
               anchorEl={locationAnchorEl} 
               placement="bottom-start"
-              style={{ zIndex: 9999 }}
+              style={{ zIndex: 10001 }}
               modifiers={[
                 {
                   name: 'offset',

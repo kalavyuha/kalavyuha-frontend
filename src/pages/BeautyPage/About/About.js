@@ -154,7 +154,7 @@ const AboutUs = ({
   region,
   StreetAddress,
   buisnessName,
-  isLoading = false, // New prop to control loading state
+  isLoading = false,
 }) => {
   const GOOGLE_API_KEY = "AIzaSyBdWs3MgBKaIDNzkk5pvlfqO2SeobfsWCk";
 

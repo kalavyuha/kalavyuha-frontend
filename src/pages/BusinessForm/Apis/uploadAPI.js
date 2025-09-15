@@ -22,8 +22,6 @@ export const uploadImages = async (files, token) => {
       throw new Error(`Total file size is too large (${(totalSize / 1024 / 1024).toFixed(2)}MB). Maximum allowed total size is 25MB.`);
     }
 
-    console.log(`Uploading ${files.length} files, total size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
-
     const response = await axios.post(`${constant.baseUrl}api/v1/files/upload/images/`, formData, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -32,16 +30,10 @@ export const uploadImages = async (files, token) => {
       timeout: 60000, // 60 seconds timeout
       maxContentLength: 50 * 1024 * 1024, // 50MB max content length
       maxBodyLength: 50 * 1024 * 1024, // 50MB max body length
-      onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        console.log(`Upload progress: ${percentCompleted}%`);
-      },
     });
     
     return { data: response.data, error: null };
   } catch (error) {
-    console.error('Error uploading images:', error);
-    
     let errorMessage = 'Failed to upload images';
     
     if (error.response) {
@@ -84,9 +76,7 @@ export const uploadFileWithCompression = async (file, token, options = {}) => {
 
     // Compress image if it's too large
     if (file.type.startsWith('image/') && file.size > 2 * 1024 * 1024) {
-      console.log('Compressing image...');
       processedFile = await compressImage(file, maxDimension, compressionQuality);
-      console.log(`Compressed from ${(file.size / 1024 / 1024).toFixed(2)}MB to ${(processedFile.size / 1024 / 1024).toFixed(2)}MB`);
     }
 
     // Final size check
@@ -96,7 +86,6 @@ export const uploadFileWithCompression = async (file, token, options = {}) => {
 
     return await uploadImages([processedFile], token);
   } catch (error) {
-    console.error('Error uploading file with compression:', error);
     throw error;
   }
 };
@@ -141,40 +130,3 @@ const compressImage = (file, maxDimension = 1920, quality = 0.8) => {
     img.src = URL.createObjectURL(file);
   });
 };
-
-
-// export const deleteImage = async (imageUrl, token) => {
-//   try {
-//     await axios.delete(`${API_BASE_URL}/api/v1/files/delete`, {
-//       headers: {
-//         'Authorization': `Bearer ${token}`,
-//       },
-//       data: { url: imageUrl },
-//     });
-//     return { success: true, error: null };
-//   } catch (error) {
-//     console.error('Error deleting image:', error);
-//     return { 
-//       success: false, 
-//       error: error.response?.data?.message || 'Failed to delete image' 
-//     };
-//   }
-// };
-
-// export const getUploadUrl = async (fileName, fileType, token) => {
-//   try {
-//     const response = await axios.get(`${API_BASE_URL}/api/v1/files/upload-url`, {
-//       headers: {
-//         'Authorization': `Bearer ${token}`,
-//       },
-//       params: {
-//         file_name: fileName,
-//         file_type: fileType,
-//       },
-//     });
-//     return { url: response.data.url, error: null };
-//   } catch (error) {
-//     console.error('Error getting upload URL:', error);
-//     return { url: null, error: error.response?.data?.message || 'Failed to get upload URL' };
-//   }
-// };
