@@ -10,8 +10,6 @@ import { constant } from "../../../constant";
  */
 export const createBusinessHours = async (businessHoursData, authToken) => {
   try {
-    console.log('Sending business hours data:', JSON.stringify(businessHoursData, null, 2));
-
     const response = await fetch(`${constant.baseUrl}api/v1/BussinessHours/create`, {
       method: 'POST',
       headers: {
@@ -25,15 +23,12 @@ export const createBusinessHours = async (businessHoursData, authToken) => {
       let errorMessage = response.statusText;
       try {
         const errorData = await response.json();
-        console.error('API Error Response:', errorData);
         
         // Handle different error response formats
         if (errorData.detail && Array.isArray(errorData.detail)) {
           // FastAPI validation errors format
-          console.error('Full validation errors:', errorData.detail);
           const validationErrors = errorData.detail.map(err => {
-            console.error('Individual error:', err);
-            return `${err.loc?.join('.')} - ${err.msg} (Input: ${JSON.stringify(err.input || 'N/A')})`;
+            return `${err.loc?.join('.')} - ${err.msg}`;
           }).join('; ');
           errorMessage = `Validation errors: ${validationErrors}`;
         } else if (errorData.detail && typeof errorData.detail === 'string') {
@@ -47,7 +42,7 @@ export const createBusinessHours = async (businessHoursData, authToken) => {
         }
         
       } catch (parseError) {
-        console.error('Failed to parse error response:', parseError);
+        // Failed to parse error response
       }
       throw new Error(`Business hours creation failed: ${errorMessage}`);
     }
@@ -55,7 +50,6 @@ export const createBusinessHours = async (businessHoursData, authToken) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error creating business hours:', error);
     throw error;
   }
 };

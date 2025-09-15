@@ -2,8 +2,6 @@ import { constant } from '../../../constant';
 
 export const createBusinessDetails = async (businessData) => {
   try {
-    console.log("Sending business data:", businessData);
-
     const response = await fetch(`${constant.baseUrl}api/v1/BussinessDetails/create/`, {
       method: 'POST',
       headers: {
@@ -15,7 +13,6 @@ export const createBusinessDetails = async (businessData) => {
 
     if (!response.ok) {
       const errorResponse = await response.json().catch(() => null);
-      console.error("Detailed error response:", errorResponse);
       
       // Handle 422 validation errors specifically
       if (response.status === 422 && errorResponse?.detail) {
@@ -30,7 +27,6 @@ export const createBusinessDetails = async (businessData) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Error creating business details:', error);
     throw error;
   }
 };

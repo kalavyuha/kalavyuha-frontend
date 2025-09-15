@@ -44,7 +44,6 @@ const AppointmentHistory = () => {
     // Load appointments from localStorage
     const loadAppointments = () => {
       const storedAppointments = JSON.parse(localStorage.getItem("userAppointments") || "[]");
-      console.log("AppointmentHistory: Loaded appointments from localStorage:", storedAppointments.length, "appointments");
       setAppointments(storedAppointments);
     };
 
@@ -52,13 +51,11 @@ const AppointmentHistory = () => {
 
     // Listen for storage changes to update appointments when new ones are added
     const handleStorageChange = () => {
-      console.log("AppointmentHistory: Storage change detected");
       loadAppointments();
     };
 
     // Listen for new appointment events
     const handleNewAppointment = (event) => {
-      console.log("AppointmentHistory: New appointment event received:", event.detail);
       loadAppointments(); // Reload appointments when a new one is added
     };
 

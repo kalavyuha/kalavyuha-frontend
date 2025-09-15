@@ -134,15 +134,6 @@ const LeftPanel = ({
         Kalavyuha
       </Typography>
 
-      {/* <Typography variant="h6" sx={{ mb: 0, fontWeight: 'bold', fontSize:{xs:18, sm:20} }}>Chat with us</Typography> */}
-
-      {/* <Button 
-        startIcon={<MessagesSquare />} 
-        onClick={handleNavigateToSupport}
-        sx={{ mb: 1, textTransform: 'capitalize', color: 'black', fontWeight: 'bold', fontSize:{xs:13, sm:14} }}
-      >
-        Start live chat
-      </Button> */}
       <Button
         startIcon={<Send />}
         onClick={handleNavigateToSupport}
@@ -530,8 +521,6 @@ const LeftPanel = ({
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "space-between",
-                              // backgroundColor: "#f8f9fa",
-                              // border: "1px solid #e9ecef",
                             }}
                             onClick={() => toggleCategory(category.id)}
                           >
@@ -578,9 +567,7 @@ const LeftPanel = ({
                                         key={service.id}
                                         style={{
                                           marginBottom: "10px",
-                                          // borderBottom: "1px solid #e8e8e8",
                                           paddingBottom: "8px",
-                                          // backgroundColor: "#fafafa",
                                           padding: "18px",
                                           borderRadius: "4px",
                                           marginTop: "0px",
@@ -631,18 +618,6 @@ const LeftPanel = ({
                                 </ul>
                               )}
                           </Collapse>
-
-                          {/* Empty category message */}
-                          {/* {(!category.services || category.services.length === 0) && (
-                          <div style={{ 
-                            marginLeft: '12px', 
-                            fontSize: '11px', 
-                            color: '#888',
-                            fontStyle: 'italic'
-                          }}>
-                            No services added to this category yet.
-                          </div>
-                        )} */}
                         </li>
                       ))}
                     </ul>
@@ -692,12 +667,6 @@ const LeftPanel = ({
                     overflowWrap: "break-word",
                   }}
                 >
-                  {/* <b>Schedule Type:</b> {
-                    formData.businessHours.scheduleType === "selected_hours" ? "Open for selected hours" :
-                    formData.businessHours.scheduleType === "appointment" ? "By Appointment only" :
-                    formData.businessHours.scheduleType === "always_open" ? "Always Open" : "Not Set"
-                  } <br /> */}
-                  {/* <b>Weekly Schedule:</b> */}
                   <ul
                     style={{
                       listStyleType: "none",
@@ -741,7 +710,6 @@ const LeftPanel = ({
                           key={day.id}
                           style={{
                             marginBottom: "4px",
-                            // borderBottom: "1px solid #e0e0e0",
                             paddingBottom: "6px",
                             fontSize: "11px",
                           }}
@@ -758,18 +726,6 @@ const LeftPanel = ({
           </Box>
         </Box>
       </Box>
-
-      {/* Scroll Buttons  */}
-      {/* {isOverflowing && (
-        <Box sx={{ display: 'flex', flexDirection: 'column-reverse', marginRight: '-31px', padding: '8px' }}>
-          <Button onClick={() => handleScroll(1)} sx={{ color: canScrollDown ? 'black' : 'gray', fontWeight: 'bold', minWidth: '0px' }} disabled={!canScrollDown}>
-            <ChevronDown />
-          </Button>
-          <Button onClick={() => handleScroll(-1)} sx={{ color: canScrollUp ? 'black' : 'gray', fontWeight: 'bold', minWidth: '0px' }} disabled={!canScrollUp}>
-            <ChevronUp />
-          </Button>
-        </Box>
-      )} */}
     </Box>
   );
 };

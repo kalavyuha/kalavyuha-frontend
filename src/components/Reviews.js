@@ -71,24 +71,6 @@ const GoogleImage = styled('img')({
   marginRight: 4
 });
 
-// const ScrollContainer = styled(Box)({
-//   overflowX: 'auto',
-//   display: 'flex',
-//   gap: 16,
-//   paddingBottom: 16,
-//   '&::-webkit-scrollbar': {
-//     height: 8,
-//   },
-//   '&::-webkit-scrollbar-track': {
-//     background: '#f1f1f1',
-//     borderRadius: 4,
-//   },
-//   '&::-webkit-scrollbar-thumb': {
-//     background: '#888',
-//     borderRadius: 4,
-//   },
-// });
-
 export default function ReviewsSection() {
     const [expandedReview, setExpandedReview] = useState(null);
     const scrollContainerRef = useRef(null);
@@ -124,16 +106,11 @@ export default function ReviewsSection() {
     <Container sx={{ py: 4 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
         <Stack direction="row" spacing={1} alignItems="center">
-          {/* <Typography variant="h4" component="h2" fontWeight="bold">
-            Recent Reviews
-          </Typography> */}
             <Typography
                 variant="h3"
                 component="h2"
                 sx={{
                     color: 'black',
-                    // fontWeight: 'bold',
-                    // mb: 4
                 }}
                 >
                 Recent Reviews
@@ -152,7 +129,6 @@ export default function ReviewsSection() {
         <Button
             variant="contained"
             sx={{
-              // mt:8,
               bgcolor: '#cdddec',
               fontWeight: 'bold',
               color: '#1b4d69',
@@ -191,7 +167,7 @@ export default function ReviewsSection() {
                 overflowX: 'auto',
                 paddingBottom: '16px',
                 scrollBehavior: 'smooth',
-                scrollbarWidth: 'none', // For Firefox
+                scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
                 
                 }}
@@ -203,7 +179,6 @@ export default function ReviewsSection() {
                     key={review.id}
                     style={{
                         minWidth: '300px',
-                        // backgroundColor: '#f9f9f9',
                         borderRadius: '20px',
                         border:"2px solid black",
                         padding:"5px"

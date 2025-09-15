@@ -30,6 +30,7 @@ import Signup from "../pages/Auth/Signup";
 import Login from "../pages/Auth/Login";
 import ColorLogo from "../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.png";
 import { apiget } from "../pages/service/api";
+import { useAuth } from "../Context/AuthContext";
 
 const StyledAppBar = styled(AppBar)({
   background: "#eaeef2",
@@ -87,6 +88,7 @@ const DropdownItem = styled(ListItem)({
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAction, setUserAction] = useState(null);
@@ -97,22 +99,22 @@ export default function Navbar() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
-  const [userId, setUserId] = useState(null);
 
-  const handleBackdropClick = () => {
-    setLoginOpen(false);
-    setSignupOpen(false);
+  const handleBackdropClick = (e) => {
+    // Only close if clicking directly on the backdrop, not on child elements
+    if (e.target === e.currentTarget) {
+      setLoginOpen(false);
+      setSignupOpen(false);
+    }
   };
 
   // Fetch cart items function
   const fetchCartItems = async () => {
     try {
-      const userDetail = JSON.parse(localStorage.getItem("userDetail"));
-      
-      if (userDetail && userDetail._id) {
+      if (user && user._id) {
         // For logged-in users, try API first
         try {
-          const result = await apiget(`api/v1/addToCart/service/cart/${userDetail._id}`);
+          const result = await apiget(`api/v1/addToCart/service/cart/${user._id}`);
           if (result && result.status === 200 && result?.data?.Data?.services) {
             setCartItems(result.data.Data.services);
             return;
@@ -132,7 +134,30 @@ export default function Navbar() {
   };
 
   const handleCartClick = () => {
-    navigate('/cart');
+    // Check if we have a stored business ID and try to get business data
+    const businessId = localStorage.getItem('businessId');
+    let navigationState = {};
+    
+    if (businessId) {
+      const storedBusinessData = localStorage.getItem(`businessData_${businessId}`);
+      if (storedBusinessData) {
+        try {
+          const businessData = JSON.parse(storedBusinessData);
+          navigationState = {
+            _id: businessId,
+            businessData: businessData
+          };
+        } catch (error) {
+          console.error('Error parsing stored business data in navbar:', error);
+        }
+      }
+      // Even if no stored business data, pass the business ID
+      if (!navigationState._id) {
+        navigationState._id = businessId;
+      }
+    }
+    
+    navigate('/cart', { state: Object.keys(navigationState).length > 0 ? navigationState : undefined });
   };
 
   const handleDownloadClick = () => {
@@ -152,11 +177,6 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    const user_Id = JSON.parse(localStorage.getItem("userDetail"));
-    if (user_Id) {
-      setUserId(user_Id);
-    }
-    
     // Initial cart fetch
     fetchCartItems();
     
@@ -191,11 +211,10 @@ export default function Navbar() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [userAction]);
+  }, [user]); // Updated dependency to use user from auth context
 
   const handleLogOut = () => {
-    localStorage.removeItem("userDetail");
-    setUserId(null);
+    logout(); // Use logout from auth context
   };
 
   useEffect(() => {
@@ -311,10 +330,7 @@ export default function Navbar() {
               fontSize: "14px",
             }}
           >
-            Kalavyuha <br />{" "}
-            {/* <Typography component="span" sx={{ fontWeight: 'bold', fontSize: '12px', color: '#000' }}>
-              Business
-            </Typography> */}
+            Kalavyuha <br />
           </Typography>
         </Box>
 
@@ -488,7 +504,7 @@ export default function Navbar() {
           />
         </ListItem>
       </List>
-      <a href="/kalavyuha-frontend/business-page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+      <a href="/kalavyuha-frontend/business/page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
         <Box sx={{ p: 2 }}>
           <DownloadButton
             fullWidth
@@ -551,21 +567,10 @@ export default function Navbar() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <NavButton startIcon={<Download />} onClick={handleDownloadClick}>Download</NavButton>
 
-                <a href="/kalavyuha-frontend/business-page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                <a href="/kalavyuha-frontend/business/page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
                   <NavButton startIcon={<Store />}>List Your Business</NavButton>
                 </a>
               </Box>
-
-              {/* <IconButton
-                size="small"
-                color="#000"
-                sx={{
-                  pointerEvents: "none",
-                  "&:hover": { background: "none" },
-                }}
-              >
-                <MoreVert />
-              </IconButton> */}
 
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 2, mr: 2 }}
@@ -605,7 +610,7 @@ export default function Navbar() {
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
                 >
-                  {userId ? <AccountCircleIcon /> : "Sign In"}
+                  {isAuthenticated ? <AccountCircleIcon /> : "Sign In"}
                 </ProfileButton>
               </Box>
             </Box>
@@ -642,7 +647,7 @@ export default function Navbar() {
                 minWidth: "200px",
               }}
             >
-              {!userId ? (
+              {!isAuthenticated ? (
                 <DropdownItem
                   sx={{ color: "#000" }}
                   onClick={() => setLoginOpen(true)}
@@ -678,40 +683,63 @@ export default function Navbar() {
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent backdrop
-            zIndex: 1400, // Higher than Popper
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 1400,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            // padding: 2,
           }}
-          onClick={handleBackdropClick} // Close on clicking the backdrop
+          onClick={handleBackdropClick}
         >
           <Box
             sx={{
               position: "relative",
-              backgroundColor: "white",
-              padding: "24px",
+              // backgroundColor: "red",
+              padding: 1,
               borderRadius: "12px",
-              minWidth: "300px",
-              background: "transparent",
-              zIndex: 1500, // Ensure it's above the backdrop
+              maxWidth: "600px",
+              maxHeight: "90vh",
+              overflow: "auto",
+              zIndex: 1500,
+              // width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {signupOpen && (
-              <Signup
-                setLoginOpen={setLoginOpen}
-                setSignupOpen={setSignupOpen}
-                setUserAction={setUserAction}
-              />
+              <Box sx={{ 
+                overflow: "auto",
+                "& > *": {
+                  minHeight: "auto !important",
+                  height: "auto !important"
+                }
+              }}>
+                <Signup
+                  setLoginOpen={setLoginOpen}
+                  setSignupOpen={setSignupOpen}
+                  setUserAction={setUserAction}
+                />
+              </Box>
             )}
 
             {loginOpen && (
-              <Login
-                setLoginOpen={setLoginOpen}
-                setSignupOpen={setSignupOpen}
-                setUserAction={setUserAction}
-              />
+              <Box sx={{ 
+                overflow: "auto",
+                "& > *": {
+                  minHeight: "auto !important",
+                  height: "auto !important"
+                }
+              }}>
+                <Login
+                  setLoginOpen={setLoginOpen}
+                  setSignupOpen={setSignupOpen}
+                  setUserAction={setUserAction}
+                />
+              </Box>
             )}
           </Box>
         </Box>
@@ -729,7 +757,6 @@ export default function Navbar() {
           display: { xs: "block", md: "none" },
           "& .MuiDrawer-paper": {
             boxSizing: "border-box",
-            // height: '100%',
             width: "100%",
           },
         }}

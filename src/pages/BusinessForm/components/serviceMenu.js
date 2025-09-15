@@ -68,10 +68,6 @@ const useResizeObserverFix = () => {
         window.requestAnimationFrame(() => {
           try {
             const height = document.body.offsetHeight; // Trigger controlled reflow
-            // Only log in development
-            if (process.env.NODE_ENV === 'development') {
-              console.debug('Layout reflow triggered:', height);
-            }
           } catch (err) {
             // Silently handle any errors during reflow
           }
@@ -164,7 +160,7 @@ const ServiceFormBox = ({
   // Use proper ResizeObserver fix instead of error suppression
   useResizeObserverFix();
 
-  // Additional error handling specifically for webpack dev server
+  // Additional error handling for better user experience
   useEffect(() => {
     const originalConsoleError = console.error;
     console.error = (...args) => {
@@ -239,10 +235,7 @@ const ServiceFormBox = ({
     }
 
     try {
-      // TODO: Get token dynamically or from environment
       const token = process.env.REACT_APP_UPLOAD_TOKEN || 'VIRoHdqUAtpklgKg';
-      
-      console.log('Uploading service image:', file.name, file.size);
       
       const { data, error: uploadError } = await uploadImages([file], token);
 
@@ -253,8 +246,6 @@ const ServiceFormBox = ({
       const uploadedUrl = data?.Data?.[0];
       if (!uploadedUrl) throw new Error('No URL returned from upload');
 
-      console.log('Service image upload successful:', uploadedUrl);
-
       const updatedCategories = [...categories];
       updatedCategories[categoryIndex].services[serviceIndex] = {
         ...updatedCategories[categoryIndex].services[serviceIndex],
@@ -264,11 +255,9 @@ const ServiceFormBox = ({
         },
       };
 
-      console.log('Updated service with image:', updatedCategories[categoryIndex].services[serviceIndex]);
       setCategories(updatedCategories);
       message.success('Image uploaded successfully');
     } catch (err) {
-      console.error('Upload failed:', err);
       message.error(`Image upload failed: ${err.message}`);
     }
   };
@@ -472,16 +461,14 @@ const ServiceFormBox = ({
           width: "100%",
           maxWidth: "100%",
           mb: { xs: 1, sm: 2 },
-          // p: { xs: 0, sm: 0, md: 1.5 },
-          // pr: { xs: 0, sm: 0.5, md: 1 },
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
           wordWrap: "break-word",
           wordBreak: "break-word",
-          contain: "layout style paint", // Enhanced CSS containment
-          contentVisibility: "auto", // Optimize rendering
-          willChange: "scroll-position", // Hint for scroll optimization
-          // bgcolor:"red"
+          contain: "layout style paint",
+          contentVisibility: "auto",
+          willChange: "scroll-position",
+
         }}
       >
         {categories.map((category, categoryIndex) => (
@@ -591,7 +578,6 @@ const ServiceFormBox = ({
                   onClick={() => handleAddEmptyService(categoryIndex)}
                   sx={{
                     textTransform: "none",
-                    // background: "#1b4d69",
                     color: "#fff",
                     fontSize: { xs: "0.60rem", sm: "0.7rem", md: "0.7rem" },
                     px: { xs: 1, sm: 1.25, md: 1.5 },
@@ -695,27 +681,25 @@ const ServiceFormBox = ({
                       borderRadius: { xs: "12px", sm: "15px" },
                       border: "1px solid #e9ecef",
                       backgroundColor: "#ffffff",
-                      minHeight: "200px", // Fixed minimum height to prevent layout shifts
-                      maxHeight: "600px", // Maximum height constraint
-                      contain: "layout style paint", // Enhanced containment
-                      containIntrinsicSize: "auto 200px", // Helps with layout stability
+                      minHeight: "200px",
+                      maxHeight: "600px",
+                      contain: "layout style paint",
+                      containIntrinsicSize: "auto 200px",
                       "&.dragging": {
                         backgroundColor: "#f8f9fa",
                         opacity: 0.7,
                         transform: "rotate(2deg)",
                       },
                       "&:hover": {
-                        // boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                        // borderColor: '#1b4d69',
                         transform: "translateY(-1px)",
                       },
                       maxWidth: "100%",
                       overflow: "hidden",
                       wordWrap: "break-word",
                       wordBreak: "break-word",
-                      transition: "transform 0.2s ease-in-out", // More specific transition
+                      transition: "transform 0.2s ease-in-out",
                       position: "relative",
-                      willChange: "transform", // Optimize for transform changes
+                      willChange: "transform",
                       "&::before": {
                         content: '""',
                         position: "absolute",
@@ -967,7 +951,7 @@ const ServiceFormBox = ({
                               borderRadius: "6px",
                               fontSize: "14px",
                               background: "#fbfbfb",
-                              transition: "none", // Remove transitions that can cause ResizeObserver issues
+                              transition: "none",
                             },
                             "& .MuiInputLabel-root": {
                               fontSize: "14px",
@@ -979,7 +963,7 @@ const ServiceFormBox = ({
                               resize: "vertical",
                               minHeight: "60px",
                               maxHeight: "120px",
-                              transition: "none", // Remove transitions
+                              transition: "none",
                             },
                             "& textarea": {
                               resize: "vertical !important",
@@ -987,7 +971,7 @@ const ServiceFormBox = ({
                             },
                           }}
                           InputProps={{
-                            disableUnderline: true, // Reduce layout calculations
+                            disableUnderline: true,
                           }}
                         />
                       </Box>
@@ -1134,7 +1118,6 @@ const ServiceFormBox = ({
                               sx={{
                                 flex: 1,
                                 "& .MuiInputBase-root": {
-                                  // height: "100%",
                                   height: "44px",
                                   borderRadius: "6px",
                                   background: "#fbfbfb",
@@ -1238,7 +1221,6 @@ const ServiceFormBox = ({
                           sx={{
                             flex: 1,
                             width: "50%",
-                            // bgcolor: "red",
                             height: { sm: 160 },
                             display: "flex",
                             flexDirection: "column",
@@ -1246,7 +1228,6 @@ const ServiceFormBox = ({
                           }}
                         >
                           {/* Description - Full Width */}
-                          {/* <Box> */}
                           <TextField
                             value={service.description}
                             onChange={(e) => {
@@ -1296,7 +1277,6 @@ const ServiceFormBox = ({
                               disableUnderline: true, // Reduce layout calculations
                             }}
                           />
-                          {/* </Box> */}
                         </Box>
                       </Box>
                     </Box>
@@ -1441,9 +1421,7 @@ const ServiceFormBox = ({
                             },
                           }}
                         />
-                        <Box
-                        // sx={{ width: '140px' }}
-                        >
+                        <Box>
                           <DurationSelect
                             value={service.durationType}
                             onChange={(e) => {
@@ -1490,7 +1468,6 @@ const ServiceFormBox = ({
                             color: service.uploaded ? "#fff" : "#000000",
                             textTransform: "none",
                             width: "160px",
-                            // height: '56px',
                             height: { xs: "40px", sm: "45px", md: "50px" },
                             display: "flex",
                             flexDirection: "column",
@@ -1644,7 +1621,6 @@ const ServiceFormBox = ({
                 borderRadius: "8px",
                 fontSize: { xs: "14px", sm: "15px" },
                 backgroundColor: "#fff",
-                // border: "1px solid #dee2e6",
                 "&:hover": {
                   borderColor: "#1b4d69",
                 },
@@ -1695,47 +1671,6 @@ const ServiceFormBox = ({
         </Button>
            </Box>
       </Box>
-
-      {/* Summary Statistics */}
-      {/* <Box sx={{ 
-        mt: 2, 
-        p: 2, 
-        backgroundColor: '#e8f4f8', 
-        borderRadius: '8px',
-        border: '1px solid #bee5eb',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 2
-      }}>
-        <Box>
-          <Typography variant="subtitle2" sx={{ 
-            fontWeight: 'bold', 
-            color: '#1b4d69',
-            fontSize: { xs: '0.875rem', sm: '0.9rem' }
-          }}>
-            Summary
-          </Typography>
-          <Typography variant="body2" sx={{ 
-            color: '#6c757d',
-            fontSize: { xs: '0.8rem', sm: '0.85rem' }
-          }}>
-            {categories.length} {categories.length === 1 ? 'Category' : 'Categories'} • {' '}
-            {categories.reduce((total, cat) => total + cat.services.length, 0)} Total Services
-          </Typography>
-        </Box>
-        
-        
-      </Box> */}
-      {/* <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' , mt:1}}>
-          <Typography variant="caption" sx={{ 
-            color: '#6c757d',
-            fontSize: { xs: '0.75rem', sm: '0.8rem' }
-          }}>
-            💡 Tip: Drag to reorder categories and services
-          </Typography>
-        </Box> */}
     </Box>
   );
 };

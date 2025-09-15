@@ -28,10 +28,8 @@ const AddReviews = () => {
         component="h2"
         sx={{
           color: "#000",
-          //   fontWeight: 700,
           fontSize: { xs: "20px", sm: "24px", md: "28px" },
           mb: 1,
-          //   textAlign: 'center',
         }}
       >
         Add a Review
@@ -41,21 +39,17 @@ const AddReviews = () => {
         component="h2"
         sx={{
           color: "#555",
-          //   fontWeight: 700,
           fontSize: { xs: "12px", sm: "14px", md: "16px" },
           mb: 3,
-          //   textAlign: 'center',
         }}
       >
         Kindly help us improve by sharing your experience with us.
       </Typography>
       <Box sx={{ p: { xs: 0, sm: 0 }, borderRadius: 3, mb: 3 }}>
-        {/* <Grid container spacing={0} alignItems="stretch"> */}
+
         <Grid item xs={12}>
           <Box sx={{ display: "flex", flexDirection: "column", mb: 2 }}>
-            {/* <Typography variant="h6" sx={{ mb: 1, color: "#555", fontSize: { xs: "14px", sm: "16px", md: "18px" } }}>
-                Rate your experience
-              </Typography> */}
+
             <Box sx={{ mt: 0, display: "flex", alignItems: "center", gap: 2 }}>
               <Rating
                 name="review-rating"
@@ -85,9 +79,6 @@ const AddReviews = () => {
               justifyContent: "center",
             }}
           >
-            {/* <Typography variant="h6" sx={{ mb: 2, color: "#000" }}>
-                Write your review
-              </Typography> */}
             <TextField
               placeholder="Share your thoughts..."
               variant="outlined"
@@ -118,7 +109,7 @@ const AddReviews = () => {
             />
           </Box>
         </Grid>
-        {/* </Grid> */}
+
         <Box
           sx={{
             display: "flex",

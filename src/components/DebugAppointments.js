@@ -31,19 +31,16 @@ const DebugAppointments = () => {
     
     window.dispatchEvent(new CustomEvent('appointmentAdded', { detail: testAppointment }));
     
-    console.log("Debug: Test appointment added:", testAppointment);
     alert("Test appointment added! Check appointment history page.");
   };
 
   const clearAppointments = () => {
     localStorage.removeItem("userAppointments");
-    console.log("Debug: All appointments cleared");
     alert("All appointments cleared from localStorage!");
   };
 
   const showStoredAppointments = () => {
     const stored = localStorage.getItem("userAppointments");
-    console.log("Debug: Stored appointments:", stored);
     alert(`Stored appointments: ${stored || "None"}`);
   };
 

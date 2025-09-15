@@ -43,16 +43,16 @@ const Main = () => {
                         // User declined or error occurred
                         switch(error.code) {
                             case error.PERMISSION_DENIED:
-                                console.log('User declined to share location');
+                                // User declined to share location
                                 break;
                             case error.POSITION_UNAVAILABLE:
-                                console.log('Location information is unavailable');
+                                // Location information is unavailable
                                 break;
                             case error.TIMEOUT:
-                                console.log('Location request timed out');
+                                // Location request timed out
                                 break;
                             default:
-                                console.log('An unknown error occurred while retrieving location');
+                                // An unknown error occurred while retrieving location
                                 break;
                         }
                     },
@@ -63,7 +63,7 @@ const Main = () => {
                     }
                 );
             } else {
-                console.log('Geolocation is not supported by this browser');
+                // Geolocation is not supported by this browser
             }
         };
 

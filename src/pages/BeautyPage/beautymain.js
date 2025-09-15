@@ -106,7 +106,6 @@ function BeautyMain() {
   const fetchDetailData = async () => {
     setLoading(true);
     const result = await apiget(`api/v1/BussinessDetails/alldetails/${id}`);
-    // console.log("TESTING", result);
     if (result && result?.data?.Status === 200) {
       setBuisnessInfo(result?.data?.Data?.BusinessInfo);
       setServices(result?.data?.Data?.Services);
@@ -137,7 +136,7 @@ function BeautyMain() {
       />
 
       <Container maxWidth="lg">
-        {/* {images.length > 0 && <ImageGallery images={images} />}  chnages made by rakshit */}
+        {/* {images.length > 0 && <ImageGallery images={images} />}  changes made by rakshit */}
         {images && images.length > 0 && <ImageGallery images={images} />}{" "}
         {/*---------changes made by Rakshit*/}
         <OffersCarousel buisnessId={buisnessInfo?.BussinessUserId} />
@@ -293,6 +292,7 @@ function BeautyMain() {
           buisness_Id={buisnessInfo?.BussinessUserId}
           loading={loading}
           staffData={staff}
+          businessInfo={buisnessInfo}
         />
         {buisnessProduct.length > 0 && (
           <Products

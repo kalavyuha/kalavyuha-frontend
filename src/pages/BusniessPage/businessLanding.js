@@ -62,7 +62,7 @@ export default function BusinessLandingSection() {
               </Typography>
               <Button 
                 component={Link} 
-                to="/business-account"
+                to="/business/account"
                 variant="contained" 
                 color="primary"
                 size={isMobile ? "medium" : "large"}

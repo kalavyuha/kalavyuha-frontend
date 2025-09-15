@@ -22,13 +22,11 @@ const BusinessHours = () => {
       const storedData = localStorage.getItem("formData");
       return storedData ? JSON.parse(storedData) : {};
     } catch (error) {
-      console.error("Error parsing stored data:", error);
       return {};
     }
   };
 
   const storedData = getStoredData();
-  console.log("Stored Data:", storedData);
   const existingBusinessHours = storedData.businessHours || {};
 
   const [scheduleType, setScheduleType] = useState(
@@ -115,12 +113,10 @@ const BusinessHours = () => {
       })
     );
 
-    navigate("/business-service-info", { state: formData });
+    navigate("/business/service-info", { state: formData });
   };
 
   const handleNextStep = async () => {
-    // Debug log to show current open/closed status for all days
-    console.log('Debug: daysStatus before saving:', daysStatus);
     const previousData = getStoredData();
     const formData = {
       ...previousData,
@@ -136,25 +132,14 @@ const BusinessHours = () => {
         detail: { key: "formData", data: formData },
       })
     );
-
-    console.log("Business hours data saved to localStorage:", formData.businessHours);
     
     // Navigate to document uploads where the API call will be made
-    navigate("/business-document-uploads", { state: formData });
+    navigate("/business/document-uploads", { state: formData });
   };
 
   const handlePreview = () => {
-    console.log("Business Hours Schedule:");
     WeekDays.forEach((day) => {
       const status = daysStatus[day.id];
-      console.log(`${day.name}:`, {
-        isOpen: status.isOpen,
-        hours: status.isOpen
-          ? scheduleType === "selected_hours"
-            ? `${status.startTime} ${status.startMeridian} to ${status.endTime} ${status.endMeridian}`
-            : "Open 24 hours"
-          : "Closed",
-      });
     });
   };
 

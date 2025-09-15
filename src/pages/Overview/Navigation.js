@@ -193,11 +193,6 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
         setLoading(true)
         setIsLoading(true)
         
-        // Log the date and time data being used
-        console.log('Navigation - Date:', date);
-        console.log('Navigation - Time:', time);
-        console.log('Navigation - Selected Date Data:', selectedDateData);
-        
         // Build query parameters including date and time if available
         let queryParams = `ServiceName=${serviceName}&Location=${location}&BussinessType=${selectedCategory}`;
         
@@ -222,13 +217,11 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
             }
         }
         
-        console.log('Navigation - API Query:', queryParams);
         
         const result = await apiget(`api/v1/BussinessDetails/filter/?${queryParams}`);
         if (result && result.status === 200) {
             onDataChange(result?.data?.Data);
             setBuisnessType(selectedCategory)
-            console.log(result?.data?.Data)
         }
         setIsLoading(false)
         setLoading(false)
@@ -241,7 +234,7 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
                 setPopularServices(result?.data?.Data)
             }
         } catch (err) {
-            console.log(err)
+            // Handle error silently or with proper error handling
         }
     }
 

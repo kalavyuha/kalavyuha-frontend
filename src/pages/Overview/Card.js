@@ -20,7 +20,6 @@ const iconStyle = {
 }
 
 const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
-  console.log('CardList data:', data);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [favourites, setFavourites] = useState([])
@@ -259,8 +258,6 @@ const sampleApiData = [
 
     let mappedServices = [];
     if (Array.isArray(services) && services.length > 0 && Array.isArray(services[0].Categories)) {
-      // Debug: log the actual structure of services
-      console.log('Business services:', services);
       mappedServices = services[0].Categories.slice(0, 2).map(category => {
         if (Array.isArray(category?.Services) && category.Services.length > 0) {
           const service = category.Services[0];
@@ -309,7 +306,7 @@ const sampleApiData = [
         setFavourites(result?.data?.Data || [])
       }
     } catch (error) {
-      console.log('Error fetching favourites:', error)
+      // Error fetching favourites
     }
   }
 
@@ -345,10 +342,10 @@ const sampleApiData = [
         };
         setFavourites(prevFavs => [...prevFavs, newFavourite]);
       } else {
-        console.log('Failed to add to favourites');
+        // Failed to add to favourites
       }
     } catch (error) {
-      console.log('Error adding favourite:', error);
+      // Error adding favourite
     } finally {
       setUpdatingFavourite(null);
     }
@@ -368,10 +365,10 @@ const sampleApiData = [
       if (result?.data?.Status === 200) {
         setFavourites(prevFavs => prevFavs.filter(fav => fav._id !== favouriteId));
       } else {
-        console.log('Failed to remove from favourites');
+        // Failed to remove from favourites
       }
     } catch (error) {
-      console.log('Error removing favourite:', error);
+      // Error removing favourite
     } finally {
       setUpdatingFavourite(null);
     }

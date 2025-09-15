@@ -113,10 +113,8 @@ const ServiceDirectory = () => {
         const text = await resp.text();
         let json;
         try { json = JSON.parse(text); } catch (e) { json = text; }
-        console.log('NearByServices fetch result', { headers, status: resp.status, body: json });
         return { resp, body: json };
       } catch (err) {
-        console.error('NearByServices fetch error', err, headers);
         return { error: err };
       }
     };

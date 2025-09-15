@@ -261,8 +261,6 @@ export default function CreateBusniessAccount() {
       return;
     }
 
-    console.log("Form submitted:", formData);
-
     const optSendUrl = `${constant.baseUrl}api/v1/otp/send/`;
 
     try {
@@ -278,14 +276,11 @@ export default function CreateBusniessAccount() {
       });
 
       if (response.status === 200) {
-        console.log("OTP sent successfully:", response.data);
         navigate("/otp-verification", { state: formData });
       } else {
-        console.error("Error sending OTP:", response.data);
-        alert("Failed to send OTP. Please try again.");
+        throw new Error("Failed to send OTP. Please try again.");
       }
     } catch (error) {
-      console.error("Error during API call:", error);
       alert("An error occurred while sending the OTP.");
     }
   };

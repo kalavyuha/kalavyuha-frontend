@@ -630,12 +630,6 @@ const AppointmentHistoryDetail = () => {
             borderRadius: 3,
             boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
             overflow: "hidden",
-            // minHeight: 230,
-            // alignItems: "center",
-            // display: "flex",
-            // justifyContent: "space-between",
-            // backgroundColor: "#000",
-            // height: "100%",
           }}
         >
           <CardContent sx={{ p: 0 }}>

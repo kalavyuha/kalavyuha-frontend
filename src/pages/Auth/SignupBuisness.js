@@ -96,7 +96,7 @@ const HexagonGallery = () => {
                     backgroundColor: '#424242',
                     WebkitClipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                     clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                    transform: 'translateX(10px)', // Shift slightly to the right
+                    transform: 'translateX(10px)',
                 }}
             >
                 <img
@@ -123,7 +123,7 @@ const HexagonGallery = () => {
                     backgroundColor: '#424242',
                     WebkitClipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                     clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                    transform: 'translateX(10px)', // Shift slightly to the right
+                    transform: 'translateX(10px)',
                 }}
             >
                 <img
@@ -150,7 +150,7 @@ const HexagonGallery = () => {
                     backgroundColor: '#424242',
                     WebkitClipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                     clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                    transform: 'translateX(10px)', // Shift slightly to the right
+                    transform: 'translateX(10px)',
                 }}
             >
                 <img
@@ -232,7 +232,7 @@ const TwoButon = () => {
 const RightBoxStyle = {
     padding: '2em',
     border: '2px solid #000',
-    width: { xs: '100%', md: '20em', sm: '100%' }, // Full width on small devices, 40em on larger devices
+    width: { xs: '100%', md: '20em', sm: '100%' },
     color: '#000',
     borderRadius: '2em',
     justifyContent: 'space-between',

@@ -185,11 +185,9 @@ export default function TeamPresence() {
       const token = "VIRoHdqUAtpklgKg";
       const { data, error: uploadError } = await uploadImages([file], token);
 
-      console.log(data);
       if (uploadError) throw new Error(uploadError);
       if (!data?.Data?.length) throw new Error("No image URL returned");
 
-      console.log(data);
       setSelectedImage({
         s3Url: data?.Data?.[0] ?? "",
         previewUrl: URL.createObjectURL(file),
@@ -197,7 +195,6 @@ export default function TeamPresence() {
       });
       setSelectedAvatar(null);
     } catch (err) {
-      console.error("Upload failed:", err);
       alert(`Image upload failed: ${err.message}`);
     }
   };
@@ -299,7 +296,7 @@ export default function TeamPresence() {
       teamMembers,
     };
     localStorage.setItem("formData", JSON.stringify(combinedData));
-    navigate("/business-profile-form", { state: combinedData });
+    navigate("/business/profile-form", { state: combinedData });
   };
 
   const handleNextServiceMenu = () => {
@@ -309,9 +306,8 @@ export default function TeamPresence() {
       teamMembers,
       teamInfoCompleted: true,
     };
-    console.log("Handle Next Service: ", combinedData);
     localStorage.setItem("formData", JSON.stringify(combinedData));
-    navigate("/business-service-info", { state: combinedData });
+    navigate("/business/service-info", { state: combinedData });
   };
 
   return (

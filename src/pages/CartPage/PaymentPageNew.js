@@ -81,6 +81,8 @@ const PaymentPage = () => {
         throw new Error("Failed to prepare booking payload");
       }
 
+      console.log("Sending booking payload:", bookingPayload);
+
       // Send booking to API
       const result = await sendBookingToAPI(bookingPayload);
 

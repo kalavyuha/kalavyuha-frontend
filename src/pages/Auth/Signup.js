@@ -12,8 +12,10 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { showSuccess, showError } from "../../components/toast";
 import { apipost } from "../service/api";
+import { useAuth } from "../../Context/AuthContext";
 
 const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
+  const { login } = useAuth();
   const [showOTP, setShowOTP] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [isOTPSent, setIsOTPSent] = useState(false);
@@ -59,7 +61,6 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
       Password: "7415823695",
     });
     const data = response.data || response;
-    console.log(data);
 
     if (data && data.Status === 200) {
       setSignupOpen(false);
@@ -74,7 +75,8 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
           PhoneNumber: data?.Data?.PhoneNumber,
           Name: data?.Data?.Name,
         };
-        localStorage.setItem("userDetail", JSON.stringify(userDetail));
+        // Use auth context login method
+        login(userDetail);
       }
 
       setUserAction(data);
@@ -112,7 +114,6 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
     });
 
     const data = response.data || response;
-    // console.log("OTP Verification Signup Response:", data);
     if (data.Status === 200) {
       setIsVerified(true);
 
@@ -123,8 +124,8 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
         Name: data?.Data?.Name,
       };
 
-      localStorage.setItem("userDetail", JSON.stringify(userDetail));
-      console.log("User data stored in localStorage:", userDetail);
+      // Use auth context login method
+      login(userDetail);
     }
     if (data.Status === 401) {
       setIsVerified(false);
@@ -137,42 +138,14 @@ const Signup = ({ setLoginOpen, setSignupOpen, setUserAction }) => {
     <>
       <Box
         sx={{
-          padding: "18px",
+          // padding: "18px",
           borderRadius: "2px",
           // border: '2px solid #fff',
-          width: { xs: "85%", sm: "350px", md: "350px" },
+          width: { xs: "100%", sm: "350px", md: "350px" },
           // backgroundColor: 'rgba(0,0,0,0.5)',
           position: "relative",
         }}
       >
-        {/* <Box
-                    sx={{
-                        ...commonBoxStyle,
-                        top: '-5px',
-                        left: '-5px',
-                    }}
-                />
-                <Box
-                    sx={{
-                        ...commonBoxStyle,
-                        top: '-5px',
-                        right: '-5px',
-                    }}
-                />
-                <Box
-                    sx={{
-                        ...commonBoxStyle,
-                        bottom: '-5px',
-                        left: '-5px',
-                    }}
-                />
-                <Box
-                    sx={{
-                        ...commonBoxStyle,
-                        bottom: '-5px',
-                        right: '-5px',
-                    }}
-                /> */}
 
         <Box
           sx={{

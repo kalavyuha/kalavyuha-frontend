@@ -65,8 +65,6 @@ export default function BusinessDocumentUploads() {
     services,
   } = previousData || {};
 
-  console.log("Previous Data:", previousData.businessHours);
-
   const handleBackTeamPresence = () => {
     localStorage.setItem(
       "formData",
@@ -75,7 +73,7 @@ export default function BusinessDocumentUploads() {
         documentUploads: fileList,
       })
     );
-    navigate("/business-hours", {
+    navigate("/business/hours", {
       state: {
         ...previousData,
         documentUploads: fileList,
@@ -106,11 +104,7 @@ export default function BusinessDocumentUploads() {
       });
 
       if (missingDocuments.length > 0) {
-        alert(
-          `Please upload all required documents: ${missingDocuments.join(", ")}`
-        );
-        setIsUploading(false);
-        return;
+        throw new Error(`Please upload all required documents: ${missingDocuments.join(", ")}`);
       }
       // Progress update
       setUploadProgress(5);
@@ -158,8 +152,7 @@ export default function BusinessDocumentUploads() {
       );
 
       if (missingFields.length > 0) {
-        alert(`Missing required fields: ${missingFields.join(", ")}`);
-        return;
+        throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
       }
 
       // Additional validation for specific fields
@@ -167,38 +160,21 @@ export default function BusinessDocumentUploads() {
         isNaN(businessPayload.BussinessUserId) ||
         businessPayload.BussinessUserId <= 0
       ) {
-        alert("Invalid BussinessUserId (MerchantAccountID)");
-        return;
+        throw new Error("Invalid BussinessUserId (MerchantAccountID)");
       }
 
       if (
         isNaN(businessPayload.TotalStaff) ||
         businessPayload.TotalStaff <= 0
       ) {
-        alert("Invalid TotalStaff count");
-        return;
+        throw new Error("Invalid TotalStaff count");
       }
 
       if (isNaN(businessPayload.Latitude) || isNaN(businessPayload.Longitude)) {
-        alert("Invalid latitude or longitude coordinates");
-        return;
+        throw new Error("Invalid latitude or longitude coordinates");
       }
 
-      console.log("Business Payload:", businessPayload);
-      console.log("Payload validation:", {
-        BussinessUserId: typeof businessPayload.BussinessUserId,
-        BussinessType: typeof businessPayload.BussinessType,
-        BusinessName: typeof businessPayload.BusinessName,
-        StreetAddress: typeof businessPayload.StreetAddress,
-        ZipCode: typeof businessPayload.ZipCode,
-        Region: typeof businessPayload.Region,
-        TotalStaff: typeof businessPayload.TotalStaff,
-        Latitude: typeof businessPayload.Latitude,
-        Longitude: typeof businessPayload.Longitude,
-      });
-
       const businessData = await createBusinessDetails(businessPayload);
-      console.log("Business Creation Response:", businessData);
 
       // Progress update
       setUploadProgress(20);
@@ -206,8 +182,6 @@ export default function BusinessDocumentUploads() {
 
       // Handle large integer IDs properly
       const businessId = businessData.Data?._id;
-      console.log("Raw Business ID:", businessId);
-      console.log("Business ID type:", typeof businessId);
 
       if (!businessId) {
         throw new Error("No business ID returned from business creation");
@@ -218,7 +192,6 @@ export default function BusinessDocumentUploads() {
         typeof businessId === "string"
           ? parseInt(businessId)
           : Number(businessId);
-      console.log("Converted Business ID:", businessIdNum);
 
       if (isNaN(businessIdNum)) {
         throw new Error("Invalid business ID returned from business creation");
@@ -230,13 +203,7 @@ export default function BusinessDocumentUploads() {
 
       // 2. Submit Staff Data
       if (previousData.teamMembers && previousData.teamMembers.length > 0) {
-        console.log("Raw team members data:", previousData.teamMembers);
-
         const staffPayload = previousData.teamMembers.map((member, index) => {
-          console.log(`Processing member ${index + 1}:`, member);
-          console.log(`Member role type:`, typeof member.role);
-          console.log(`Member role value:`, member.role);
-
           // Convert role to string safely
           let roleString = "General";
           if (Array.isArray(member.role)) {
@@ -266,42 +233,15 @@ export default function BusinessDocumentUploads() {
           };
         });
 
-        console.log("Staff Payload:", staffPayload);
-        console.log(
-          "Staff Payload Validation:",
-          staffPayload.map((staff) => ({
-            BussinessId: `${typeof staff.BussinessId} (${staff.BussinessId})`,
-            StaffName: `${typeof staff.StaffName} (${staff.StaffName})`,
-            StaffNumber: `${typeof staff.StaffNumber} (${staff.StaffNumber})`,
-            Gender: `${typeof staff.Gender} (${staff.Gender})`,
-            Experience: `${typeof staff.Experience} (${staff.Experience})`,
-            Specialization: `${typeof staff.Specialization} (${
-              staff.Specialization
-            })`,
-            Role: `${typeof staff.Role} (${staff.Role})`,
-            ProfileImage: `${typeof staff.ProfileImage} (${
-              staff.ProfileImage
-            })`,
-          }))
-        );
-
         try {
           const staffData = await createStaff(staffPayload, authToken);
-          console.log("StaffResponse:", staffData);
 
           // Progress update
           setUploadProgress(45);
           setUploadStage("Staff added successfully...");
         } catch (error) {
-          console.error("Error creating staff:", error);
-          console.error(
-            "Staff payload that caused error:",
-            JSON.stringify(staffPayload, null, 2)
-          );
           throw new Error(`Staff creation failed: ${error.message}`);
         }
-      } else {
-        console.warn("No team members data found, skipping staff creation");
       }
 
       // Progress update
@@ -316,26 +256,22 @@ export default function BusinessDocumentUploads() {
         ])
       );
 
-      const formatDuration = (duration, type) => {
+        const formatDuration = (duration, type) => {
         const suffixMap = {
           days: "d",
           hours: "h",
           minutes: "m",
           months: "mo",
-          // mints: "m",
         };
 
         if (!duration || isNaN(duration)) {
-          console.warn(`Invalid duration: ${duration}`);
           return "0m";
         }
 
         return suffixMap[type]
           ? `${duration}${suffixMap[type]}`
           : `${duration}m`;
-      };
-
-      const prepareServicePayload = (
+      };      const prepareServicePayload = (
         servicesData,
         businessId,
         staffMap,
@@ -351,11 +287,6 @@ export default function BusinessDocumentUploads() {
             Services: category.services.map((service) => {
               const imageUrl =
                 service.image?.s3Url?.url || service.imageUrl || null;
-              console.log(`Transforming service "${service.name}":`, {
-                originalImage: service.image,
-                extractedImageUrl: imageUrl,
-                uploaded: service.uploaded,
-              });
 
               return {
                 Name: service.name.trim(),
@@ -426,21 +357,6 @@ export default function BusinessDocumentUploads() {
           staffMap,
           458
         );
-        console.log("Service Payload:", servicePayload);
-        console.log("Service Payload Structure:", {
-          BussinessId: servicePayload.BussinessId,
-          CreatedBy: servicePayload.CreatedBy,
-          Categories: servicePayload.Categories?.map((cat) => ({
-            Name: cat.Name,
-            Services: cat.Services?.map((service) => ({
-              Name: service.Name,
-              Price: service.Price,
-              Duration: service.Duration,
-              BookingCount: service.BookingCount,
-              Staff: service.Staff,
-            })),
-          })),
-        });
 
         // Additional validation for the prepared payload
         if (!servicePayload.BussinessId || isNaN(servicePayload.BussinessId)) {
@@ -455,13 +371,11 @@ export default function BusinessDocumentUploads() {
         }
 
         const response = await createServices(servicePayload, authToken);
-        console.log("API Response:", response);
 
         // Progress update
         setUploadProgress(65);
         setUploadStage("Services configured successfully...");
       } catch (error) {
-        console.error("Service creation failed:", error);
         throw error;
       }
 
@@ -520,12 +434,10 @@ export default function BusinessDocumentUploads() {
       try {
         const scheduleType =
           previousData.businessHours?.scheduleType || "selected_hours";
-        console.log("Raw business hours data:", previousData.businessHours);
-        console.log("Schedule type:", scheduleType);
 
         // Validate business hours data exists
         if (!previousData.businessHours) {
-          console.warn("No business hours data found, using default 'closed' for all days");
+          // Use default 'closed' for all days if no data found
         }
 
         // Map schedule types to new API format
@@ -541,18 +453,6 @@ export default function BusinessDocumentUploads() {
         }
 
         const businessIdForHours = String(businessIdNum);
-        console.log(
-          "BusinessId for hours:",
-          businessIdForHours,
-          "Type:",
-          typeof businessIdForHours
-        );
-        console.log(
-          "Original businessIdNum:",
-          businessIdNum,
-          "MAX_SAFE_INTEGER:",
-          Number.MAX_SAFE_INTEGER
-        );
 
         // Build array for all days
         const businessHoursArr = weekDays.map((day) => {
@@ -597,22 +497,15 @@ export default function BusinessDocumentUploads() {
           BusinessHours: businessHoursArr,
         };
 
-        console.log(
-          "Sending business hours payload:",
-          JSON.stringify(payload, null, 2)
-        );
         try {
           const businessHoursData = await createBusinessHours(
             payload,
             authToken
           );
-          console.log("Business Hours Response:", businessHoursData);
         } catch (error) {
-          console.error("Error creating business hours:", error);
           throw new Error(`Business hours creation failed: ${error.message}`);
         }
       } catch (error) {
-        console.error("Error creating business hours:", error);
         throw new Error(`Business hours creation failed: ${error.message}`);
       }
 
@@ -660,7 +553,6 @@ export default function BusinessDocumentUploads() {
       UploadErrorHandler.logError(error, 'Business Form Submission');
       const userFriendlyError = UploadErrorHandler.createUserFriendlyMessage(error);
       
-      console.error("Error during submission:", error);
       localStorage.setItem("documentUploads", JSON.stringify(fileList));
 
       // Show user-friendly error dialog

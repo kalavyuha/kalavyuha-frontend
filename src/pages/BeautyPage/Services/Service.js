@@ -42,7 +42,7 @@ const ServiceCard = ({
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'center', // Center both sides vertically
+        alignItems: 'center',
         padding: '10px',
         justifyContent: 'space-between',
         flexDirection: 'row',
@@ -96,7 +96,6 @@ const ServiceCard = ({
                   variant="body2" 
                   color="textSecondary"
                   sx={{
-                    // width: '16rem',
                     textOverflow: 'ellipsis',
                     overflow: 'hidden',
                     whiteSpace: 'nowrap',
@@ -249,7 +248,7 @@ const SkeletonServiceCard = () => {
   );
 };
 
-const Services = ({ services, buisness_Id, loading, staffData }) => {
+const Services = ({ services, buisness_Id, loading, staffData, businessInfo }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedValue, setSelectedValue] = useState(1);
   const [cartItems, setCartItems] = useState([]);
@@ -261,8 +260,6 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   const params = useParams();
   const [visibleServices, setVisibleServices] = useState(5);
   const [selectedCategory, setSelectedCategory] = useState('All');
-
-  console.log("Services component props:", { services, buisness_Id, loading, staffData });
 
   // Extract and flatten services from the nested structure
   const flattenedServices = React.useMemo(() => {
@@ -323,25 +320,19 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("Initializing cart...");
         const userDetail = JSON.parse(localStorage.getItem("userDetail"));
-        console.log("User detail from localStorage:", userDetail);
 
         if (userDetail && userDetail._id) {
-          console.log("User is logged in, setting userId:", userDetail._id);
           setUserId(userDetail._id);
 
           await fetchCartItems(userDetail._id);
         } else {
-          console.log("User not logged in, using localStorage for cart");
           const savedCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-          console.log("Saved cart items from localStorage:", savedCartItems);
           setCartItems(savedCartItems);
         }
       } catch (error) {
-        console.error("Error initializing cart:", error);
+        // Error initializing cart
       } finally {
-        console.log("Cart initialization complete");
         setLoadingCart(false);
       }
     };
@@ -351,9 +342,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
   const fetchCartItems = async (userId) => {
     try {
-      console.log("Fetching cart items for userId:", userId);
       const result = await apiget(`api/v1/addToCart/service/cart/${userId}`);
-      console.log("Fetch cart result:", result);
 
       if (result && result.status === 200 && result.data && result.data.Data) {
         const cartData = result?.data?.Data;
@@ -367,18 +356,15 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
           img: service.image || service.img,
         }));
 
-        console.log("Setting cart items:", apiCartItems);
         setCartItems(apiCartItems);
         // Notify navbar about cart update
         notifyCartUpdate();
       } else {
-        console.log("No cart data found or unexpected response structure");
         // Clear cart and notify
         setCartItems([]);
         notifyCartUpdate();
       }
     } catch (error) {
-      console.error("Error fetching cart items:", error);
       // Clear cart on error and notify
       setCartItems([]);
       notifyCartUpdate();
@@ -394,7 +380,6 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   };
 
   const handleAddToCart = async (service) => {
-    console.log("Service being added to cart:", service);
     setActionId(service._id)
     const isServiceInCart = cartItems.some(item => item._id == service._id);
 
@@ -407,31 +392,49 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
         } else {
           // Add to cart
           await addToCartAPI(service);
+          // Store business data when first service is added
+          storeBusinessDataOnAdd();
         }
 
         // Refresh cart items after operation
         await fetchCartItems(userId);
       } catch (error) {
-        console.error("Cart operation failed:", error);
         // Even if API fails, let's try to continue with localStorage as fallback
         handleLocalStorageCart(service);
       }
     } else {
       // If user is not logged in, use localStorage
       handleLocalStorageCart(service);
+      // Store business data when first service is added
+      if (!isServiceInCart) {
+        storeBusinessDataOnAdd();
+      }
     }
     setActionId(null)
   };
 
+  // Helper function to store business data when adding to cart
+  const storeBusinessDataOnAdd = () => {
+    if (businessInfo && params.id) {
+      const businessData = {
+        BusinessName: businessInfo.BusinessName,
+        ProfileImage: businessInfo.ProfileImage,
+        StreetAddress: businessInfo.StreetAddress,
+        ShopNumber: businessInfo.ShopNumber,
+        Region: businessInfo.Region,
+        ZipCode: businessInfo.ZipCode,
+        AverageRating: businessInfo.AverageRating,
+        _id: businessInfo._id,
+      };
+      const key = `businessData_${params.id}`;
+      localStorage.setItem(key, JSON.stringify(businessData));
+    }
+  };
+
   // Add to cart using API
   const addToCartAPI = async (service) => {
-    console.log("addToCartAPI called with service:", service);
-    console.log("Current cartId:", cartId);
-    console.log("Current userId:", userId);
-
     try {
       if (!cartId && userId) {
-        console.log("Creating new cart...");
         const result = await apipost('api/v1/addToCart/service/add', {
           UserId: `${userId}`,
           BussinessId: buisness_Id,
@@ -447,12 +450,10 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
             }
           ],
         });
-        console.log("Create cart result:", result);
         if (result && result.status === 200) {
           setCartId(result?.data?.Data);
         }
       } else {
-        console.log("Updating existing cart...");
         const updatePayload = {
           services: [
             ...cartItems.map(item => ({
@@ -471,13 +472,10 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
             }
           ],
         };
-        console.log("Update payload:", updatePayload);
         
         const result = await apipatch(`api/v1/addToCart/service/update/${cartId}`, updatePayload);
-        console.log("Update cart result:", result);
       }
     } catch (error) {
-      console.error("Error in addToCartAPI:", error);
       throw error; // Re-throw to be caught by handleAddToCart
     }
   };
@@ -519,9 +517,6 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
   };
 
   const handleLocalStorageCart = (service) => {
-    console.log("Using localStorage for cart. Current cartItems:", cartItems);
-    console.log("Service to add/remove:", service);
-    
     setCartItems(prevItems => {
       const existingItemIndex = prevItems.findIndex(
         item => item._id === service._id
@@ -529,14 +524,11 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
 
       let updatedItems;
       if (existingItemIndex > -1) {
-        console.log("Removing service from localStorage cart");
         updatedItems = prevItems.filter((_, index) => index !== existingItemIndex);
       } else {
-        console.log("Adding service to localStorage cart");
         updatedItems = [...prevItems, service];
       }
 
-      console.log("Updated cart items:", updatedItems);
       // Update localStorage and notify navbar
       updateCartAndNotify(updatedItems);
       return updatedItems;
@@ -571,7 +563,7 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
         }
       }
     } catch (error) {
-      console.error("Error syncing cart:", error);
+      // Error syncing cart
     }
     setActionId(null)
   };
@@ -581,7 +573,35 @@ const Services = ({ services, buisness_Id, loading, staffData }) => {
     if (params.id) {
       localStorage.setItem('businessId', params.id);
     }
-    navigate(`/cart`, { state: { staff: staffData, _id: params.id } });
+    
+    // Prepare comprehensive business data to pass to cart
+    const businessData = businessInfo ? {
+      BusinessName: businessInfo.BusinessName,
+      ProfileImage: businessInfo.ProfileImage,
+      StreetAddress: businessInfo.StreetAddress,
+      ShopNumber: businessInfo.ShopNumber,
+      Region: businessInfo.Region,
+      ZipCode: businessInfo.ZipCode,
+      AverageRating: businessInfo.AverageRating,
+      _id: businessInfo._id,
+      Introduction: businessInfo.Introduction,
+      ClosingTime: businessInfo.ClosingTime,
+      OpeningTime: businessInfo.OpeningTime
+    } : null;
+    
+    // Store in localStorage when navigating to cart (will persist through navigation)
+    if (businessData && params.id) {
+      const key = `businessData_${params.id}`;
+      localStorage.setItem(key, JSON.stringify(businessData));
+    }
+    
+    navigate(`/cart`, { 
+      state: { 
+        staff: staffData, 
+        _id: params.id,
+        businessData: businessData
+      } 
+    });
   };
 
 

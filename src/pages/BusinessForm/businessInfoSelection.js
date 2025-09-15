@@ -98,7 +98,6 @@ export default function BusinessInfoSelection() {
 
   const handleNext = () => {
     if (!selected) {
-      console.warn('No option selected');
       return;
     }
 
@@ -110,7 +109,7 @@ export default function BusinessInfoSelection() {
       localStorage.setItem('formData', JSON.stringify(formData));
 
       if (selected === 'no-website') {
-        navigate('/business-profile-form', { state: formData });
+        navigate('/business/profile-form', { state: formData });
       } else if (selected === 'have-website') {
         localStorage.removeItem("formData");
         message.error('Functionality Under Progress PLEASE GO BACK');
@@ -122,7 +121,7 @@ export default function BusinessInfoSelection() {
   };
 
   const handleBackRoleSelect = () => {
-    navigate('/business-role-selection', { state: previousData });
+    navigate('/business/role-selection', { state: previousData });
   };
   
   return (

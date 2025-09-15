@@ -118,12 +118,10 @@ const GoogleImage = styled('img')({
       }
       
       const apiData = await response.json();
-      console.log('API Response:', apiData); // Debug log
       
       // Transform API data to match component structure
       // The API response has a Data array containing the reviews
       const reviewsData = apiData.Data || [];
-      console.log('Reviews Data:', reviewsData); // Debug log
       const transformedReviews = Array.isArray(reviewsData) ? reviewsData.map(review => ({
         id: review._id,
         ReviewId: review._id,

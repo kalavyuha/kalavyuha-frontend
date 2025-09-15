@@ -97,8 +97,6 @@ export default function OTPVerification() {
       });
       const data = await response.json();
 
-      console.log(data);
-
       if (data.Status === 404 || data.Status === 200 ) {
         setMessage("Account Created Successfully!");
         const { firstName, lastName, email, countryCode, phone, password } =
@@ -119,12 +117,11 @@ export default function OTPVerification() {
         });
 
         const businessMemberData = await businessMemberResponse.json();
-        console.log(businessMemberData);
 
         if (businessMemberResponse.ok && businessMemberData.Status === 200) {
           setTimeout(() => {
             setOpen(false);
-            navigate("/business-role-selection", {
+            navigate("/business/role-selection", {
               state: {
                 ...previousData.state,
                 MerchantAccountID: businessMemberData.Data._id,
@@ -138,7 +135,6 @@ export default function OTPVerification() {
         setMessage("Invalid OTP. Please try again.");
       }
     } catch (error) {
-      console.error("OTP Verification Error:", error);
       setMessage(
         "An error occurred during OTP verification. Please try again."
       );
@@ -171,7 +167,6 @@ export default function OTPVerification() {
         setMessage("Failed to resend OTP. Please try again.");
       }
     } catch (error) {
-      console.error("Resend OTP Error:", error);
       setMessage("Failed to resend OTP. Please try again.");
     } finally {
       setOpen(true);
@@ -179,7 +174,7 @@ export default function OTPVerification() {
   };
 
   const editNumber = () => {
-    navigate("/business-account", { state: previousData.state });
+    navigate("/business/account", { state: previousData.state });
   };
 
   return (

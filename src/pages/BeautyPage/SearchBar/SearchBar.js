@@ -21,11 +21,12 @@ import SearchField from '../../../components/searchField';
 import CustomButton from '../../../components/customButton';
 import { apiget, apipost, apidelete } from '../../service/api';
 import { useMatchingSearchResult } from '../../../Context/detailPageContext';
+import { useAuth } from '../../../Context/AuthContext';
 import { showError, showSuccess } from '../../../components/toast';
 
-const userId = 76368169;
-
 const SearchBar = ({ buisnessInfo, reviews, }) => {
+  const { user } = useAuth();
+  const userId = user?._id;
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState('');
@@ -53,7 +54,7 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
         setFavourites(result?.data?.Data || []);
       }
     } catch (error) {
-      console.log('Error fetching favourites:', error);
+      // Error fetching favourites
     }
   };
 
@@ -82,10 +83,9 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
         };
         setFavourites(prevFavs => [...prevFavs, newFavourite]);
       } else {
-        console.log('Failed to add to favourites');
+        showError('Failed to add to favourites');
       }
     } catch (error) {
-      console.log('Error adding favourite:', error);
       showError('Error adding to favourites');
     } finally {
       setUpdatingFavourite(false);
@@ -107,10 +107,10 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
       if (result?.data?.Status === 200) {
         setFavourites(prevFavs => prevFavs.filter(fav => fav._id !== favouriteId));
       } else {
-        console.log('Failed to remove from favourites');
+        showError('Failed to remove from favourites');
       }
     } catch (error) {
-      console.log('Error removing favourite:', error);
+      showError('Error removing from favourites');
     } finally {
       setUpdatingFavourite(false);
     }
@@ -130,8 +130,6 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
   useEffect(() => {
     // Helper to get today's opening/closing times
     const getTodayTimes = () => {
-      // Assume buisnessInfo.OpeningTimes is an object like { Monday: '09:00', ... }
-      // Fallback to buisnessInfo.OpeningTime/ClosingTime if not present
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const today = days[new Date().getDay()];
       const openingTimes = buisnessInfo?.OpeningTimes || {};
@@ -202,9 +200,6 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
   const updateSearchResult = async () => {
     setLoading(true);
     const result = await apiget(`api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${selectedCategory}`);
-    // if (result && result.status === 200) {
-    //   console.log('');
-    // }
     setLoading(false);
   };
 
@@ -220,7 +215,6 @@ const SearchBar = ({ buisnessInfo, reviews, }) => {
         sx={{
           background: 'linear-gradient(to bottom, #467d9b, #002c5c)',
           position: 'absolute',
-          // height: '35vh',
           height: '19rem',
           width: '100%',
           zIndex: -1,

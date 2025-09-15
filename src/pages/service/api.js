@@ -56,16 +56,13 @@ export const apiget = async (path) => {
             localStorage.setItem('token', response.data.token);
         }
 
-        if (response && response.status === 200) {
-           console.log('--');
-        }
         return response;
 
     } catch (error) {
         if (error && error.response) {
             if (error && error.response && error.response.status === 400) {
                 if (error.response.data.message) {
-                    console.log(error)
+                    // Handle error without logging
                 }
             }
         }
@@ -74,8 +71,6 @@ export const apiget = async (path) => {
 }
 
 export const apipost = async (path, data) => {
-    console.log(data)
-
     try {
         const headers = { ...authHeader() };
         
@@ -93,10 +88,6 @@ export const apipost = async (path, data) => {
         if (response.data.token && response.data.token !== null) {
             localStorage.setItem('token', response?.data?.token);
         }
-
-        if (response && response.status === 200) {
-            console.log(response?.message);
-        }
         return response;
     } catch (error) {
         console.error('API Post Error:', error);
@@ -112,7 +103,7 @@ export const apipost = async (path, data) => {
             // Handle other HTTP errors
             if (errorData && error.response.status === 401) {
                 if (errorData.message) {
-                    console.log(errorData.message);
+                    // Authentication error handled
                 }
                 throw new Error('Authentication failed. Please login again.');
             }
@@ -147,9 +138,6 @@ export const apiput = async (path, data) => {
         if (response.data.token && response.data.token !== null) {
             localStorage.setItem('token', response.data.token);
         }
-        if (response && response.status === 200) {
-            console.log('--');
-        }
         return response;
     } catch (error) {
         if (error && error.response) {
@@ -176,16 +164,13 @@ export const apidelete = async (path) => {
         if (response.data.token && response.data.token !== null) {
             localStorage.setItem('token', response.data.token);
         }
-        if (response && response.status === 200) {
-            console.log('--');
-        }
-
+        
         return response;
     } catch (error) {
         if (error && error.response) {
             if (error && error.response && error.response.status === 400) {
                 if (error.response.data.message) {
-                    console.log('--');
+                    // Handle error without logging
                 }
             }
         }
@@ -205,16 +190,12 @@ export const deleteManyApi = async (path, data) => {
         if (response.data.token && response.data.token !== null) {
             localStorage.setItem('token', response?.data?.token);
         }
-
-        if (response && response.status === 200) {
-            console.log('--');
-        }
         return response;
     } catch (error) {
         if (error && error.response) {
             if (error && error.response.data && error.response.status === 401) {
                 if (error.response.data.message) {
-                    console.log('--');
+                    // Handle authentication error
                 }
             }
         }
@@ -237,16 +218,12 @@ export const apipatch = async (path, data) => {
             localStorage.setItem('token', response.data.token);
         }
         
-        if (response && response.status === 200) {
-            console.log('--');
-        }
-
         return response;
     } catch (error) {
         if (error && error.response) {
             if (error.response.status === 400 || error.response.status === 401) {
                 if (error.response.data.message) {
-                    console.log(error.response.data.message);
+                    // Handle error without logging
                 }
             }
         }
