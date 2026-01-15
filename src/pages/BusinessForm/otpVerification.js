@@ -39,8 +39,7 @@ export default function OTPVerification() {
 
   const previousData = useLocation();
   const navigate = useNavigate();
-  const { firstName, lastName, email, countryCode, phone, password } =
-    previousData.state || {};
+  const { firstName, lastName, email, countryCode, phone } = previousData.state || {};
 
   useEffect(() => {
     let timer;
@@ -68,7 +67,6 @@ export default function OTPVerification() {
 
   const handleKeyDown = (event, index) => {
     if (event.key === "Backspace" && !otpValue[index] && index > 0) {
-      // If current field is empty and backspace is pressed, move to previous field
       inputRefs.current[index - 1].focus();
       const newOtpValue = [...otpValue];
       newOtpValue[index - 1] = "";
@@ -78,100 +76,105 @@ export default function OTPVerification() {
 
   const handleVerifyOTP = async () => {
     setIsLoading(true);
+    setMessage("");
     const enteredOtp = otpValue.join("");
-
-    const otpVerifyUrl = `${constant.baseUrl}api/v1/otp/verify/`;
-    const createBusinessMemberUrl = `${constant.baseUrl}api/v1/BussinessMember/create/`;
-
+    console.log(previousData.state.phone)
+    console.log(previousData.state)
     try {
-      const response = await fetch(otpVerifyUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          PhoneNumber: `${countryCode}${previousData.state.phone}`,
-          OTP: enteredOtp,
-          UserType: "merchant",
-        }),
-      });
-      const data = await response.json();
-
-      if (data.Status === 404 || data.Status === 200 ) {
-        setMessage("Account Created Successfully!");
-        const { firstName, lastName, email, countryCode, phone, password } =
-          previousData.state || {};
-
-        const businessMemberResponse = await fetch(createBusinessMemberUrl, {
+      const verifyResponse = await fetch(
+        `${constant.baseUrl}api/v1/otp/verify`,
+        {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            PhoneNumber: `${previousData.state.countryCode}${previousData.state.phone}`,
+            OTP: enteredOtp,
+            UserType: "Merchant",
+          }),
+        }
+      );
+
+      const verifyData = await verifyResponse.json();
+
+      if (!verifyResponse.ok) {
+        throw new Error(verifyData.detail || "Invalid OTP");
+      }
+
+      const { firstName, lastName, email, countryCode, phone, password } = previousData.state;
+
+      const memberResponse = await fetch(`${constant.baseUrl}api/v1/business-member/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             FirstName: firstName,
             LastName: lastName,
-            Email: email,
+            Email: email || null,
             PhoneNumber: `${countryCode}${phone}`,
             Password: password,
+            IsAgree: true,
           }),
         });
 
-        const businessMemberData = await businessMemberResponse.json();
+      const memberData = await memberResponse.json();
+            
+      const Token = memberData.Data.Token;
+      localStorage.setItem("authToken", Token);
 
-        if (businessMemberResponse.ok && businessMemberData.Status === 200) {
-          setTimeout(() => {
-            setOpen(false);
-            navigate("/business/role-selection", {
-              state: {
-                ...previousData.state,
-                MerchantAccountID: businessMemberData.Data._id,
-              },
-            });
-          }, 2000);
-        } else {
-          setMessage("Failed to create business member. Please try again.");
-        }
-      } else {
-        setMessage("Invalid OTP. Please try again.");
+      if (!memberResponse.ok || memberData.Status !== 200) {
+        throw new Error(memberData.Message || "Account creation failed");
       }
+
+      setMessage("Account created successfully!");
+      setTimeout(() => {
+        navigate("/business/role-selection", {
+          state: {
+            ...previousData.state,
+            MerchantAccountID: memberData.Data.BusinessMemberId,
+          },
+        });
+      }, 1500);
+
     } catch (error) {
-      setMessage(
-        "An error occurred during OTP verification. Please try again."
-      );
+      setMessage(error.message || "OTP verification failed");
     } finally {
       setIsLoading(false);
       setOpen(true);
     }
   };
 
+
   const handleResendOTP = async () => {
     setResendDisabled(true);
     setCountdown(30);
-
-    const optSendUrl = `${constant.baseUrl}api/v1/otp/send/`;
+    setMessage("");
 
     try {
-      const response = await fetch(optSendUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          PhoneNumber: previousData.state.phone,
-        }),
-      });
+      const response = await fetch(
+        `${constant.baseUrl}api/v1/otp/send`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            PhoneNumber: `${countryCode}${previousData.state.phone}`,
+            UserType: "Merchant",
+          }),
+        }
+      );
 
-      if (response.status === 200 && response.data?.Status === "Success") {
-        setMessage("New OTP sent successfully!");
-      } else {
-        setMessage("Failed to resend OTP. Please try again.");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to resend OTP");
       }
+      setMessage("New OTP sent successfully!");
+
     } catch (error) {
-      setMessage("Failed to resend OTP. Please try again.");
+      setMessage(error.message || "Failed to resend OTP");
     } finally {
       setOpen(true);
     }
   };
+
 
   const editNumber = () => {
     navigate("/business/account", { state: previousData.state });

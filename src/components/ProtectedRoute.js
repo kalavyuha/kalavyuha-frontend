@@ -7,7 +7,6 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  // Show loading while checking authentication
   if (loading) {
     return (
       <Box
@@ -28,9 +27,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // If not authenticated, redirect to home with login modal
   if (!isAuthenticated) {
-    // Trigger login modal to open
     setTimeout(() => {
       window.dispatchEvent(new Event('open-login-modal'));
     }, 100);
