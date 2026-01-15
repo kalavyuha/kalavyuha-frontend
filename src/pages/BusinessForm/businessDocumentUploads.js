@@ -1,5 +1,5 @@
 // Business Hours Upload - Single API Call for all days is handled HERE in businessDocumentUploads.js via createBusinessHours from businessHoursApi.js
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -18,7 +18,6 @@ import LeftPanel from "./components/leftpanel";
 import { createBusinessDetails } from "./Apis/businessDetailsApi.js";
 import { createStaff } from "./Apis/staffApi.js";
 import { createServices } from "./Apis/servicesApi.js";
-import { constant } from "../../constant.js";
 import { uploadDocuments } from "./Apis/documentsApi.js";
 import { createBusinessHours } from "./Apis/businessHoursApi.js";
 import UploadErrorHandler from "../../utils/uploadErrorHandler";
@@ -60,9 +59,6 @@ export default function BusinessDocumentUploads() {
     email,
     countryCode,
     phone,
-    teamSize,
-    teamMembers,
-    services,
   } = previousData || {};
 
   const handleBackTeamPresence = () => {
@@ -211,7 +207,6 @@ export default function BusinessDocumentUploads() {
           } else if (typeof member.role === "string") {
             roleString = member.role;
           } else if (member.role && typeof member.role === "object") {
-            // Handle object case - try to extract meaningful value
             if (member.role.value) {
               roleString = member.role.value;
             } else if (member.role.label) {
@@ -224,7 +219,7 @@ export default function BusinessDocumentUploads() {
           return {
             BussinessId: String(businessIdNum), // Send as string to avoid precision issues
             StaffName: member.name || "Unknown",
-            StaffNumber: Number(member.id) || index + 1, // Use index+1 as fallback
+            StaffNumber: Number(member.id) || index + 1, 
             Gender: member.gender || "Other",
             Experience: String(member.experience) || "0",
             Specialization: roleString,

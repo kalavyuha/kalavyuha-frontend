@@ -134,6 +134,9 @@ const theme = createTheme({
 
 export default function CreateBusniessAccount() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -185,12 +188,9 @@ export default function CreateBusniessAccount() {
       }));
     }
 
-    // Validate phone number if the phone field is being changed
     if (name === "phone") {
-      // Only allow numeric input
       const numericValue = value.replace(/\D/g, "");
 
-      // Limit to 10 digits
       const limitedValue = numericValue.slice(0, 10);
 
       setFormErrors((prevErrors) => ({
@@ -210,7 +210,7 @@ export default function CreateBusniessAccount() {
         localStorage.setItem("formData", JSON.stringify(updatedData));
         return updatedData;
       });
-      return; // Exit early for phone number handling
+      return;
     }
 
     setFormData((prevData) => {
@@ -224,8 +224,8 @@ export default function CreateBusniessAccount() {
   };
 
   useEffect(() => {
-    const isValidEmail = formData.email ? validateEmail(formData.email) : true; // Allow empty email but validate if present
-    const isValidPhone = formData.phone ? validatePhone(formData.phone) : false; // Phone is required
+    const isValidEmail = formData.email ? validateEmail(formData.email) : true; 
+    const isValidPhone = formData.phone ? validatePhone(formData.phone) : false; 
     const isValid =
       formData.firstName &&
       formData.lastName &&
@@ -240,50 +240,56 @@ export default function CreateBusniessAccount() {
     setIsFormValid(isValid);
   }, [formData, formErrors]);
 
+  // otp send
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setApiError("");
 
-    // Validate email before submission
     if (formData.email && !validateEmail(formData.email)) {
-      setFormErrors((prevErrors) => ({
-        ...prevErrors,
-        email: "Please enter a valid email address",
-      }));
+      setFormErrors((p) => ({ ...p, email: "Invalid email address" }));
       return;
     }
 
-    // Validate phone before submission
-    if (!formData.phone || !validatePhone(formData.phone)) {
-      setFormErrors((prevErrors) => ({
-        ...prevErrors,
-        phone: "Phone number must be exactly 10 digits",
-      }));
+    if (!validatePhone(formData.phone)) {
+      setFormErrors((p) => ({ ...p, phone: "Phone must be 10 digits" }));
       return;
     }
 
-    const optSendUrl = `${constant.baseUrl}api/v1/otp/send/`;
+    setLoading(true);
 
     try {
-      const response = await fetch(optSendUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${constant.baseUrl}api/v1/otp/send`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            PhoneNumber: `${formData.countryCode}${formData.phone}`,
+            UserType: "Merchant",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.Message || "OTP failed");
+      }
+
+      navigate("/business/otp-verification", {
+        state: {
+          ...formData,
+          expiresIn: data.Data.ExpiresInSeconds,
         },
-        body: JSON.stringify({
-          PhoneNumber: `${formData.countryCode}${formData.phone}`,
-          UserType: "merchant",
-        }),
       });
 
-      if (response.status === 200) {
-        navigate("/otp-verification", { state: formData });
-      } else {
-        throw new Error("Failed to send OTP. Please try again.");
-      }
-    } catch (error) {
-      alert("An error occurred while sending the OTP.");
+    } catch (err) {
+      setApiError(err.message || "Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+
 
   return (
     <ThemeProvider theme={theme}>
@@ -615,11 +621,16 @@ export default function CreateBusniessAccount() {
                       fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
                       "&:hover": { bgcolor: "#17394d" },
                     }}
-                    disabled={!isFormValid}
+                    disabled={!isFormValid || loading}
                   >
-                    Create Account
+                    {loading ? " Sending OTP... " : "Create Account"}
                   </Button>
 
+                  {apiError && (
+                    <Typography color="error" sx={{ mt: 1 }}>
+                      {apiError}
+                    </Typography>
+                  )}
                   <Divider sx={{ mb: 2 }}>
                     <Typography
                       variant="subtitle2"
@@ -632,16 +643,6 @@ export default function CreateBusniessAccount() {
                       or
                     </Typography>
                   </Divider>
-
-                  {/* <Button fullWidth
-                    startIcon={<Box component="img" src={GoogleG} sx={{ width: 20, height: 20 }} />}
-                    variant="outlined"
-                    sx={{
-                      mb: 2, textTransform: "capitalize", fontWeight: "bold", padding: 1.2,
-                    }}
-                  >
-                    Sign Up with Google
-                  </Button> */}
 
                   <Grid container justifyContent="center">
                     <Grid item>
