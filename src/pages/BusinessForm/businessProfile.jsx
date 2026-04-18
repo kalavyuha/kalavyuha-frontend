@@ -13,9 +13,9 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MapComponent from './components/location.map';
 import LeftPanel from './components/leftpanel.js'; 
-import { uploadImages } from './Apis/uploadAPI.js'
+import { uploadImages } from './Apis/uploadAPI.js';
 
-
+// Theme configuration
 const theme = createTheme({
   palette: {
     primary: {
@@ -27,10 +27,22 @@ const theme = createTheme({
   },
 });
 
+// Common text field styles
+const textFieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '10px',
+    backgroundColor: '#fbfbfb',
+    '& fieldset': {
+      borderColor: '#d9d9d9',
+    },
+  },
+};
+
 export default function BusinessProfileForm() {
   const navigate = useNavigate();
   const [manualEditMode, setManualEditMode] = useState(false);
   
+  // Get stored data from localStorage
   const getStoredData = () => {
     try {
       const storedData = localStorage.getItem('formData');
@@ -42,9 +54,9 @@ export default function BusinessProfileForm() {
   };
   
   const previousData = getStoredData();
-
   const { firstName, lastName, email, countryCode, phone, selectedId } = previousData || {};
 
+  // Form state
   const [formData, setFormData] = useState({
     businessName: previousData.formData?.businessName || '',
     introduction: previousData.formData?.introduction || '',
@@ -60,24 +72,54 @@ export default function BusinessProfileForm() {
   });
 
   const [isNextDisabled, setIsNextDisabled] = useState(true);
+  
+  // Create combined data object for LeftPanel that updates immediately
+  const [currentFormData, setCurrentFormData] = useState(() => ({
+    ...previousData,
+    formData: {
+      businessName: previousData.formData?.businessName || '',
+      introduction: previousData.formData?.introduction || '',
+      shopName: previousData.formData?.shopName || '',
+      streetAddress: previousData.formData?.streetAddress || '',
+      zipCode: previousData.formData?.zipCode || '',
+      city: previousData.formData?.city || '',
+      state: previousData.formData?.state || '',
+      country: previousData.formData?.country || '',
+      profilePicture: previousData.formData?.profilePicture || null,
+      adrsLatitude: previousData.formData?.adrsLatitude || '',
+      adrsLongitude: previousData.formData?.adrsLongitude || '',
+    },
+    businessInfoCompleted: true,
+  }));
 
+  // Update currentFormData whenever formData changes
   useEffect(() => {
-    const updateLocalStorage = () => {
-      try {
-        const combinedData = {
-          ...previousData,
-          formData,
-          businessInfoCompleted: true,
-        };
-        localStorage.setItem('formData', JSON.stringify(combinedData));
-      } catch (error) {
-        console.error('Error updating localStorage:', error);
-      }
-    };
-
-    updateLocalStorage();
+    setCurrentFormData(prev => ({
+      ...prev,
+      formData: formData,
+    }));
+    
+    // Also update localStorage
+    try {
+      const combinedData = {
+        ...previousData,
+        formData,
+        businessInfoCompleted: true,
+      };
+      localStorage.setItem('formData', JSON.stringify(combinedData));
+    } catch (error) {
+      console.error('Error updating localStorage:', error);
+    }
   }, [formData, previousData]);
 
+  // Validate form and update next button state
+  useEffect(() => {
+    const { businessName, introduction, streetAddress, zipCode, city, state, adrsLatitude, adrsLongitude } = formData;
+    const isFormValid = businessName && introduction && streetAddress && zipCode && city && state && adrsLatitude && adrsLongitude;
+    setIsNextDisabled(!isFormValid);
+  }, [formData]);
+
+  // Navigation handlers
   const handleBack = () => {
     const combinedData = {
       ...previousData,
@@ -92,9 +134,9 @@ export default function BusinessProfileForm() {
       ...previousData,
       formData: {
         ...formData,
-         profilePicture: formData.profilePicture?.s3Url 
-        ? { s3Url: formData.profilePicture.s3Url } 
-        : null
+        profilePicture: formData.profilePicture?.s3Url 
+          ? { s3Url: formData.profilePicture.s3Url } 
+          : null
       },
       businessInfoCompleted: true,
       teamInfoCompleted: false
@@ -104,12 +146,21 @@ export default function BusinessProfileForm() {
     navigate('/business/team-presence', { state: dataToStore });
   };
 
+  // Form change handlers
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
     }));
+  };
+
+  const handleAddressChange = (event) => {
+    if (!manualEditMode) {
+      alert("Please select a location on the map first");
+      return;
+    }
+    handleChange(event);
   };
 
   const handleLocationSelect = (selectedData) => {
@@ -140,12 +191,12 @@ export default function BusinessProfileForm() {
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file');
       return;
     }
 
-    // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       alert('File size should be less than 5MB');
       return;
@@ -153,7 +204,6 @@ export default function BusinessProfileForm() {
 
     try {
       const token = process.env.REACT_APP_UPLOAD_TOKEN || 'VIRoHdqUAtpklgKg'; 
-      
       const { data, error: uploadError } = await uploadImages([file], token);
 
       if (uploadError) {
@@ -174,23 +224,26 @@ export default function BusinessProfileForm() {
     }
   };
 
-  const handleAddressChange = (event) => {
-    if (!manualEditMode) {
-      alert("Please select a location on the map first");
-      return;
-    }
-    handleChange(event);
-  };
-
-  useEffect(() => {
-    const { businessName, introduction, streetAddress, zipCode, city, state, profilePicture, adrsLatitude, adrsLongitude } = formData;
-    const isFormValid = businessName && introduction && streetAddress && zipCode && city && state && adrsLatitude && adrsLongitude;
-    setIsNextDisabled(!isFormValid);
-  }, [formData]);
-
   const handleSubmit = (event) => {
     event.preventDefault();
   };
+
+  // Section title component
+  const SectionTitle = ({ children }) => (
+    <Grid container justifyContent="left" sx={{ my: { xs: 0.5, lg: 0.25 }, px: { xs: 2, sm: 2 } }}>
+      <Grid item>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: "bold", 
+            fontSize: { xs: '1rem', sm: '1.1rem', lg: '0.95rem' } 
+          }}
+        >
+          {children}
+        </Typography>
+      </Grid>
+    </Grid>
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -198,33 +251,27 @@ export default function BusinessProfileForm() {
         sx={{
           minHeight: '100vh',
           display: 'flex',
-          overflow:"hidden",
+          overflow: "hidden",
           bgcolor: 'background.default',
         }}
       >
         <Container maxWidth={false} disableGutters sx={{ display: 'flex', flexGrow: 1 }}>
           <Grid container>
-            {/* Left side */}
-            <Grid item xs={12} lg={4} md={5} square>
-              
-                <LeftPanel
-                  firstName={firstName}
-                  lastName={lastName}
-                  email={email}
-                  countryCode={countryCode}
-                  phone={phone}
-                  isSignIn={true}
-                  formData={previousData} 
-                />
+            {/* Left Panel */}
+            <Grid item xs={12} lg={4} md={5}>
+              <LeftPanel
+                firstName={firstName}
+                lastName={lastName}
+                email={email}
+                countryCode={countryCode}
+                phone={phone}
+                isSignIn={true}
+                formData={currentFormData}  // Pass the current form data that updates immediately
+              />
             </Grid>
 
-            {/* Right side - form */}
-            <Grid 
-              item 
-              xs={12} 
-              lg={8}
-              md={7}
-            >
+            {/* Right Panel - Form */}
+            <Grid item xs={12} lg={8} md={7}>
               <Box
                 sx={{
                   mx: { xs: 1, sm: 2, md: 3, lg: 2 },
@@ -239,8 +286,9 @@ export default function BusinessProfileForm() {
                   scrollbarWidth: 'none',  
                   '&::-webkit-scrollbar': { display: 'none' },
                   justifyContent: { lg: 'center' }
-                  }}
+                }}
               >
+                {/* Header */}
                 <Typography 
                   component="h1" 
                   variant="h5" 
@@ -253,8 +301,9 @@ export default function BusinessProfileForm() {
                     px: { xs: 1, sm: 0 }
                   }}
                 >
-                  Introduce your {selectedId}  Services Profile
+                  Introduce your {selectedId} Services Profile
                 </Typography>
+                
                 <Typography 
                   variant="subtitle1" 
                   sx={{ 
@@ -267,15 +316,20 @@ export default function BusinessProfileForm() {
                   Let's get your business profile set up in less than 2 minutes.
                 </Typography>
 
-                <Box component="form" noValidate onSubmit={handleSubmit} sx={{ maxWidth: { xs: '100%', sm: 500, lg: 600 }, width: '100%' }}>
+                {/* Form */}
+                <Box 
+                  component="form" 
+                  noValidate 
+                  onSubmit={handleSubmit} 
+                  sx={{ 
+                    maxWidth: { xs: '100%', sm: 500, lg: 600 }, 
+                    width: '100%' 
+                  }}
+                >
                   <Grid container spacing={{ xs: 2, lg: 1 }}>
-                    <Grid container justifyContent="left" sx={{ my: { xs: 0.5, lg: 0.25 }, px: { xs: 2, sm: 2 } }}>
-                      <Grid item>
-                        <Typography variant="h6" sx={{ fontWeight: "bold", fontSize: { xs: '1rem', sm: '1.1rem', lg: '0.95rem' } }}>
-                          Business Introduction
-                        </Typography>
-                      </Grid>
-                    </Grid>
+                    
+                    {/* Business Introduction Section */}
+                    <SectionTitle>Business Introduction</SectionTitle>
 
                     <Grid item xs={12} sm={6}>
                       <TextField
@@ -286,22 +340,20 @@ export default function BusinessProfileForm() {
                         autoFocus
                         value={formData.businessName}
                         onChange={handleChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb", p:0 }}
-                        InputProps={{
-                          style: {
-                            borderRadius: '10px',
-                            background:"#fbfbfb"
-                          }
-                        }}
+                        sx={textFieldStyles}
                       />
                     </Grid>
 
                     <Grid item xs={12} sm={6}>
-                      <Grid container spacing={2} alignItems="center" sx={{ justifyContent: { xs: "left", sm: "right" } }}>
+                      <Grid 
+                        container 
+                        spacing={2} 
+                        alignItems="center" 
+                        sx={{ justifyContent: { xs: "left", sm: "right" } }}
+                      >
                         <Grid item>
                           <Avatar
-                            src={formData.profilePicture?.s3Url?.url || ""}
-                            // src={formData.profilePicture?.s3Url || ""}
+                            src={formData.profilePicture?.s3Url || ""}
                             alt="Profile"
                             sx={{ 
                               width: { xs: 48, sm: 56 }, 
@@ -326,8 +378,12 @@ export default function BusinessProfileForm() {
                             }}
                           >
                             Upload Picture
-                            {/* <input type="file" hidden onChange={handleFileChange} /> */}
-                            <input type="file" hidden accept='image/*' onChange={handleFileChange} />
+                            <input 
+                              type="file" 
+                              hidden 
+                              accept="image/*" 
+                              onChange={handleFileChange} 
+                            />
                           </Button>
                         </Grid>
                       </Grid>
@@ -341,28 +397,17 @@ export default function BusinessProfileForm() {
                         rows={{ xs: 3, lg: 2 }}
                         label="Share Your Business Story"
                         name="introduction"
-                        placeholder='Explain what makes your business unique...'
+                        placeholder="Explain what makes your business unique..."
                         value={formData.introduction}
                         onChange={handleChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
-                        InputProps={{
-                          style: {
-                            borderRadius: '10px',
-                            background:"#fbfbfb"
-                          }
-                        }}
+                        sx={textFieldStyles}
                       />
                     </Grid>
 
-                    <Grid container justifyContent="left" sx={{ my: { xs: 0.5, lg: 0.25 }, px: { xs: 1, sm: 2 } }}>
-                      <Grid item>
-                        <Typography variant="h6" sx={{ fontWeight: "bold", fontSize: { xs: '1rem', sm: '1.1rem', lg: '0.95rem' } }}>
-                          Location
-                        </Typography>
-                      </Grid>
-                    </Grid>
+                    {/* Location Section */}
+                    <SectionTitle>Location</SectionTitle>
 
-                    {/* google map */}
+                    {/* Google Map Component */}
                     <MapComponent 
                       onSelectLocation={handleLocationSelect} 
                       initialPosition={
@@ -379,13 +424,7 @@ export default function BusinessProfileForm() {
                         label="Shop No."
                         value={formData.shopName}
                         onChange={handleChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
-                        InputProps={{
-                          style: {
-                            borderRadius: '10px',
-                            background:"#fbfbfb"
-                          }
-                        }}
+                        sx={textFieldStyles}
                       />
                     </Grid>
 
@@ -397,13 +436,7 @@ export default function BusinessProfileForm() {
                         label="Street Address"
                         value={formData.streetAddress}
                         onChange={handleAddressChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
-                        InputProps={{
-                          style: {
-                            borderRadius: '10px',
-                            background:"#fbfbfb"
-                          }
-                        }}
+                        sx={textFieldStyles}
                       />
                     </Grid>
 
@@ -415,13 +448,7 @@ export default function BusinessProfileForm() {
                         label="City"
                         value={formData.city}
                         onChange={handleAddressChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
-                        InputProps={{
-                          style: {
-                            borderRadius: '10px',
-                            background:"#fbfbfb"
-                          }
-                        }}
+                        sx={textFieldStyles}
                       />
                     </Grid>
 
@@ -433,13 +460,7 @@ export default function BusinessProfileForm() {
                         label="State"
                         value={formData.state}
                         onChange={handleAddressChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
-                        InputProps={{
-                          style: {
-                            borderRadius: '10px',
-                            background:"#fbfbfb"
-                          }
-                        }}
+                        sx={textFieldStyles}
                       />
                     </Grid>
 
@@ -451,20 +472,13 @@ export default function BusinessProfileForm() {
                         label="Zip Code"
                         value={formData.zipCode}
                         onChange={handleChange}
-                        sx={{ borderRadius: "10px", borderColor:"#d9d9d9", background:"#fbfbfb" }}
-                        InputProps={{
-                          style: {
-                            borderRadius: '10px',
-                            background:"#fbfbfb"
-                          }
-                        }}
+                        sx={textFieldStyles}
                       />
                     </Grid>
 
-
-                    <Grid item xs={12} >
+                    {/* Navigation Buttons */}
+                    <Grid item xs={12}>
                       <Grid container sx={{ justifyContent: "space-between" }} spacing={1}>
-                        
                         <Grid item xs={6}>
                           <Button 
                             fullWidth

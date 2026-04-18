@@ -69,7 +69,7 @@ export default function FAQSection() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${constant.baseUrl}api/v1/FAQ/list/`, {
+      const response = await fetch(`${constant.baseUrl}/api/v1/FAQ/list/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

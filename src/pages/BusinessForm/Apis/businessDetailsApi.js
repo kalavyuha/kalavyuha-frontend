@@ -2,7 +2,7 @@ import { constant } from '../../../constant';
 
 export const createBusinessDetails = async (businessData) => {
   try {
-    const response = await fetch(`${constant.baseUrl}api/v1/BussinessDetails/create/`, {
+    const response = await fetch(`${constant.baseUrl}/api/v1/business-details/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

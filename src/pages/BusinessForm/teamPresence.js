@@ -327,7 +327,7 @@ export default function TeamPresence() {
         >
           <Grid container>
             {/* Left side */}
-            <Grid item xs={12} md={4} square>
+            <Grid item xs={12} md={4}>
               <LeftPanel
                 firstName={firstName}
                 lastName={lastName}

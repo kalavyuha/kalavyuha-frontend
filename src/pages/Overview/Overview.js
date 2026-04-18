@@ -42,7 +42,7 @@ const Overview = () => {
 
     const fetchPopularServices = async () => {
         try {
-            const result = await apiget(`${constant.baseUrl}api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&Category=Beauty&latitude=78.9897978&longitude=28.6767965&page=1`);
+            const result = await apiget(`${constant.baseUrl}/api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&Category=Beauty&latitude=78.9897978&longitude=28.6767965&page=1`);
             if (result && result.data?.Status === 200) {
                 setPopularServices(result?.data?.Data)
             }

@@ -2,7 +2,7 @@ import { constant } from '../../../constant';
 
 export const createStaff = async (staffData, authToken) => {
   try {
-    const response = await fetch(`${constant.baseUrl}api/v1/Staff/create`, {
+    const response = await fetch(`${constant.baseUrl}/api/v1/business-staff/`, {
       method: "POST",
       headers: { 
         "Authorization": `Bearer ${authToken}`,

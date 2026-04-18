@@ -43,7 +43,7 @@ export const uploadDocuments = async (businessId, files, authToken) => {
       throw new Error(`Total file size is too large (${(totalSize / 1024 / 1024).toFixed(2)}MB). Maximum allowed total size is 25MB.`);
     }
 
-    const response = await fetch(`${constant.baseUrl}api/v1/Documents/create/?BusinessId=${businessId}`, {
+    const response = await fetch(`${constant.baseUrl}/api/v1/business-documents/upload`, {
       method: 'POST',
       headers: { 
         "Authorization": `Bearer ${authToken}` 

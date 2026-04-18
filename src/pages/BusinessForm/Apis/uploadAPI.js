@@ -22,10 +22,9 @@ export const uploadImages = async (files, token) => {
       throw new Error(`Total file size is too large (${(totalSize / 1024 / 1024).toFixed(2)}MB). Maximum allowed total size is 25MB.`);
     }
 
-    const response = await axios.post(`${constant.baseUrl}api/v1/files/upload/images/`, formData, {
+    const response = await axios.post(`${constant.baseUrl}/api/v1/files/upload/`, formData, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        // Don't set Content-Type - let axios set it with boundary for multipart/form-data
       },
       timeout: 60000, // 60 seconds timeout
       maxContentLength: 50 * 1024 * 1024, // 50MB max content length

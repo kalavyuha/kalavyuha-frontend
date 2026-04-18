@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Property Images</title>
+</head>
+<body>
+
+    <h2>Upload Property Media</h2>
+
+    <form id="uploadForm">
+        <div>
+            <label>Property ID:</label><br/>
+            <input type="text" id="property_id" required />
+        </div>
+        <br/>
+
+        <div>
+            <label>Media Type:</label><br/>
+            <input type="text" id="media_type" value="image" required />
+        </div>
+        <br/>
+
+        <div>
+            <label>Is Primary:</label>
+            <input type="checkbox" id="is_primary" />
+        </div>
+        <br/>
+
+        <div>
+            <label>Select Images:</label><br/>
+            <input type="file" id="files" multiple accept="image/*" required />
+        </div>
+        <br/>
+
+        <button type="submit">Upload</button>
+    </form>
+
+    <h3>Response:</h3>
+    <pre id="responseBox"></pre>
+
+<script>
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const propertyId = document.getElementById("property_id").value;
+    const mediaType = document.getElementById("media_type").value;
+    const isPrimary = document.getElementById("is_primary").checked;
+    const files = document.getElementById("files").files;
+
+    const token = prompt("Enter Bearer Token:");
+
+    const formData = new FormData();
+    formData.append("property_id", propertyId);
+    formData.append("media_type", mediaType);
+    formData.append("is_primary", isPrimary);
+
+    for (let i = 0; i < files.length; i++) {
+        formData.append("file", files[i]);  // Important: key must be 'file'
+    }
+
+    try {
+        const response = await fetch(
+            "http://localhost:8000/api/v1/media/property/upload",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token
+                },
+                body: formData
+            }
+        );
+
+        const result = await response.json();
+        document.getElementById("responseBox").textContent =
+            JSON.stringify(result, null, 2);
+
+    } catch (error) {
+        document.getElementById("responseBox").textContent =
+            "Error: " + error.message;
+    }
+});
+</script>
+
+</body>
+</html>

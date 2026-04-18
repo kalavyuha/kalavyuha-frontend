@@ -257,6 +257,7 @@ const TermsConditions = () => {
                         primary={
                           <Typography
                             variant="body1"
+                            component="div"
                             sx={{
                               color: '#2d3748',
                               lineHeight: 1.6,

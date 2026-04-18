@@ -168,7 +168,7 @@ export default function CreateBusniessAccount() {
   };
 
   useEffect(() => {
-    const savedData = localStorage.getItem("formData");
+    const savedData = localStorage.getItem("accountData");
     if (savedData) {
       setFormData(JSON.parse(savedData));
     }
@@ -207,7 +207,7 @@ export default function CreateBusniessAccount() {
           ...prevData,
           [name]: limitedValue,
         };
-        localStorage.setItem("formData", JSON.stringify(updatedData));
+        localStorage.setItem("accountData", JSON.stringify(updatedData));
         return updatedData;
       });
       return;
@@ -218,7 +218,7 @@ export default function CreateBusniessAccount() {
         ...prevData,
         [name]: name === "agreeTerms" ? checked : value,
       };
-      localStorage.setItem("formData", JSON.stringify(updatedData));
+      localStorage.setItem("accountData", JSON.stringify(updatedData));
       return updatedData;
     });
   };
@@ -259,13 +259,13 @@ export default function CreateBusniessAccount() {
 
     try {
       const response = await fetch(
-        `${constant.baseUrl}api/v1/otp/send`,
+        `${constant.baseUrl}/api/v1/otp/send`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            PhoneNumber: `${formData.countryCode}${formData.phone}`,
-            UserType: "Merchant",
+            phone_number: `${formData.countryCode}${formData.phone}`,
+            user_type: "merchant",
           }),
         }
       );
@@ -273,13 +273,27 @@ export default function CreateBusniessAccount() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || data.Message || "OTP failed");
+        throw new Error(data.detail || data.message || "OTP failed");
+      }
+
+      if (data?.data?.user_exists) {
+        setApiError("User already exists. Please login.");
+        
+        setTimeout(() => {
+          navigate("/business/login", {
+            state: {
+              phone: `${formData.countryCode}${formData.phone}`
+            }
+          });
+        }, 2000);
+
+        return;
       }
 
       navigate("/business/otp-verification", {
         state: {
           ...formData,
-          expiresIn: data.Data.ExpiresInSeconds,
+          expiresIn: data.data.expires_in_seconds,
         },
       });
 
@@ -655,7 +669,7 @@ export default function CreateBusniessAccount() {
                       >
                         Already have an account?&nbsp;
                         <Link
-                          href="/kalavyuha-frontend/login-business"
+                          href="/kalavyuha-frontend/business/login"
                           underline="always"
                           sx={{
                             color: "#1b4d69",

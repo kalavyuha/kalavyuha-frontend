@@ -149,7 +149,7 @@ export default function BusinessServiceInfo() {
         >
           <Grid container>
             {/* Left */}
-            <Grid item xs={12} md={4} square>
+            <Grid item xs={12} md={4}>
               <LeftPanel
                 firstName={firstName}
                 lastName={lastName}
@@ -235,14 +235,14 @@ export default function BusinessServiceInfo() {
                 />
 
                 <Box sx={{ 
-                  mt: 2, 
+                  
                   maxWidth: 600, 
                   width: "100%", 
                   mx: { xs: 1, sm: 2, md: 3 },
                   px: { xs: 0.5, sm: 1, md: 1.5 },
                   overflow: "hidden",
                 }}>
-                  <Grid item xs={12} sx={{ mt: 2 }}>
+                  <Grid item xs={12} >
                     <Grid
                       container
                       sx={{ justifyContent: "space-between" }}

@@ -69,7 +69,7 @@ const ForgotPassword = ({ onBack }) => {
     setLoading(true);
     setOtpError("");
     try {
-      const res = await fetch(`${constant.baseUrl}api/v1/otp/send`, {
+      const res = await fetch(`${constant.baseUrl}/api/v1/otp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -91,7 +91,7 @@ const ForgotPassword = ({ onBack }) => {
     setLoading(true);
     setOtpError("");
     try {
-      const res = await fetch(`${constant.baseUrl}api/v1/otp/verify`, {
+      const res = await fetch(`${constant.baseUrl}/api/v1/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -116,7 +116,7 @@ const ForgotPassword = ({ onBack }) => {
     setOtpError("");
     try {
       const res = await fetch(
-        `${constant.baseUrl}api/v1/BussinessMember/update/${userId}`,
+        `${constant.baseUrl}/api/v1/BussinessMember/update/${userId}`,
         {
           method: "PATCH",
           headers: {

@@ -29,7 +29,7 @@ const ServicesRecommendations = ({ category = "Beauty" }) => {
         const longitude = localStorage.getItem("longitude");
 
         const response = await fetch(
-          `${constant.baseUrl}api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=${latitude}&longitude=${longitude}&page=1`,
+          `${constant.baseUrl}/api/v1/Service/popularServiceAndBusinesses/?search_for=Businesses&category=${category}&latitude=${latitude}&longitude=${longitude}&page=1`,
           {
             headers: {
               Authorization: "Bearer VIRoHdqUAtpklgKg",

@@ -77,19 +77,21 @@ export default function OTPVerification() {
   const handleVerifyOTP = async () => {
     setIsLoading(true);
     setMessage("");
+
     const enteredOtp = otpValue.join("");
-    console.log(previousData.state.phone)
-    console.log(previousData.state)
+
     try {
       const verifyResponse = await fetch(
-        `${constant.baseUrl}api/v1/otp/verify`,
+        `${constant.baseUrl}/api/v1/otp/verify`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            PhoneNumber: `${previousData.state.countryCode}${previousData.state.phone}`,
-            OTP: enteredOtp,
-            UserType: "Merchant",
+            phone_number: `${previousData.state.countryCode}${previousData.state.phone}`,
+            otp: enteredOtp,
+            user_type: "merchant",
+            email: previousData.state.email || null,
+            password: previousData.state.password || null,
           }),
         }
       );
@@ -97,40 +99,57 @@ export default function OTPVerification() {
       const verifyData = await verifyResponse.json();
 
       if (!verifyResponse.ok) {
-        throw new Error(verifyData.detail || "Invalid OTP");
+        throw new Error(verifyData.detail || verifyData.message || "Invalid OTP");
       }
 
-      const { firstName, lastName, email, countryCode, phone, password } = previousData.state;
+      console.log(verifyData.data)
+      const token = verifyData?.data?.token;
 
-      const memberResponse = await fetch(`${constant.baseUrl}api/v1/business-member/create`, {
+      if (!token) {
+        throw new Error("Authentication failed. Token not received.");
+      }
+
+      // save token
+      localStorage.setItem("authToken", token);
+
+      const { firstName, lastName } = previousData.state;
+
+      // create business member
+      const memberResponse = await fetch(
+        `${constant.baseUrl}/api/v1/business-member/`,
+        {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
           body: JSON.stringify({
-            FirstName: firstName,
-            LastName: lastName,
-            Email: email || null,
-            PhoneNumber: `${countryCode}${phone}`,
-            Password: password,
-            IsAgree: true,
+            first_name: firstName,
+            last_name: lastName,
+            business_phone_number: `${previousData.state.countryCode}${previousData.state.phone}`,
+            business_email: previousData.state.email,
+            is_agree: true,
           }),
-        });
+        }
+      );
 
       const memberData = await memberResponse.json();
-            
-      const Token = memberData.Data.Token;
-      localStorage.setItem("authToken", Token);
 
-      if (!memberResponse.ok || memberData.Status !== 200) {
-        throw new Error(memberData.Message || "Account creation failed");
+      if (!memberResponse.ok || memberData.status !== 200) {
+        throw new Error(memberData.message || "Account creation failed");
       }
 
+      // save business member ID
+      localStorage.setItem(
+        "businessMemberID",
+        memberData?.data?.id
+      );
+
       setMessage("Account created successfully!");
+
       setTimeout(() => {
         navigate("/business/role-selection", {
-          state: {
-            ...previousData.state,
-            MerchantAccountID: memberData.Data.BusinessMemberId,
-          },
+          state: { ...previousData.state },
         });
       }, 1500);
 
@@ -150,13 +169,14 @@ export default function OTPVerification() {
 
     try {
       const response = await fetch(
-        `${constant.baseUrl}api/v1/otp/send`,
+        `${constant.baseUrl}/api/v1/otp/send`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            PhoneNumber: `${countryCode}${previousData.state.phone}`,
-            UserType: "Merchant",
+            phone_number: `${countryCode}${previousData.state.phone}`,
+            user_type: "merchant",
+            reset:true,
           }),
         }
       );
@@ -197,7 +217,7 @@ export default function OTPVerification() {
         >
           <Grid container>
             {/* Left side  */}
-            <Grid item xs={12} md={4} square>
+            <Grid item xs={12} md={4}>
               <LeftPanel
                 firstName={firstName}
                 lastName={lastName}

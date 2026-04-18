@@ -102,7 +102,7 @@ const LoginSection = ({ onForgotPassword }) => {
     try {
       const formattedPhone = phone.replace(/\s/g, "");
       const response = await fetch(
-        `${constant.baseUrl}api/v1/BussinessMember/member/login/`,
+        `${constant.baseUrl}/api/v1/BussinessMember/member/login/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
