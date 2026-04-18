@@ -10,7 +10,7 @@ import { constant } from "../../../constant";
  */
 export const createBusinessHours = async (businessHoursData, authToken) => {
   try {
-    const response = await fetch(`${constant.baseUrl}api/v1/BussinessHours/create`, {
+    const response = await fetch(`${constant.baseUrl}/api/v1/business-hours/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

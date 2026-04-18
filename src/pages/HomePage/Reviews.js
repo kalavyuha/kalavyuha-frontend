@@ -103,7 +103,7 @@ const GoogleImage = styled('img')({
     setError(null);
     try {
       const response = await fetch(
-        `${constant.baseUrl}api/v1/Reviews/get/?businessId=${businessId}&customerId=${customerId}`,
+        `${constant.baseUrl}/api/v1/Reviews/get/?businessId=${businessId}&customerId=${customerId}`,
         {
           method: 'GET',
           headers: {

@@ -20,7 +20,6 @@ const CustomButton = ({ children, startIcon, endIcon, onClick }) => (
       justifyContent: 'space-between',
       '&:hover': {
         backgroundColor: 'rgba(27, 77, 105, 0.1)',
-        // borderColor: '#1b4d69',
         outline: '2px solid #1b4d69',
       },
     }}

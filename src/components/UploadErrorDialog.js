@@ -105,7 +105,7 @@ const UploadErrorDialog = ({
 
       <DialogContent>
         <Alert severity={getSeverity()} sx={{ mb: 2 }}>
-          <Typography variant="body1">
+          <Typography variant="body1" component="div">
             {message}
           </Typography>
         </Alert>

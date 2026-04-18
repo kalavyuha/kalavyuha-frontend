@@ -707,7 +707,7 @@ const Services = ({ services, buisness_Id, loading, staffData, businessInfo }) =
               variant="outlined"
               onClick={handleSeeMore}
               sx={{
-                borderColor: '2px solid #1b4d69',
+                border: '2px solid #1b4d69',
                 color: '#1b4d69',
                 '&:hover': {
                   backgroundColor: '#1b4d69',

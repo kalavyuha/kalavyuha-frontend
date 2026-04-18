@@ -264,8 +264,9 @@ export default function FormWithDocumentUpload({ setFileListParent, initialFiles
               onMouseEnter={() => setHighlightedSection(doc.name)}
               onMouseLeave={() => setHighlightedSection(null)}
               style={{
+                borderWidth: "2px",
+                borderStyle: "dashed",
                 borderColor: highlightedSection === doc.name ? "#8eabbb" : "#e2e6ea",
-                border: "2px dashed",
                 borderRadius: "6px",
               }}
             >

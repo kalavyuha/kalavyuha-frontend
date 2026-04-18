@@ -88,7 +88,6 @@ export default function BusinessRoleSelection() {
     try {
       const formData = {
         ...previousData,
-        MerchantAccountID: merchantAccountID,
         businessRole: selected,
         isSignIn: true,
         businessInfoCompleted: false,
@@ -115,7 +114,7 @@ export default function BusinessRoleSelection() {
         <Container maxWidth={false} disableGutters sx={{ display: 'flex', flexGrow: 1 }}>
           <Grid container>
             {/* Left */}
-            <Grid item xs={12} md={4}  square>
+            <Grid item xs={12} md={4}>
 
                 <LeftPanel
                   firstName={previousData.firstName}

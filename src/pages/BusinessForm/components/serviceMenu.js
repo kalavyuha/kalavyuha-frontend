@@ -414,61 +414,40 @@ const ServiceFormBox = ({
     setCategories(updatedCategories);
   };
 
-  const renderStaffNames = (staff) => {
-    const maxStaffLength = 15;
-    const staffString = staff.join(", ");
-    if (staff.length === 0) {
-      return "Assign Staff";
-    }
-    return staffString.length > maxStaffLength
-      ? `${staffString.slice(0, maxStaffLength)}...`
-      : staffString;
-  };
-
   return (
     <Box sx={{ width: "100%", maxWidth: "100%" }}>
-      {/* Informational Header */}
-      {/* <Box sx={{ 
-        mb: 2, 
-        p: 2, 
-        backgroundColor: '#f8f9fa', 
-        borderRadius: '8px', 
-        border: '1px solid #e9ecef' 
-      }}>
-        <Typography variant="h6" sx={{ 
-          fontWeight: 'bold', 
-          color: '#1b4d69', 
-          mb: 1,
-          fontSize: { xs: '1rem', sm: '1.1rem' }
-        }}>
-          Service Categories & Management
-        </Typography>
-        <Typography variant="body2" sx={{ 
-          color: '#6c757d', 
-          fontSize: { xs: '0.875rem', sm: '0.9rem' },
-          lineHeight: 1.4
-        }}>
-          Organize your services into categories (e.g., "Hair", "Massage"). 
-          Each category can contain multiple services with their own details, pricing, and staff assignments.
-        </Typography>
-      </Box> */}
-
       <Box
         sx={{
-          height: { xs: "450px", sm: "450px", md: "450px" }, // Fixed height instead of maxHeight
+          height: { xs: "320px", sm: "320px", md: "320px" },
           overflowY: "auto",
           overflowX: "hidden",
-          width: "100%",
+          width: "98%",
           maxWidth: "100%",
           mb: { xs: 1, sm: 2 },
-          scrollbarWidth: "none",
-          "&::-webkit-scrollbar": { display: "none" },
+          pr: 2,
           wordWrap: "break-word",
           wordBreak: "break-word",
           contain: "layout style paint",
           contentVisibility: "auto",
           willChange: "scroll-position",
-
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "rgba(0, 0, 0, 0.04)",
+            borderRadius: "10px",
+            marginBlock: "4px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "rgba(27, 77, 105, 0.5)",
+            borderRadius: "10px",
+            "&:hover": {
+              backgroundColor: "rgba(27, 77, 105, 0.7)",
+            },
+          },
+          // Firefox scrollbar styling
+          scrollbarWidth: "thin",
+          scrollbarColor: "rgba(27, 77, 105, 0.5) rgba(0, 0, 0, 0.04)",
         }}
       >
         {categories.map((category, categoryIndex) => (
@@ -1582,7 +1561,7 @@ const ServiceFormBox = ({
           display: "flex",
           gap: { xs: 1, sm: 1.5, md: 2 },
           mt: { xs: 2, sm: 3 },
-          p: { xs: 1.5, sm: 2, md: 2.5 },
+          p: { xs: 1, sm: 1, md: 1.5 },
           backgroundColor: "#f8f9fa",
           borderRadius: "12px",
           border: "2px dashed #dee2e6",
@@ -1603,73 +1582,73 @@ const ServiceFormBox = ({
               width: "100%",
               fontWeight: "bold",
               color: "#1b4d69",
-              mb: 1,
               fontSize: { xs: "0.875rem", sm: "0.9rem" },
             }}
           >
             Add New Category
           </Typography>
-            <Box sx={{ flex: 1, display: "flex", gap: 1, width: "100%", flexDirection: { xs: "column", sm: "row" } }}>
-          <TextField
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-            placeholder="Enter Category Name"
-            size="small"
-            fullWidth
-            sx={{
-              "& .MuiInputBase-root": {
-                borderRadius: "8px",
-                fontSize: { xs: "14px", sm: "15px" },
-                backgroundColor: "#fff",
-                "&:hover": {
-                  borderColor: "#1b4d69",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                fontSize: { xs: "14px", sm: "15px" },
-              },
-              "& .MuiInputBase-input": {
-                wordWrap: "break-word",
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-              },
-            }}
-          />
+
+          <Box sx={{ flex: 1, display: "flex", gap: 1, width: "100%", flexDirection: { xs: "column", sm: "row" } }}>
+              <TextField
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Enter Category Name"
+                size="small"
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    borderRadius: "8px",
+                    fontSize: { xs: "14px", sm: "15px" },
+                    backgroundColor: "#fff",
+                    "&:hover": {
+                      borderColor: "#1b4d69",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: { xs: "14px", sm: "15px" },
+                  },
+                  "& .MuiInputBase-input": {
+                    wordWrap: "break-word",
+                    wordBreak: "break-word",
+                    whiteSpace: "normal",
+                  },
+                }}
+              />
      
 
-        <Button
-          variant="contained"
-          onClick={handleAddNewCategory}
-          disabled={!newCategoryName.trim()}
-          sx={{
-            textTransform: "none",
-            background: "#1b4d69",
-            color: "#fff",
-            fontSize: { xs: "14px", sm: "15px" },
-            px: { xs: 2, sm: 3 },
-            py: { xs: 1.75, sm: 1.75 },
-            borderRadius: "8px",
-            minWidth: { xs: "100%", sm: "140px" },
-            maxWidth: { xs: "100%", sm: "auto" },
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            height: "40px",
-            "&:hover": {
-              background: "#0d3a52",
-              transform: "translateY(-1px)",
-              boxShadow: "0 4px 8px rgba(27, 77, 105, 0.3)",
-            },
-            "&:disabled": {
-              background: "#e9ecef",
-              color: "#6c757d",
-              cursor: "not-allowed",
-            },
-          }}
-        >
-          <b>Add Category</b>
-        </Button>
-           </Box>
+              <Button
+                variant="contained"
+                onClick={handleAddNewCategory}
+                disabled={!newCategoryName.trim()}
+                sx={{
+                  textTransform: "none",
+                  background: "#1b4d69",
+                  color: "#fff",
+                  fontSize: { xs: "14px", sm: "15px" },
+                  px: { xs: 2, sm: 3 },
+                  py: { xs: 1.75, sm: 1.75 },
+                  borderRadius: "8px",
+                  minWidth: { xs: "100%", sm: "140px" },
+                  maxWidth: { xs: "100%", sm: "auto" },
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  height: "40px",
+                  "&:hover": {
+                    background: "#0d3a52",
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 8px rgba(27, 77, 105, 0.3)",
+                  },
+                  "&:disabled": {
+                    background: "#e9ecef",
+                    color: "#6c757d",
+                    cursor: "not-allowed",
+                  },
+                }}
+              >
+                <b>Add Category</b>
+              </Button>
+          </Box>
       </Box>
     </Box>
   );

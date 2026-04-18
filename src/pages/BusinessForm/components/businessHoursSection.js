@@ -182,13 +182,14 @@ const BusinessHours = () => {
         <Box
           sx={{
             width: { xs: "300px ", sm: "480px" },
+            height:'35rem',
             borderRadius: 2,
             mt: 3,
             display: "flex",
             flexDirection: "column",
+            justifyContent: "center",
             alignItems: "center",
             gap: 2,
-            // bgcolor: "red",
           }}
         >
           {/* ----------------SCHEDULE---------------- */}

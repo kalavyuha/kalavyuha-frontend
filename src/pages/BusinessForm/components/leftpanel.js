@@ -201,36 +201,41 @@ const LeftPanel = ({
       >
         {(isSignIn || businessRoleForm) && (
           <>
-            <Typography variant="h6" sx={{ mt: 2, fontWeight: "bold" }}>
+            <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
               Profile Completion
             </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                width: "100%",
-                height: 10,
-                borderRadius: 5,
-                backgroundColor: "#d3d3d3",
-                "& .MuiLinearProgress-bar": { backgroundColor: "#1b4d69" },
-              }}
-            />
-            <Typography sx={{ mt: 1, fontSize: 12, fontWeight: "bold" }}>
-              {Math.round(progress)}% Completed
-            </Typography>
+
+            {/* Flex wrapper */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: "bold", whiteSpace: "nowrap" }}>
+                {Math.round(progress)}%
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={progress}
+                sx={{
+                  flex: 1, 
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: "#d3d3d3",
+                  "& .MuiLinearProgress-bar": { backgroundColor: "#1b4d69" },
+                }}
+              />
+
+            </Box>
           </>
         )}
       </Box>
 
-      <Box sx={{ maxHeight: "47vh", overflow: "hidden", width: "100%" }}>
+      <Box sx={{ maxHeight: "67vh", mt: 2, overflow: "hidden", width: "100%" }}>
         <Box
           ref={scrollContainerRef}
           sx={{
             overflowY: "auto",
             padding: "4px 24px 4px 0",
-            maxHeight: "45vh",
+            maxHeight: "60vh",
             transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out",
-            maxHeight: !isMobile || isExpanded ? "45vh" : "0vh",
+            maxHeight: !isMobile || isExpanded ? "60vh" : "0vh",
             opacity: !isMobile || isExpanded ? 1 : 0,
             "&::-webkit-scrollbar": {
               width: "6px",
@@ -278,7 +283,7 @@ const LeftPanel = ({
               <>
                 <Typography
                   variant="h6"
-                  sx={{ mb: 0, mt: 2, fontWeight: "bold" }}
+                  sx={{ mb: 0, fontWeight: "bold" }}
                 >
                   Your Details
                 </Typography>
@@ -319,7 +324,7 @@ const LeftPanel = ({
               <>
                 <Typography
                   variant="h6"
-                  sx={{ mb: 0, mt: 2, fontWeight: "bold" }}
+                  sx={{ mb: 0, fontWeight: "bold" }}
                 >
                   Business Category
                 </Typography>
@@ -358,7 +363,7 @@ const LeftPanel = ({
               <>
                 <Typography
                   variant="h6"
-                  sx={{ mb: 0, mt: 2, fontWeight: "bold" }}
+                  sx={{ mb: 0, fontWeight: "bold" }}
                 >
                   Business Introduction
                 </Typography>
@@ -402,7 +407,7 @@ const LeftPanel = ({
               <>
                 <Typography
                   variant="h6"
-                  sx={{ mb: 0, mt: 2, fontWeight: "bold" }}
+                  sx={{ mb: 0, fontWeight: "bold" }}
                 >
                   Staff Presence
                 </Typography>
@@ -472,20 +477,19 @@ const LeftPanel = ({
                 <>
                   <Typography
                     variant="h6"
-                    sx={{ mb: 0, mt: 2, fontWeight: "bold" }}
+                    sx={{ fontWeight: "bold" }}
                   >
                     Services
                   </Typography>
 
                   <Box
                     sx={{
-                      mb: 2,
                       ml: 1.5,
                       fontSize: 12,
                       wordBreak: "break-word",
                       overflowWrap: "break-word",
-                      maxHeight: "300px",
-                      overflowY: "auto",
+                      // maxHeight: "300px",
+                      // overflowY: "auto",
                       "&::-webkit-scrollbar": {
                         width: "4px",
                       },
@@ -514,9 +518,8 @@ const LeftPanel = ({
                           {/* Category Header */}
                           <div
                             style={{
-                              padding: "2px 2px",
                               borderRadius: "4px",
-                              marginBottom: "1px",
+                              marginBottom: "4px",
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
@@ -558,7 +561,6 @@ const LeftPanel = ({
                                     listStyleType: "none",
                                     paddingLeft: "12px",
                                     marginTop: "2px",
-                                    marginBottom: "8px",
                                   }}
                                 >
                                   {category.services.map(
@@ -566,11 +568,9 @@ const LeftPanel = ({
                                       <li
                                         key={service.id}
                                         style={{
-                                          marginBottom: "10px",
-                                          paddingBottom: "8px",
+                                          paddingBottom: "0px",
                                           padding: "18px",
                                           borderRadius: "4px",
-                                          marginTop: "0px",
                                         }}
                                       >
                                         <b
@@ -652,7 +652,7 @@ const LeftPanel = ({
               <>
                 <Typography
                   variant="h6"
-                  sx={{ mb: 0, mt: 2, fontWeight: "bold" }}
+                  sx={{ fontWeight: "bold" }}
                 >
                   Business Hours
                 </Typography>
@@ -730,4 +730,4 @@ const LeftPanel = ({
   );
 };
 
-export default LeftPanel;
+export default React.memo(LeftPanel);

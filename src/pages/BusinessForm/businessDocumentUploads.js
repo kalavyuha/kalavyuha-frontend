@@ -1,4 +1,3 @@
-// Business Hours Upload - Single API Call for all days is handled HERE in businessDocumentUploads.js via createBusinessHours from businessHoursApi.js
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -15,13 +14,8 @@ import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DocumentUpload from "../../components/documentUploads";
 import LeftPanel from "./components/leftpanel";
-import { createBusinessDetails } from "./Apis/businessDetailsApi.js";
-import { createStaff } from "./Apis/staffApi.js";
-import { createServices } from "./Apis/servicesApi.js";
-import { uploadDocuments } from "./Apis/documentsApi.js";
-import { createBusinessHours } from "./Apis/businessHoursApi.js";
-import UploadErrorHandler from "../../utils/uploadErrorHandler";
 import UploadErrorDialog from "../../components/UploadErrorDialog";
+import { createBusinessFlow } from "../../Services/businessForm/orchestrators/createBusinessFlow.js";
 
 const theme = createTheme({
   palette: {
@@ -35,8 +29,7 @@ const theme = createTheme({
 });
 
 export default function BusinessDocumentUploads() {
-  const authToken = "VIRoHdqUAtpklgKg";
-
+  const authToken = localStorage.getItem("authToken");
   const location = useLocation();
   const storedData = localStorage.getItem("formData");
   const previousData =
@@ -49,7 +42,9 @@ export default function BusinessDocumentUploads() {
   });
 
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
   const [uploadStage, setUploadStage] = useState("");
   const [errorDialog, setErrorDialog] = useState({ open: false, error: null });
 
@@ -80,491 +75,24 @@ export default function BusinessDocumentUploads() {
   // backend integration
   const handleSubmit = async () => {
     try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      setUploadStage("Initializing upload...");
+      setLoading(true);
 
-      // Validate auth token
-      if (!authToken) {
-        throw new Error("Auth token is missing");
-      }
-
-      const requiredDocuments = [
-        "Pan Card (Owner)",
-        "GST Certificate",
-        "Utility Bills",
-      ];
-      // -----------------------------
-      const missingDocuments = requiredDocuments.filter((doc) => {
-        return !fileList[doc] || fileList[doc].length === 0;
-      });
-
-      if (missingDocuments.length > 0) {
-        throw new Error(`Please upload all required documents: ${missingDocuments.join(", ")}`);
-      }
-      // Progress update
-      setUploadProgress(5);
-      setUploadStage("Creating business profile...");
-
-      // 1. Submit busniessDetails
-      const businessPayload = {
-        BussinessUserId: Number(previousData.MerchantAccountID),
-        BussinessType: previousData.businessRole,
-        BusinessName: previousData.formData.businessName,
-        ProfileImage: previousData.formData.profilePicture?.s3Url?.url || null,
-        Introduction: previousData.formData.introduction ?? null,
-        ShopNumber: previousData.formData.shopNumber ?? null,
-        StreetAddress: previousData.formData.streetAddress,
-        City: previousData.formData.city,
-        State: previousData.formData.state,
-        ZipCode: previousData.formData.zipCode,
-        Country: previousData.formData.country,
-        Latitude: parseFloat(previousData.formData.adrsLatitude) || 0.0,
-        Longitude: parseFloat(previousData.formData.adrsLongitude) || 0.0,
-        LikesCount: 0,
-        website: previousData.formData.website ?? null,
-        VisitCount: 310,
-        OpeningTime: previousData.formData.openingTime ?? "00:00",
-        ClosingTime: previousData.formData.closingTime ?? "00:00",
-        TotalStaff:
-          Number(previousData.teamSize) ||
-          previousData.teamMembers?.length ||
-          1,
-        CreatedBy: 1,
-        UpdatedBy: 1,
-      };
-
-      // Validate required fields
-      const requiredFields = [
-        "BussinessUserId",
-        "BussinessType",
-        "BusinessName",
-        "StreetAddress",
-        "ZipCode",
-        "TotalStaff",
-      ];
-      const missingFields = requiredFields.filter(
-        (field) => !businessPayload[field]
+      const id = await createBusinessFlow(
+        previousData,
+        fileList,
+        authToken,
+        (p, stage) => {
+          setUploadProgress(p);
+          setUploadStage(stage);
+        }
       );
 
-      if (missingFields.length > 0) {
-        throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
-      }
+      navigate("/kalavyuha-frontend");
 
-      // Additional validation for specific fields
-      if (
-        isNaN(businessPayload.BussinessUserId) ||
-        businessPayload.BussinessUserId <= 0
-      ) {
-        throw new Error("Invalid BussinessUserId (MerchantAccountID)");
-      }
-
-      if (
-        isNaN(businessPayload.TotalStaff) ||
-        businessPayload.TotalStaff <= 0
-      ) {
-        throw new Error("Invalid TotalStaff count");
-      }
-
-      if (isNaN(businessPayload.Latitude) || isNaN(businessPayload.Longitude)) {
-        throw new Error("Invalid latitude or longitude coordinates");
-      }
-
-      const businessData = await createBusinessDetails(businessPayload);
-
-      // Progress update
-      setUploadProgress(20);
-      setUploadStage("Processing business details...");
-
-      // Handle large integer IDs properly
-      const businessId = businessData.Data?._id;
-
-      if (!businessId) {
-        throw new Error("No business ID returned from business creation");
-      }
-
-      // Convert to number carefully for large integers
-      const businessIdNum =
-        typeof businessId === "string"
-          ? parseInt(businessId)
-          : Number(businessId);
-
-      if (isNaN(businessIdNum)) {
-        throw new Error("Invalid business ID returned from business creation");
-      }
-
-      // Progress update
-      setUploadProgress(30);
-      setUploadStage("Adding team members...");
-
-      // 2. Submit Staff Data
-      if (previousData.teamMembers && previousData.teamMembers.length > 0) {
-        const staffPayload = previousData.teamMembers.map((member, index) => {
-          // Convert role to string safely
-          let roleString = "General";
-          if (Array.isArray(member.role)) {
-            roleString = member.role.join(", ");
-          } else if (typeof member.role === "string") {
-            roleString = member.role;
-          } else if (member.role && typeof member.role === "object") {
-            if (member.role.value) {
-              roleString = member.role.value;
-            } else if (member.role.label) {
-              roleString = member.role.label;
-            } else {
-              roleString = JSON.stringify(member.role);
-            }
-          }
-
-          return {
-            BussinessId: String(businessIdNum), // Send as string to avoid precision issues
-            StaffName: member.name || "Unknown",
-            StaffNumber: Number(member.id) || index + 1, 
-            Gender: member.gender || "Other",
-            Experience: String(member.experience) || "0",
-            Specialization: roleString,
-            Role: roleString,
-            ProfileImage: member.profileImage?.url || null,
-          };
-        });
-
-        try {
-          const staffData = await createStaff(staffPayload, authToken);
-
-          // Progress update
-          setUploadProgress(45);
-          setUploadStage("Staff added successfully...");
-        } catch (error) {
-          throw new Error(`Staff creation failed: ${error.message}`);
-        }
-      }
-
-      // Progress update
-      setUploadProgress(50);
-      setUploadStage("Setting up services...");
-
-      // 3. Submit Services
-      const staffMap = new Map(
-        previousData.teamMembers.map((member) => [
-          member.name,
-          Number(member.id),
-        ])
-      );
-
-        const formatDuration = (duration, type) => {
-        const suffixMap = {
-          days: "d",
-          hours: "h",
-          minutes: "m",
-          months: "mo",
-        };
-
-        if (!duration || isNaN(duration)) {
-          return "0m";
-        }
-
-        return suffixMap[type]
-          ? `${duration}${suffixMap[type]}`
-          : `${duration}m`;
-      };      const prepareServicePayload = (
-        servicesData,
-        businessId,
-        staffMap,
-        createdBy
-      ) => {
-        return {
-          BussinessId: businessIdNum,
-          CreatedBy: createdBy,
-          Categories: servicesData.map((category) => ({
-            Id: category.id || null,
-            Name: category.name,
-            Expanded: category.expanded ?? true,
-            Services: category.services.map((service) => {
-              const imageUrl =
-                service.image?.s3Url?.url || service.imageUrl || null;
-
-              return {
-                Name: service.name.trim(),
-                Description: service.description || "",
-                Price: parseFloat(service.price) || 0,
-                Duration: formatDuration(
-                  service.duration,
-                  service.durationType
-                ),
-                DurationType: service.durationType || "mints",
-                BookingCount: 0, // Add the missing BookingCount field
-                Staff: service.staff
-                  .map((staffName) => staffMap.get(staffName))
-                  .filter(Boolean),
-                Image: imageUrl,
-                Uploaded: service.uploaded || false,
-                IsDiscount: service.isDiscount || false,
-                DiscountProvider: service.DiscountProvider || null,
-                DiscountPercentage: service.DiscountPercentage || null,
-              };
-            }),
-          })),
-        };
-      };
-
-      try {
-        // Validate services data before sending
-        if (!previousData.services || !Array.isArray(previousData.services)) {
-          throw new Error("Services data is missing or invalid");
-        }
-
-        if (previousData.services.length === 0) {
-          throw new Error("No services data found");
-        }
-
-        // Check if services have required fields
-        const invalidServices = [];
-        previousData.services.forEach((category, categoryIndex) => {
-          if (!category.name) {
-            invalidServices.push(`Category ${categoryIndex + 1}: missing name`);
-          }
-          if (!category.services || !Array.isArray(category.services)) {
-            invalidServices.push(
-              `Category ${categoryIndex + 1}: missing or invalid services array`
-            );
-          } else {
-            category.services.forEach((service, serviceIndex) => {
-              if (!service.name) {
-                invalidServices.push(
-                  `Category ${categoryIndex + 1}, Service ${
-                    serviceIndex + 1
-                  }: missing name`
-                );
-              }
-            });
-          }
-        });
-
-        if (invalidServices.length > 0) {
-          throw new Error(
-            `Invalid services data: ${invalidServices.join(", ")}`
-          );
-        }
-
-        const servicePayload = prepareServicePayload(
-          previousData.services,
-          businessIdNum,
-          staffMap,
-          458
-        );
-
-        // Additional validation for the prepared payload
-        if (!servicePayload.BussinessId || isNaN(servicePayload.BussinessId)) {
-          throw new Error("Invalid BussinessId in service payload");
-        }
-
-        if (
-          !servicePayload.Categories ||
-          !Array.isArray(servicePayload.Categories)
-        ) {
-          throw new Error("Invalid Categories in service payload");
-        }
-
-        const response = await createServices(servicePayload, authToken);
-
-        // Progress update
-        setUploadProgress(65);
-        setUploadStage("Services configured successfully...");
-      } catch (error) {
-        throw error;
-      }
-
-      // Progress update
-      setUploadProgress(70);
-      setUploadStage("Configuring business hours...");
-
-      // 4. Business Hours Upload - Single API Call for all days
-
-      const weekDays = [
-        { id: 1, name: "Monday" },
-        { id: 2, name: "Tuesday" },
-        { id: 3, name: "Wednesday" },
-        { id: 4, name: "Thursday" },
-        { id: 5, name: "Friday" },
-        { id: 6, name: "Saturday" },
-        { id: 7, name: "Sunday" },
-      ];
-
-      // Helper function to convert 24-hour format to 12-hour format
-      const convertTo12Hour = (time24) => {
-        if (!time24) return null;
-
-        let [hours, minutes] = time24.split(":");
-        hours = parseInt(hours);
-
-        if (hours === 0) {
-          return `12:${minutes} AM`;
-        } else if (hours < 12) {
-          return `${hours.toString().padStart(2, "0")}:${minutes} AM`;
-        } else if (hours === 12) {
-          return `12:${minutes} PM`;
-        } else {
-          const hour12 = hours - 12;
-          return `${hour12.toString().padStart(2, "0")}:${minutes} PM`;
-        }
-      };
-
-      // Helper function to convert 12-hour format to 24-hour format for internal processing
-      const convertTo24Hour = (time12, meridian) => {
-        if (!time12) return "00:00";
-
-        let [hours, minutes] = time12.split(":");
-        hours = parseInt(hours);
-
-        if (meridian === "PM" && hours !== 12) {
-          hours += 12;
-        } else if (meridian === "AM" && hours === 12) {
-          hours = 0;
-        }
-
-        return `${hours.toString().padStart(2, "0")}:${minutes}`;
-      };
-
-      // Process business hours for all days in a single payload
-      try {
-        const scheduleType =
-          previousData.businessHours?.scheduleType || "selected_hours";
-
-        // Validate business hours data exists
-        if (!previousData.businessHours) {
-          // Use default 'closed' for all days if no data found
-        }
-
-        // Map schedule types to new API format
-        let apiScheduleType;
-        switch (scheduleType) {
-          case "always_open":
-            apiScheduleType = "always_open";
-            break;
-          case "selected_hours":
-          default:
-            apiScheduleType = "open_hours";
-            break;
-        }
-
-        const businessIdForHours = String(businessIdNum);
-
-        // Build array for all days
-        const businessHoursArr = weekDays.map((day) => {
-          const dayData = previousData.businessHours?.daysStatus?.[day.id];
-          let status = "closed";
-          let startTime = null;
-          let endTime = null;
-          let enabled = false;
-
-          if (scheduleType === "always_open") {
-            if (dayData?.isOpen) {
-              enabled = true;
-              status = "24hours";
-            } else {
-              status = "closed";
-              enabled = false;
-            }
-          } else {
-            if (dayData?.isOpen) {
-              enabled = true;
-              status = "open";
-              startTime = `${dayData.startTime} ${dayData.startMeridian}`;
-              endTime = `${dayData.endTime} ${dayData.endMeridian}`;
-            } else {
-              enabled = false;
-              status = "closed";
-            }
-          }
-
-          return {
-            day: day.name,
-            enabled,
-            status,
-            startTime: status === "open" ? startTime : null,
-            endTime: status === "open" ? endTime : null,
-          };
-        });
-
-        const payload = {
-          BusinessId: businessIdForHours,
-          ScheduleType: apiScheduleType,
-          BusinessHours: businessHoursArr,
-        };
-
-        try {
-          const businessHoursData = await createBusinessHours(
-            payload,
-            authToken
-          );
-        } catch (error) {
-          throw new Error(`Business hours creation failed: ${error.message}`);
-        }
-      } catch (error) {
-        throw new Error(`Business hours creation failed: ${error.message}`);
-      }
-
-      // Progress update
-      setUploadProgress(80);
-      setUploadStage("Business hours configured...");
-
-      // 5. Documents Uploads
-      setUploadProgress(85);
-      setUploadStage("Uploading documents...");
-
-      await uploadDocuments(businessIdNum, fileList, authToken);
-
-      // Progress update
-      setUploadProgress(95);
-      setUploadStage("Finalizing setup...");
-
-      // localStorage.setItem("businessId", JSON.stringify(businessIdNum));
-      localStorage.removeItem("formData");
-
-      // Clear browser history to prevent back navigation
-      window.history.pushState(null, null, window.location.href);
-      window.history.pushState(null, null, window.location.href);
-      window.onpopstate = function () {
-        window.history.go(1);
-      };
-
-      // Final progress update
-      setUploadProgress(100);
-      setUploadStage("Upload complete! Redirecting...");
-
-      // Small delay to show completion
-      setTimeout(() => {
-        // window.location.replace(`http://localhost:3001/?id=${businessIdNum}`);
-        // localStorage.setItem("businessId", JSON.stringify(businessIdNum));
-        // window.location.replace(`${constant.merchantUrl}`);
-        navigate("/under-construction");
-      }, 1000);
-    } catch (error) {
-      setIsUploading(false);
-      setUploadProgress(0);
-      setUploadStage("");
-      
-      // Use enhanced error handling
-      UploadErrorHandler.logError(error, 'Business Form Submission');
-      const userFriendlyError = UploadErrorHandler.createUserFriendlyMessage(error);
-      
-      localStorage.setItem("documentUploads", JSON.stringify(fileList));
-
-      // Show user-friendly error dialog
-      setErrorDialog({
-        open: true,
-        error: userFriendlyError
-      });
-
-      // Handle specific error types
-      if (error.message.includes("413") || error.message.includes("too large")) {
-        // Clear the file list to force re-upload for large file errors
-        setFileList({});
-        localStorage.removeItem("documentUploads");
-      } else if (error.message.includes("Document upload failed")) {
-        setFileList({});
-        localStorage.removeItem("documentUploads");
-      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -671,6 +199,7 @@ export default function BusinessDocumentUploads() {
 
             <Typography
               variant="body2"
+              component="div"
               sx={{
                 mb: 2,
                 color: "#666",
@@ -714,6 +243,7 @@ export default function BusinessDocumentUploads() {
 
             <Typography
               variant="caption"
+              component="div"
               sx={{
                 mt: 2,
                 color: "#999",
@@ -745,7 +275,7 @@ export default function BusinessDocumentUploads() {
           sx={{ display: "flex", flexGrow: 1, margin: 0 }}
         >
           <Grid container>
-            <Grid item xs={12} md={4} square>
+            <Grid item xs={12} md={4}>
               <LeftPanel
                 firstName={firstName}
                 lastName={lastName}
@@ -795,6 +325,7 @@ export default function BusinessDocumentUploads() {
 
                 <Typography
                   variant="subtitle1"
+                  component="div"
                   sx={{
                     mb: 4,
                     textAlign: "center",

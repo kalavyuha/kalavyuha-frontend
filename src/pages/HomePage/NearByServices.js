@@ -93,7 +93,7 @@ const ServiceDirectory = () => {
   const [debugInfo, setDebugInfo] = useState(null);
 
   // Configure API details
-  const API_URL = `${constant.baseUrl}api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&latitude=78.9897978&longitude=28.6767965&page=1`;
+  const API_URL = `${constant.baseUrl}/api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&latitude=78.9897978&longitude=28.6767965&page=1`;
   const AUTH_TOKEN = 'VIRoHdqUAtpklgKg';
 
   useEffect(() => {

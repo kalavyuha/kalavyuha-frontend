@@ -137,7 +137,7 @@ export default function BusinessInfoSelection() {
         <Container maxWidth={false} disableGutters sx={{ display: 'flex', flexGrow: 1 }}>
           <Grid container>
             {/* Left */}
-            <Grid item xs={12} md={4}  square>
+            <Grid item xs={12} md={4}>
 
               
                 <LeftPanel
