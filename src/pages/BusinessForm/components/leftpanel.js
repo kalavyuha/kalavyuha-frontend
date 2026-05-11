@@ -372,12 +372,18 @@ const LeftPanel = ({
                   sx={{ mb: 2, fontSize: 12, wordBreak: "break-word" }}
                 >
                   <b>Business Name:</b> {formData.formData.businessName} <br />
+
                   <b>Introduction:</b> {formData.formData.introduction} <br />
-                  <b>Location:</b> {formData.formData.shopName}
-                  {formData.formData.nearBy}, {formData.formData.streetAddress},{" "}
-                  {formData.formData.city}, {formData.formData.state}<br />
-                   <b>Pincode:</b>
-                  {formData.formData.zipCode}
+
+                  <b>Location:</b>
+                  {formData.formData.shopName}
+                  {formData.formData.nearBy && `, ${formData.formData.nearBy}`}
+                  {formData.formData.streetAddress && `, ${formData.formData.streetAddress}`}
+                  {formData.formData.city && `, ${formData.formData.city}`}
+                  {formData.formData.state && `, ${formData.formData.state}`}
+                  <br />
+
+                  <b>Pincode:</b> {formData.formData.zipCode}
                 </Typography>
               </>
             )}
@@ -413,6 +419,7 @@ const LeftPanel = ({
                 </Typography>
                 <Typography
                   variant="body2"
+                  component="div"
                   sx={{ mb: 2, fontSize: 12, wordBreak: "break-word" }}
                 >
                   <b>Employees:</b> {formData.teamSize || "None"} <br />
@@ -659,6 +666,7 @@ const LeftPanel = ({
 
                 <Typography
                   variant="body2"
+                  component="div"
                   sx={{
                     mb: 2,
                     ml: 1.5,

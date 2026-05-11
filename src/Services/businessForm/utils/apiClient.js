@@ -30,11 +30,14 @@ export const apiClient = async ({
     }
 
     if (!response.ok) {
-      throw new Error(
+      const errorMessage =
         data?.message ||
         data?.detail ||
-        `HTTP ${response.status}`
-      );
+        `HTTP ${response.status}`;
+      const error = new Error(errorMessage);
+      error.status = response.status;
+      error.response = data;
+      throw error;
     }
 
     return data;
