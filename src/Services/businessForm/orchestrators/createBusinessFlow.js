@@ -24,6 +24,34 @@ const REQUIRED_DOCUMENTS = [
   "Utility Bills",
 ];
 
+const isAlreadyExistsError = (error) => {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    error?.status === 409 ||
+    /already exist|already exists|duplicate|conflict/i.test(message)
+  );
+};
+
+const createFlowError = (step, error) => ({
+  step,
+  message: error?.message || "Unknown error",
+  status: error?.status,
+  details: error?.response || null,
+});
+
+const runFlowStep = async (fn, stepDescription, errors) => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (isAlreadyExistsError(error)) {
+      console.warn(`${stepDescription} already exists, skipping.`, error);
+      return error.response ?? null;
+    }
+    errors.push(createFlowError(stepDescription, error));
+    return null;
+  }
+};
+
 export const createBusinessFlow = async (
   data,
   files,
@@ -31,6 +59,7 @@ export const createBusinessFlow = async (
   onProgress
 ) => {
   try {
+    const errors = [];
 
     const missingDocs = REQUIRED_DOCUMENTS.filter(
       (doc) => !files?.[doc] || files[doc].length === 0
@@ -43,21 +72,28 @@ export const createBusinessFlow = async (
     }
 
     onProgress(10, "Creating business...");
-    const businessResponse = await createBusiness(
-      transformBusiness(data),
-      token
+    const businessResponse = await runFlowStep(
+      () => createBusiness(transformBusiness(data), token),
+      "Create business",
+      errors
     );
-    const businessId = businessResponse.data.id;
+    const businessId = businessResponse?.data?.id ?? null;
 
     onProgress(30, "Creating staff...");
     let createdStaff = [];
     const staffMap = new Map();
-    
+
     if (data.teamMembers?.length) {
       const staffPayload = transformStaff(data.teamMembers);
-      createdStaff = await createStaffApi(staffPayload, token);
-      
-      if (Array.isArray(createdStaff)) {
+      const staffResponse = await runFlowStep(
+        () => createStaffApi(staffPayload, token),
+        "Create staff",
+        errors
+      );
+
+      createdStaff = Array.isArray(staffResponse) ? staffResponse : [];
+
+      if (createdStaff.length > 0) {
         createdStaff.forEach((staff, index) => {
           const originalMember = data.teamMembers[index];
           if (originalMember) {
@@ -66,7 +102,7 @@ export const createBusinessFlow = async (
           staffMap.set(staff.name, staff.id);
         });
       } else {
-        data.teamMembers.forEach(member => {
+        data.teamMembers.forEach((member) => {
           if (member.id) {
             staffMap.set(member.name, member.id);
           }
@@ -77,55 +113,70 @@ export const createBusinessFlow = async (
     // Step 3: Create Services (30% - 70%)
     if (data.services?.length) {
       const transformedServices = transformServices(data.services);
-      
+
       let totalApiCalls = 0;
-      transformedServices.forEach(cat => {
+      transformedServices.forEach((cat) => {
         totalApiCalls += 1;
-        totalApiCalls += cat.services.length; 
-        cat.services.forEach(service => {
+        totalApiCalls += cat.services.length;
+        cat.services.forEach((service) => {
           if (service.assigned_staff?.length > 0) {
-            totalApiCalls += 1; 
+            totalApiCalls += 1;
           }
         });
       });
-      
+
       let completedCalls = 0;
       const BASE_PROGRESS = 30;
       const MAX_PROGRESS = 70;
-      const PROGRESS_RANGE = MAX_PROGRESS - BASE_PROGRESS; // 40% range
-      
+      const PROGRESS_RANGE = MAX_PROGRESS - BASE_PROGRESS;
+
       for (const categoryData of transformedServices) {
-
-        // Create category
         completedCalls++;
-        const categoryProgress = BASE_PROGRESS + (completedCalls / totalApiCalls) * PROGRESS_RANGE;
-        onProgress(Math.round(categoryProgress), `Creating category: ${categoryData.category?.name}...`);
-
-
-        const categoryResponse = await createCategoryApi(
-          {
-            name: categoryData.category?.name,
-            expanded: categoryData.category?.expanded ?? true
-          },
-          token
+        const categoryProgress =
+          BASE_PROGRESS + (completedCalls / totalApiCalls) * PROGRESS_RANGE;
+        onProgress(
+          Math.round(categoryProgress),
+          `Creating category: ${categoryData.category?.name}...`
         );
-        
-        const categoryId = categoryResponse.data.id;
+
+        const categoryResponse = await runFlowStep(
+          () =>
+            createCategoryApi(
+              {
+                name: categoryData.category?.name,
+                expanded: categoryData.category?.expanded ?? true,
+              },
+              token
+            ),
+          `Create category: ${categoryData.category?.name}`,
+          errors
+        );
+
+        const categoryId = categoryResponse?.data?.id;
+        if (!categoryId) {
+          console.warn(
+            `Skipping services for category "${categoryData.category?.name}" because category creation failed or already exists.`
+          );
+          continue;
+        }
+
         const validServices = (categoryData.services || []).filter(
           (s) => s.name && s.name.trim() !== ""
         );
-        
-        // Create services under this category
+
         for (const serviceData of validServices) {
           completedCalls++;
-          const serviceProgress = BASE_PROGRESS + (completedCalls / totalApiCalls) * PROGRESS_RANGE;
-          onProgress(Math.round(serviceProgress), `Creating service: ${serviceData.name}...`);
-          
-          // Map staff names to IDs
+          const serviceProgress =
+            BASE_PROGRESS + (completedCalls / totalApiCalls) * PROGRESS_RANGE;
+          onProgress(
+            Math.round(serviceProgress),
+            `Creating service: ${serviceData.name}...`
+          );
+
           const staffIds = (serviceData.staff || [])
-            .map(staffName => staffMap.get(staffName))
+            .map((staffName) => staffMap.get(staffName))
             .filter(Boolean);
-          
+
           const servicePayload = {
             category_id: categoryId,
             name: serviceData.name,
@@ -134,30 +185,49 @@ export const createBusinessFlow = async (
             duration_type: serviceData.duration_type || "minutes",
             image: serviceData.image || null,
             uploaded: serviceData.uploaded || false,
-            online_booking_enabled: serviceData.online_booking_enabled ?? false,
+            online_booking_enabled:
+              serviceData.online_booking_enabled ?? false,
             pricing: {
-              price: parseFloat(serviceData.pricing?.price) || 0,
-              effective_from: serviceData.pricing?.effective_from || new Date().toISOString(),
-              effective_to: serviceData.pricing?.effective_to || null
-            }
+              price:
+                parseFloat(serviceData.pricing?.price) || 0,
+              effective_from:
+                serviceData.pricing?.effective_from ||
+                new Date().toISOString(),
+              effective_to: serviceData.pricing?.effective_to || null,
+            },
           };
 
+          const serviceResponse = await runFlowStep(
+            () => createServiceApi(servicePayload, token),
+            `Create service: ${serviceData.name}`,
+            errors
+          );
 
-          
-          const serviceResponse = await createServiceApi(servicePayload, token);
-          
-          const serviceId = serviceResponse.data.id;
-          
-          // Assign staff to service if any
+          const serviceId = serviceResponse?.data?.id;
+          if (!serviceId) {
+            console.warn(
+              `Skipping staff assignment for service "${serviceData.name}" because service creation failed or already exists.`
+            );
+            continue;
+          }
+
           if (staffIds.length > 0) {
             completedCalls++;
-            const assignProgress = BASE_PROGRESS + (completedCalls / totalApiCalls) * PROGRESS_RANGE;
-            onProgress(Math.round(assignProgress), `Assigning staff to ${serviceData.name}...`);
-            await assignStaffToServiceApi(serviceId, staffIds, token);
+            const assignProgress =
+              BASE_PROGRESS + (completedCalls / totalApiCalls) * PROGRESS_RANGE;
+            onProgress(
+              Math.round(assignProgress),
+              `Assigning staff to ${serviceData.name}...`
+            );
+            await runFlowStep(
+              () => assignStaffToServiceApi(serviceId, staffIds, token),
+              `Assign staff to ${serviceData.name}`,
+              errors
+            );
           }
         }
       }
-      
+
       onProgress(70, "Services created successfully...");
     } else {
       onProgress(70, "No services to create...");
@@ -169,7 +239,11 @@ export const createBusinessFlow = async (
 
       await Promise.all(
         hoursPayloads.map((payload) =>
-          createHoursApi(payload, token)
+          runFlowStep(
+            () => createHoursApi(payload, token),
+            "Create business hours",
+            errors
+          )
         )
       );
     }
@@ -182,7 +256,7 @@ export const createBusinessFlow = async (
 
       for (const [docName, fileArray] of Object.entries(files)) {
         const document_type = DOCUMENT_TYPE_MAP[docName];
-        
+
         if (!document_type) continue;
 
         for (const fileItem of fileArray) {
@@ -195,24 +269,36 @@ export const createBusinessFlow = async (
           formData.append("file", fileObj);
 
           if (fileItem.expiryDate) {
-            formData.append("expiry_date", new Date(fileItem.expiryDate).toISOString());
+            formData.append(
+              "expiry_date",
+              new Date(fileItem.expiryDate).toISOString()
+            );
           }
 
-          uploadPromises.push(uploadDocumentApi(formData, token));
+          uploadPromises.push(
+            runFlowStep(
+              () => uploadDocumentApi(formData, token),
+              `Upload document: ${docName}`,
+              errors
+            )
+          );
         }
       }
 
       onProgress(92, "Processing documents...");
-
       await Promise.all(uploadPromises);
     }
-    
+
     onProgress(100, "Business setup completed successfully!");
 
-    return businessId;
-
+    return {
+      status: errors.length > 0 ? "partial" : "success",
+      businessId,
+      errors,
+    };
   } catch (error) {
     console.error("Error in business creation flow:", error);
     throw error;
   }
 };
+

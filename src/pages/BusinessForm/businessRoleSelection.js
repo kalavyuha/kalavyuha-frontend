@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {
   Box,
   Container,
@@ -16,7 +16,7 @@ import BeautyImg from "../../assets/images/busniessAccount/beauty.png"
 import HealthcareImg from "../../assets/images/busniessAccount/healthcare.png"
 
 import {  RadioButtonUnchecked as CircleIcon } from '@mui/icons-material';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import LeftPanel from './components/leftpanel.js'; 
 
@@ -36,14 +36,10 @@ const theme = createTheme({
 export default function BusinessRoleSelection() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
-  const location = useLocation(); 
-  const merchantAccountID = location.state?.MerchantAccountID;
-  // const merchantAccountID = 212121;
-
   
   const getStoredData = () => {
     try {
-      const storedFormData = localStorage.getItem('formData');
+      const storedFormData = localStorage.getItem('accountData');
       return storedFormData ? JSON.parse(storedFormData) : {};
     } catch (error) {
       console.error('Error parsing stored data:', error);

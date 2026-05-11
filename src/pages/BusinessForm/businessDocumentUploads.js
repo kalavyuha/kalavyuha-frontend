@@ -6,8 +6,14 @@ import {
   Button,
   Grid,
   LinearProgress,
+  Fade,
+  Zoom,
   Backdrop,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ArrowLeft } from "lucide-react";
@@ -16,6 +22,9 @@ import DocumentUpload from "../../components/documentUploads";
 import LeftPanel from "./components/leftpanel";
 import UploadErrorDialog from "../../components/UploadErrorDialog";
 import { createBusinessFlow } from "../../Services/businessForm/orchestrators/createBusinessFlow.js";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CelebrationRoundedIcon from "@mui/icons-material/Celebration";
+import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 
 const theme = createTheme({
   palette: {
@@ -47,6 +56,11 @@ export default function BusinessDocumentUploads() {
 
   const [uploadStage, setUploadStage] = useState("");
   const [errorDialog, setErrorDialog] = useState({ open: false, error: null });
+  const [confirmationDialog, setConfirmationDialog] = useState({
+    open: false,
+    message: "",
+    status: "success",
+  });
 
   const {
     firstName,
@@ -74,10 +88,37 @@ export default function BusinessDocumentUploads() {
 
   // backend integration
   const handleSubmit = async () => {
+    if (!previousData || Object.keys(previousData).length === 0) {
+      setErrorDialog({
+        open: true,
+        error: {
+          title: "Missing data",
+          message: "Please complete the previous steps before uploading documents.",
+          type: "SERVER_ERROR",
+        },
+      });
+      return;
+    }
+
+    if (!fileList || Object.keys(fileList).length === 0) {
+      setErrorDialog({
+        open: true,
+        error: {
+          title: "No documents uploaded",
+          message: "Please upload the required documents before submitting.",
+          type: "FILE_TOO_LARGE",
+        },
+      });
+      return;
+    }
+
     try {
       setLoading(true);
+      setIsUploading(true);
+      setUploadProgress(5);
+      setUploadStage("Data is uploading...");
 
-      const id = await createBusinessFlow(
+      const result = await createBusinessFlow(
         previousData,
         fileList,
         authToken,
@@ -87,12 +128,42 @@ export default function BusinessDocumentUploads() {
         }
       );
 
-      navigate("/kalavyuha-frontend");
+      setUploadProgress(100);
+      setUploadStage("Upload complete");
 
+      if (result.status === "success") {
+        localStorage.removeItem("accountData");
+        localStorage.removeItem("formData");
+        localStorage.removeItem("documentUploads");
+        setFileList({});
+      }
+
+      setConfirmationDialog({
+        open: true,
+        status: result.status,
+        message:
+          result.status === "success"
+            ? "Your business submission is complete and under review. Our team will connect with you soon."
+            : "Some information could not be saved, but your submission is under review. Our team will connect with you soon.",
+      });
     } catch (err) {
-      alert(err.message);
+      setErrorDialog({
+        open: true,
+        error: {
+          title: "Upload failed",
+          message:
+            err?.message ||
+            "Something went wrong while saving your business details.",
+          type: "SERVER_ERROR",
+          technicalDetails:
+            process.env.NODE_ENV === "development"
+              ? JSON.stringify(err?.response || err, null, 2)
+              : null,
+        },
+      });
     } finally {
       setLoading(false);
+      setIsUploading(false);
     }
   };
 
@@ -122,150 +193,251 @@ export default function BusinessDocumentUploads() {
         {/* Upload Progress Overlay */}
         <Backdrop
           sx={{
-            color: "#fff",
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            zIndex: (theme) => theme.zIndex.drawer + 999,
+            background: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(8px)",
           }}
           open={isUploading}
         >
           <Box
             sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              padding: {
-                xs: 2,
-                sm: 3,
-                md: 4,
+              width: {
+                xs: "90%",
+                sm: 420,
               },
-              backgroundColor: "white",
-              borderRadius: 3,
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-              minWidth: {
-                xs: "300px",
-                sm: "350px",
-                md: "400px",
+              bgcolor: "#fff",
+              borderRadius: "30px",
+              p: {
+                xs: 3,
+                sm: 4,
               },
-              maxWidth: {
-                xs: "320px",
-                sm: "400px",
-                md: "500px",
-              },
-              mx: {
-                xs: 2,
-                sm: 0,
+              textAlign: "center",
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: "0 25px 80px rgba(0,0,0,0.35)",
+              animation: "popup 0.4s ease",
+              "@keyframes popup": {
+                "0%": {
+                  opacity: 0,
+                  transform: "scale(0.8) translateY(40px)",
+                },
+                "100%": {
+                  opacity: 1,
+                  transform: "scale(1) translateY(0px)",
+                },
               },
             }}
           >
-            <Typography
-              variant="h6"
+            {/* Background Glow */}
+            <Box
               sx={{
-                mb: 2,
-                color: "#1b4d69",
-                fontWeight: "bold",
-                textAlign: "center",
-                fontSize: {
-                  xs: "1.1rem",
-                  sm: "1.25rem",
-                  md: "1.25rem",
-                },
-                lineHeight: {
-                  xs: 1.3,
-                  sm: 1.6,
+                position: "absolute",
+                top: -100,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 250,
+                height: 250,
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(0,200,83,0.18) 0%, rgba(255,255,255,0) 70%)",
+              }}
+            />
+
+            {/* Animated Upload Circle */}
+            <Box
+              sx={{
+                width: 110,
+                height: 110,
+                borderRadius: "50%",
+                mx: "auto",
+                mb: 3,
+                background:
+                  "linear-gradient(135deg, #00c853 0%, #43a047 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                zIndex: 2,
+                boxShadow: "0 15px 40px rgba(0,200,83,0.45)",
+                animation: "pulse 1.8s infinite",
+                "@keyframes pulse": {
+                  "0%": {
+                    transform: "scale(1)",
+                    boxShadow: "0 0 0 0 rgba(0,200,83,0.45)",
+                  },
+                  "70%": {
+                    transform: "scale(1.05)",
+                    boxShadow: "0 0 0 25px rgba(0,200,83,0)",
+                  },
+                  "100%": {
+                    transform: "scale(1)",
+                    boxShadow: "0 0 0 0 rgba(0,200,83,0)",
+                  },
                 },
               }}
             >
-              Processing Your Business Registration
+              <CloudUploadRoundedIcon
+                sx={{
+                  color: "#fff",
+                  fontSize: 55,
+                }}
+              />
+            </Box>
+
+            {/* Heading */}
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 800,
+                color: "#111827",
+                mb: 1,
+                position: "relative",
+                zIndex: 2,
+              }}
+            >
+              Setting Up Your Business
             </Typography>
 
-            <Box sx={{ width: "100%", mb: 2 }}>
+            {/* Subtitle */}
+            <Typography
+              variant="body1"
+              sx={{
+                color: "#6b7280",
+                mb: 4,
+                lineHeight: 1.7,
+                position: "relative",
+                zIndex: 2,
+              }}
+            >
+              Please wait while we securely upload and verify
+              your business documents.
+            </Typography>
+
+            {/* Progress Area */}
+            <Box
+              sx={{
+                width: "100%",
+                mb: 2,
+                position: "relative",
+                zIndex: 2,
+              }}
+            >
+              {/* Percentage */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#374151",
+                    fontWeight: 600,
+                  }}
+                >
+                  Upload Progress
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#16a34a",
+                    fontWeight: 700,
+                  }}
+                >
+                  {uploadProgress}%
+                </Typography>
+              </Box>
+
+              {/* Premium Progress Bar */}
               <LinearProgress
                 variant="determinate"
                 value={uploadProgress}
                 sx={{
-                  height: {
-                    xs: 6,
-                    sm: 8,
-                  },
-                  borderRadius: 4,
-                  backgroundColor: "#e0e0e0",
+                  height: 14,
+                  borderRadius: 999,
+                  backgroundColor: "#e5e7eb",
+                  overflow: "hidden",
+
                   "& .MuiLinearProgress-bar": {
-                    backgroundColor: "#1b4d69",
-                    borderRadius: 4,
+                    borderRadius: 999,
+                    background:
+                      "linear-gradient(90deg, #00c853, #00e676)",
+                    transition: "transform 0.4s ease",
+                    position: "relative",
+
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      background:
+                        "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)",
+                      animation: "shine 1.5s infinite",
+                    },
+                  },
+
+                  "@keyframes shine": {
+                    "0%": {
+                      transform: "translateX(-100%)",
+                    },
+                    "100%": {
+                      transform: "translateX(100%)",
+                    },
                   },
                 }}
               />
             </Box>
 
+            {/* Upload Stage */}
             <Typography
               variant="body2"
-              component="div"
               sx={{
-                mb: 2,
-                color: "#666",
-                textAlign: "center",
-                minHeight: "20px",
-                fontSize: {
-                  xs: "0.8rem",
-                  sm: "0.875rem",
-                },
-                px: {
-                  xs: 1,
-                  sm: 0,
-                },
+                color: "#4b5563",
+                fontWeight: 500,
+                minHeight: 24,
+                mb: 3,
+                position: "relative",
+                zIndex: 2,
               }}
             >
               {uploadStage}
             </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography
-                variant="h4"
-                sx={{
-                  color: "#1b4d69",
-                  fontWeight: "bold",
-                  fontSize: {
-                    xs: "1.8rem",
-                    sm: "2rem",
-                    md: "2.125rem",
-                  },
-                }}
-              >
-                {uploadProgress}%
-              </Typography>
-              <CircularProgress
-                size={24}
-                sx={{
-                  color: "#1b4d69",
-                }}
-              />
-            </Box>
-
-            <Typography
-              variant="caption"
-              component="div"
+            {/* Bottom Loader */}
+            <Box
               sx={{
-                mt: 2,
-                color: "#999",
-                textAlign: "center",
-                fontStyle: "italic",
-                fontSize: {
-                  xs: "0.7rem",
-                  sm: "0.75rem",
-                },
-                px: {
-                  xs: 1,
-                  sm: 0,
-                },
-                lineHeight: {
-                  xs: 1.3,
-                  sm: 1.5,
-                },
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 1,
+                position: "relative",
+                zIndex: 2,
               }}
             >
-              Please don't close this window while we set up your business
-              profile
-            </Typography>
+              <CircularProgress
+                size={20}
+                thickness={5}
+                sx={{
+                  color: "#00c853",
+                }}
+              />
+
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#6b7280",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                }}
+              >
+                Please don’t close this window
+              </Typography>
+            </Box>
           </Box>
         </Backdrop>
 
@@ -383,6 +555,7 @@ export default function BusinessDocumentUploads() {
                           type="submit"
                           fullWidth
                           variant="contained"
+                          disabled={loading}
                           sx={{
                             mt: 3,
                             mb: 2,
@@ -394,7 +567,7 @@ export default function BusinessDocumentUploads() {
                           }}
                           onClick={handleSubmit}
                         >
-                          Upload
+                          {loading ? "Uploading..." : "Upload"}
                         </Button>
                       </Grid>
                     </Grid>
@@ -415,8 +588,185 @@ export default function BusinessDocumentUploads() {
           setErrorDialog({ open: false, error: null });
           handleSubmit();
         }}
-        showTechnicalDetails={process.env.NODE_ENV === 'development'}
+        showTechnicalDetails={process.env.NODE_ENV === "development"}
       />
+
+      <Dialog
+        open={confirmationDialog.open}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            overflow: "hidden",
+            background:
+              "linear-gradient(to bottom, #ffffff, #f8fff9)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+          },
+        }}
+      >
+        <DialogContent
+          sx={{
+            textAlign: "center",
+            py: 5,
+            px: 4,
+            position: "relative",
+          }}
+        >
+          {/* Celebration Background Glow */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: -60,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 150,
+              height: 150,
+              borderRadius: "50%",
+              zIndex: 0,
+            }}
+          />
+
+          {/* Animated Circle Tick */}
+          <Zoom in timeout={500}>
+            <Box
+              sx={{
+                position: "relative",
+                zIndex: 2,
+                width: 50,
+                height: 50,
+                mx: "auto",
+                mb: 3,
+                borderRadius: "50%",
+                background:
+                  "linear-gradient(135deg, #1b4d69 0%, #2b5871 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 15px 25px #0e496b6b",
+                animation: "bounce 1.2s ease",
+                "@keyframes bounce": {
+                  "0%": {
+                    transform: "scale(0.5)",
+                    opacity: 0,
+                  },
+                  "60%": {
+                    transform: "scale(1.15)",
+                  },
+                  "100%": {
+                    transform: "scale(1)",
+                    opacity: 1,
+                  },
+                },
+              }}
+            >
+              <CheckCircleRoundedIcon
+                sx={{
+                  fontSize: 40,
+                  color: "#fff",
+                }}
+              />
+            </Box>
+          </Zoom>
+
+          {/* Celebration Icon */}
+          {/* <CelebrationRoundedIcon
+            sx={{
+              position: "absolute",
+              top: 40,
+              right: 40,
+              color: "#ffb300",
+              fontSize: 34,
+              animation: "rotate 4s linear infinite",
+              "@keyframes rotate": {
+                from: {
+                  transform: "rotate(0deg)",
+                },
+                to: {
+                  transform: "rotate(360deg)",
+                },
+              },
+            }}
+          /> */}
+
+          <Typography
+            variant="h6"
+            fontWeight="500"
+            sx={{
+              mb: 2,
+              color: "#1b1b1b",
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            Submission Successful 🎉
+          </Typography>
+
+          <Typography
+            variant="h6"
+            sx={{
+              mb: 2,
+              fontWeight: 600,
+              color: "#2e7d32",
+              position: "relative",
+              zIndex: 2,
+              lineHeight: 1.5,
+            }}
+          >
+            Your business profile is now under review.
+          </Typography>
+
+          <Typography
+            variant="body1"
+            sx={{
+              color: "#666",
+              mb: 4,
+              position: "relative",
+              zIndex: 2,
+              lineHeight: 1.5,
+              fontSize: 12,
+
+            }}
+          >
+            Our verification team will review your details and
+            connect with you shortly.
+          </Typography>
+
+          {/* Continue Button */}
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            onClick={() => {
+              setConfirmationDialog({
+                open: false,
+                message: "",
+                status: "success",
+              });
+              navigate("/");
+            }}
+            sx={{
+              py: 1.7,
+              borderRadius: "16px",
+              fontWeight: 700,
+              fontSize: "1rem",
+              textTransform: "none",
+              background:
+                "linear-gradient(90deg, #1b4d69, #1b4d69)",
+              boxShadow: "0 10px 25px #1b4c697b",
+              "&:hover": {
+                background:
+                  "linear-gradient(90deg, #1b4d69, #1b4d69)",
+                transform: "translateY(-2px)",
+                boxShadow: "0 14px 28px #1b4c697b",
+              },
+              transition: "all 0.3s ease",
+            }}
+          >
+            Continue
+          </Button>
+        </DialogContent>
+      </Dialog>
     </ThemeProvider>
   );
 }

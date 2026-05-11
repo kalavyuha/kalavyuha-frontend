@@ -102,7 +102,6 @@ export default function OTPVerification() {
         throw new Error(verifyData.detail || verifyData.message || "Invalid OTP");
       }
 
-      console.log(verifyData.data)
       const token = verifyData?.data?.token;
 
       if (!token) {
