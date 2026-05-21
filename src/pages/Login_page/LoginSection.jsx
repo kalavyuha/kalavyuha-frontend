@@ -10,12 +10,9 @@ import {
   Stack,
   IconButton,
   InputAdornment,
-  FormControlLabel,
-  Checkbox,
   Link,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 // import { assets } from "../../assets/images/assets";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import Visibility from "@mui/icons-material/Visibility";
@@ -26,7 +23,6 @@ import { constant } from "../../constant";
 // import { ENDPOINTS } from "../../constants/apiHandling";
 
 const LoginSection = ({ onForgotPassword }) => {
-  const navigate = useNavigate();
   // const [showOtpOptions, setShowOtpOptions] = useState(false);
   // const [otpOption, setOtpOption] = useState("phone");
   // const [showOtpVerify, setShowOtpVerify] = useState(false);
@@ -39,8 +35,6 @@ const LoginSection = ({ onForgotPassword }) => {
   const [phoneError, setPhoneError] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [merchantId, setMerchantId] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -99,34 +93,49 @@ const LoginSection = ({ onForgotPassword }) => {
   };
 
   const handleLogin = async () => {
+    if (!validatePhone(phone)) {
+      setSnackbar({
+        open: true,
+        message: "Please enter a valid 10-digit phone number.",
+        severity: "error",
+      });
+      return;
+    }
+
     try {
       const formattedPhone = phone.replace(/\s/g, "");
-      const response = await fetch(
-        `${constant.baseUrl}/api/v1/BussinessMember/member/login/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            PhoneNumber: formattedPhone,
-            Password: password,
-          }),
-        }
-      );
+      const response = await fetch(`${constant.baseUrl}/api/v1/user/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone_number: formattedPhone,
+          password,
+        }),
+      });
       const data = await response.json();
-      setMerchantId(data.Data?.MerchantId); // Use correct path for ID
-      if (response.ok && data.Status === 1) {
+
+      if (response.ok && data?.status === 1) {
+        if (data.data?.token) {
+          localStorage.setItem("authToken", data.data.token);
+        }
+
         setSnackbar({
           open: true,
-          message: data.Message || "Login successful!",
+          message: data.message || "Login successful!",
           severity: "success",
         });
+
         setTimeout(() => {
-          window.location.replace(`http://localhost:3001/?id=${data.Data?.MerchantId}`);
+          if (data.data?.merchantId) {
+            window.location.replace(`${constant.merchantUrl}?id=${data.data.merchantId}`);
+          } else {
+            window.location.replace(constant.merchantUrl);
+          }
         }, 1200);
       } else {
         setSnackbar({
           open: true,
-          message: data.Message || "Failed to authenticate, please retry.",
+          message: data?.message || "Failed to authenticate, please retry.",
           severity: "error",
         });
       }
@@ -341,48 +350,7 @@ const LoginSection = ({ onForgotPassword }) => {
                 }}
               />
 
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="agreeTerms"
-                    checked={agreeTerms}
-                    onChange={(e) => setAgreeTerms(e.target.checked)}
-                    color="primary"
-                    sx={{
-                      p: { xs: 0.2, sm: 1 },
-                      "&.Mui-checked": {
-                        color: "#1b4d69",
-                      },
-                    }}
-                  />
-                }
-                label={
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: { xs: "0.65rem", sm: "0.875rem" },
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    I agree to the{" "}
-                    <Link
-                      href="/kalavyuha-frontend/terms&conditions"
-                      underline="always"
-                      color="#1b4d69"
-                    >
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/kalavyuha-frontend/privacy" underline="always" color="#1b4d69">
-                      Privacy Policy
-                    </Link>
-                  </Typography>
-                }
-                sx={{
-                  alignItems: "center",
-                  ml: 0,
-                }}
-              />
+
 
               <Button
                 sx={{
@@ -398,7 +366,7 @@ const LoginSection = ({ onForgotPassword }) => {
                     bgcolor: "#e0e0e0",
                   },
                 }}
-                disabled={!phone || !password || !agreeTerms}
+                disabled={!phone || !password || phoneError}
                 // disabled={!email || !phone || !password}
                 // onClick={() => setShowOtpOptions(true)}
                 //  onClick={() => navigate("/")}
