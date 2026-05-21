@@ -76,13 +76,30 @@ export default function BusinessDocumentUploads() {
   };
 
   const handleSubmit = async () => {
+    if (!authToken) {
+      setErrorDialog({
+        open: true,
+        error: {
+          title: "Authentication required",
+          message: "Please log in again before submitting your business documents.",
+          type: "AUTH_ERROR",
+          actions: [
+            "Sign in again to refresh your session",
+            "If the issue persists, reload the page",
+          ],
+        },
+      });
+      return;
+    }
+
     if (!previousData || Object.keys(previousData).length === 0) {
       setErrorDialog({
         open: true,
         error: {
           title: "Missing data",
           message: "Please complete the previous steps before uploading documents.",
-          type: "SERVER_ERROR",
+          type: "VALIDATION_ERROR",
+          actions: ["Go back to the previous step and fill required fields."],
         },
       });
       return;
@@ -94,7 +111,8 @@ export default function BusinessDocumentUploads() {
         error: {
           title: "No documents uploaded",
           message: "Please upload the required documents before submitting.",
-          type: "FILE_TOO_LARGE",
+          type: "VALIDATION_ERROR",
+          actions: ["Upload at least one document for each required category."],
         },
       });
       return;
@@ -118,10 +136,12 @@ export default function BusinessDocumentUploads() {
         }
       );
 
+      console.log("createBusinessFlow result:", result);
+
       setUploadProgress(100);
       setUploadStage("Upload complete");
 
-      if (result.status === "success") {
+      if (result && (result.status === "success" || result.status === "partial")) {
         localStorage.removeItem("accountData");
         localStorage.removeItem("formData");
         localStorage.removeItem("documentUploads");

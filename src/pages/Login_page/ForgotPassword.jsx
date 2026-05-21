@@ -10,23 +10,19 @@ import {
   DialogActions,
   DialogTitle,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { constant } from "../../constant";
 
 const ForgotPassword = ({ onBack }) => {
   const [step, setStep] = useState(1);
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isPhoneValid, setIsPhoneValid] = useState(true);
-  const [email, setEmail] = useState("");
-  const [isEmailValid, setIsEmailValid] = useState(true);
   const [otpError, setOtpError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState("");
 
   const handleOtpChange = (e, idx) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
@@ -68,44 +64,75 @@ const ForgotPassword = ({ onBack }) => {
   const handleSendReset = async () => {
     setLoading(true);
     setOtpError("");
+
     try {
       const res = await fetch(`${constant.baseUrl}/api/v1/otp/send`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          PhoneNumber: phoneNumber,
-          UserType: "merchant",
+          phone_number: `+91${phoneNumber}`,
+          user_type: "merchant",
+          reset: true,
         }),
       });
-      if (!res.ok) throw new Error("Failed to send reset request");
+
+      const data = await res.json();
+
+      console.log(data);
+
+      if (!res.ok || data?.status !== 200) {
+        throw new Error(data?.message || "Failed to send reset request");
+      }
+
       setStep(2);
       setTimer(60);
+
+      setOtp(["", "", "", "", "", ""]);
+
     } catch (err) {
-      setOtpError("Failed to send reset request. Please try again.");
+      setOtpError(
+        err.message || "Failed to send reset request. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
-
+  
   const handleVerifyOtp = async () => {
     setLoading(true);
     setOtpError("");
+
     try {
+      const enteredOtp = otp.join("");
+
+      if (enteredOtp.length !== 6) {
+        setOtpError("Please enter complete OTP");
+        return;
+      }
+
       const res = await fetch(`${constant.baseUrl}/api/v1/otp/verify`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          PhoneNumber: `+91${phoneNumber}`,
-          OTP: otp.join(""),
-          UserType: "merchant",
+          phone_number: `+91${phoneNumber}`,
+          otp: enteredOtp,
+          user_type: "merchant",
         }),
       });
-      if (!res.ok) throw new Error("Incorrect OTP");
+
       const data = await res.json();
-      setUserId(data.Data?._id);
+
+      if (!res.ok || data?.status !== 1) {
+        throw new Error(data?.message || "Invalid OTP");
+      }
+
       setStep(3);
     } catch (err) {
-      setOtpError("Incorrect OTP, Please try again.");
+      setOtpError(err.message || "OTP verification failed");
     } finally {
       setLoading(false);
     }
@@ -115,35 +142,28 @@ const ForgotPassword = ({ onBack }) => {
     setLoading(true);
     setOtpError("");
     try {
-      const res = await fetch(
-        `${constant.baseUrl}/api/v1/BussinessMember/update/${userId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer VIRoHdqUAtpklgKg`,
-          },
-          body: JSON.stringify({
-            // email,
-            // phone: phoneNumber,
-            Password: newPassword,
-          }),
-        }
-      );
-      if (!res.ok) throw new Error("Failed to update password");
+      const res = await fetch(`${constant.baseUrl}/api/v1/otp/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone_number: `+91${phoneNumber}`,
+          otp: otp.join(""),
+          user_type: "merchant",
+          password: newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data?.status !== 1) {
+        throw new Error(data?.message || "Failed to reset password");
+      }
       setOpenDialog(true);
     } catch (err) {
-      setOtpError("Failed to update password. Please try again.");
+      setOtpError(err.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setEmail(value);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setIsEmailValid(emailRegex.test(value));
   };
 
   const handlePhoneChange = (e) => {
@@ -213,7 +233,7 @@ const ForgotPassword = ({ onBack }) => {
                   <Typography
                     sx={{ mb: 1, fontSize: { xs: 12, sm: 14 }, color: "grey" }}
                   >
-                    Enter your registered E-mail and Phone Number.
+                    Enter your registered phone number.
                   </Typography>
                   <Typography
                     sx={{ mt: 0, fontSize: { xs: 11, sm: 13 }, color: "grey" }}
@@ -224,59 +244,6 @@ const ForgotPassword = ({ onBack }) => {
                 <Box sx={{ textAlign: "left", width: "100%" }}>
                   {/* <Typography sx={{ color: "grey" }}>Email</Typography> */}
                 </Box>
-                <TextField
-                  type="email"
-                  label="Email Address"
-                  fullWidth
-                  value={email}
-                  onChange={handleEmailChange}
-                  error={!isEmailValid && email.length > 0}
-                  helperText={
-                    !isEmailValid && email.length > 0
-                      ? "Please enter a valid email"
-                      : ""
-                  }
-                  sx={{
-                    width: { xs: "290px", sm: "400px" },
-                    // bgcolor: "white",
-                    // border: "none",
-                    borderRadius: 2.5,
-                    "& .MuiOutlinedInput-root": {
-                      "&:hover fieldset": {
-                        borderColor:
-                          !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor:
-                          !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      "&.Mui-focused": {
-                        color:
-                          !isEmailValid && email.length > 0 ? "red" : "#1b4d69",
-                      },
-                    },
-                  }}
-                  InputProps={{
-                    sx: {
-                      height: 50,
-                      padding: 0,
-                      fontSize: 16,
-                      border: "none",
-                      "& .MuiOutlinedInput-notchedOutline": {
-                        border:
-                          !isEmailValid && email.length > 0
-                            ? "1px solid red"
-                            : "1px solid #dadada",
-                      },
-                    },
-                    style: {
-                      borderRadius: "10px",
-                      background: "#fbfbfb",
-                    },
-                  }}
-                />
                 <Box sx={{ textAlign: "left", width: "100%" }}>
                   {/* <Typography sx={{ color: "grey" }}>Phone Number</Typography> */}
                 </Box>
@@ -362,13 +329,7 @@ const ForgotPassword = ({ onBack }) => {
                       border: "1px solid #cccccc",
                     },
                   }}
-                  disabled={
-                    !email ||
-                    !isEmailValid ||
-                    !phoneNumber ||
-                    !isPhoneValid ||
-                    loading
-                  }
+                  disabled={!phoneNumber || !isPhoneValid || loading}
                   onClick={handleSendReset}
                 >
                   {loading ? "Sending..." : "Continue"}
@@ -435,9 +396,9 @@ const ForgotPassword = ({ onBack }) => {
                         maxLength: 1,
                         style: {
                           textAlign: "center",
-                          fontSize: { xs: 16, sm: 22 },
-                          width: { xs: "25px", sm: "30px" },
-                          height: { xs: "25px", sm: "30px" },
+                          fontSize: "22px",
+                          width: "30px",
+                          height: "30px",
                           background: "#fbfbfb",
                         },
                       }}
@@ -462,7 +423,6 @@ const ForgotPassword = ({ onBack }) => {
                         ml: 1,
                         textTransform: "none",
                         color: "#1b4d69",
-                        // bgcolor: "#f0f0f0",
                         borderRadius: 1,
                         fontWeight: 600,
                         fontSize: 13,
@@ -470,7 +430,10 @@ const ForgotPassword = ({ onBack }) => {
                         px: 0,
                         py: 0.5,
                       }}
-                      onClick={() => setTimer(60)}
+                      onClick={async () => {
+                        await handleSendReset();
+                        setOtp(["", "", "", "", "", ""]);
+                      }}
                     >
                       Resend
                     </Button>

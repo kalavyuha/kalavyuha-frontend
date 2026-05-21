@@ -42,12 +42,14 @@ const UploadErrorDialog = ({
     switch (type) {
       case 'FILE_TOO_LARGE':
       case 'INVALID_FILE_TYPE':
+      case 'VALIDATION_ERROR':
         return 'warning';
       case 'NETWORK_ERROR':
       case 'TIMEOUT_ERROR':
-        return 'error';
       case 'SERVER_ERROR':
         return 'error';
+      case 'AUTH_ERROR':
+        return 'warning';
       default:
         return 'info';
     }
@@ -65,6 +67,10 @@ const UploadErrorDialog = ({
         return '⏱️';
       case 'SERVER_ERROR':
         return '🔧';
+      case 'AUTH_ERROR':
+        return '🔒';
+      case 'VALIDATION_ERROR':
+        return '⚠️';
       default:
         return '⚠️';
     }
