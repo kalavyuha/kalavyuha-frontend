@@ -588,26 +588,27 @@ export default function SearchUI() {
 
   const handleSearch = async () => {
     setLoading(true)
+    navigate("/overview")
 
-    const result = await apiget(
-      `api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${category}`,
-    )
+    // const result = await apiget(
+    //   `api/v1/BussinessDetails/filter/?ServiceName=${serviceName}&Location=${location}&BussinessType=${category}`,
+    // )
 
-    if (result && result.status === 200) {
-      navigate("/overview", {
-        state: {
-          data: result?.data?.Data,
-          search: {
-            category: category,
-            serviceName: serviceName,
-            location: location,
-            date: date,
-            time: time,
-            selectedDateData: selectedDateData,
-          },
-        },
-      })
-    }
+    // if (result && result.status === 200) {
+    //   navigate("/overview", {
+    //     state: {
+    //       data: result?.data?.Data,
+    //       search: {
+    //         category: category,
+    //         serviceName: serviceName,
+    //         location: location,
+    //         date: date,
+    //         time: time,
+    //         selectedDateData: selectedDateData,
+    //       },
+    //     },
+    //   })
+    // }
     setLoading(false)
   }
 
@@ -1261,7 +1262,7 @@ export default function SearchUI() {
           onClick={handleSearch}
           disabled={loading}
         >
-          {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Search"}
+          {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "SEARCH"}
         </Button>
       </Box>
       

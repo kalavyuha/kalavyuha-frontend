@@ -32,6 +32,8 @@ import ColorLogo from "../assets/logo/kalavyuha-favicon/kalavyuha-favicon-color.
 import { apiget } from '../pages/service/api';
 import { useAuth } from '../Context/AuthContext';
 
+import { Link } from "react-router-dom";
+
 const StyledAppBar = styled(AppBar)({
   background: "#eaeef2",
   boxShadow: "0px 2px 3px -2px rgba(0, 0, 0, 0.1)",
@@ -504,7 +506,13 @@ export default function Navbar() {
           />
         </ListItem>
       </List>
-      <a href="/kalavyuha-frontend/business/page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+      
+      <Link
+        to="/business/page"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ textDecoration: "none" }}
+      >
         <Box sx={{ p: 2 }}>
           <DownloadButton
             fullWidth
@@ -517,7 +525,8 @@ export default function Navbar() {
             List Your Business
           </DownloadButton>
         </Box>
-      </a>
+      </Link>
+
     </Box>
   );
 
@@ -566,10 +575,14 @@ export default function Navbar() {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <NavButton startIcon={<Download />} onClick={handleDownloadClick}>Download</NavButton>
-
-                <a href="/kalavyuha-frontend/business/page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                <Link
+                  to="/business/page"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "none" }}
+                >
                   <NavButton startIcon={<Store />}>List Your Business</NavButton>
-                </a>
+                </Link>
               </Box>
 
               <Box
