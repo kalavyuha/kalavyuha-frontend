@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import {
   Box,
   Typography,
@@ -8,27 +9,24 @@ import {
   CardMedia,
   CardContent,
   CardActions,
-  Container
+  Container,
+  Skeleton
 } from '@mui/material';
-import { constant } from '../../constant';
 
-import MusiceTherapy from '../../assets/images/nearby/music_therapy.jpeg';
-import Makeup from '../../assets/images/nearby/makeup_service.jpeg';
-import SkinIssue from '../../assets/images/nearby/skin_issue.jpeg';
-import DisPersonFitness from '../../assets/images/nearby/disabled_person_fitness.jpeg';
+import { fetchNearbyServices } from '../../Services/home/api/nearbyServices.api';
 
-// Dynamic services will be fetched from API and stored here
-// We keep these images as possible fallbacks if the API doesn't return an image
-const FALLBACK_IMAGE = MusiceTherapy;
-
-const ServiceCard = ({ service }) => {
+const ServiceCard = React.memo(({ service }) => {
   const navigate = useNavigate();
+
+  const handleClick = useCallback(() => {
+    navigate(service.link);
+  }, [navigate, service.link]);
 
   return (
     <Card
       sx={{
-        width: { xs: 160, sm: 200, md: 280 },
-        minWidth: { xs: 160, sm: 200, md: 280 },
+        width: { xs: 160, sm: 190, md: 210 },
+        minWidth: { xs: 160, sm: 190, md: 210 },
         mx: { xs: 0.5, sm: 1 },
         height: '100%',
         display: 'flex',
@@ -36,7 +34,7 @@ const ServiceCard = ({ service }) => {
         bgcolor: 'transparent',
         border: 'none',
         boxShadow: 'none',
-        alignItems: "center",
+        alignItems: 'center',
         my: { xs: 1, sm: 2 }
       }}
     >
@@ -44,13 +42,16 @@ const ServiceCard = ({ service }) => {
         component="img"
         image={service.image}
         alt={service.title}
+        loading="lazy"
         sx={{
           height: { xs: 80, sm: 100, md: 120 },
           width: { xs: 100, sm: 120, md: 150 },
           borderRadius: 2,
           mb: 1,
+          objectFit: 'cover'
         }}
       />
+
       <CardContent sx={{ p: { xs: 0.5, sm: 1 } }}>
         <Typography
           variant="h6"
@@ -64,7 +65,14 @@ const ServiceCard = ({ service }) => {
           {service.title}
         </Typography>
       </CardContent>
-      <CardActions sx={{ p: { xs: 0.5, sm: 1 }, mt: 'auto', justifyContent: "center" }}>
+
+      <CardActions
+        sx={{
+          p: { xs: 0.5, sm: 1 },
+          mt: 'auto',
+          justifyContent: 'center'
+        }}
+      >
         <Button
           sx={{
             color: '#2196f3',
@@ -75,148 +83,222 @@ const ServiceCard = ({ service }) => {
               color: '#90caf9'
             }
           }}
-          onClick={() => navigate(service.link)}
+          onClick={handleClick}
         >
           {service.action}
         </Button>
       </CardActions>
     </Card>
   );
-};
+});
+
+ServiceCard.displayName = 'ServiceCard';
+
+// Skeleton loader for better UX
+const ServiceCardSkeleton = () => (
+  <Card
+    sx={{
+      width: { xs: 160, sm: 190, md: 210 },
+      minWidth: { xs: 160, sm: 190, md: 210 },
+      mx: { xs: 0.5, sm: 1 },
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      my: { xs: 1, sm: 2 },
+      bgcolor: 'transparent',
+      boxShadow: 'none'
+    }}
+  >
+    <Skeleton
+      variant="rounded"
+      sx={{
+        height: { xs: 80, sm: 100, md: 120 },
+        width: { xs: 100, sm: 120, md: 150 },
+        borderRadius: 2,
+        mb: 1,
+        bgcolor: 'rgba(255,255,255,0.1)'
+      }}
+    />
+    <Skeleton
+      variant="text"
+      sx={{
+        width: '80%',
+        bgcolor: 'rgba(255,255,255,0.1)'
+      }}
+    />
+    <Skeleton
+      variant="text"
+      sx={{
+        width: '60%',
+        bgcolor: 'rgba(255,255,255,0.1)'
+      }}
+    />
+  </Card>
+);
 
 const ServiceDirectory = () => {
   const scrollRef = useRef(null);
+  const intervalRef = useRef(null);
+  const timeoutRef = useRef(null);
+
   const [isManualScrolling, setIsManualScrolling] = useState(false);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(null);
 
-  // Configure API details
-  const API_URL = `${constant.baseUrl}/api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&latitude=78.9897978&longitude=28.6767965&page=1`;
-  const AUTH_TOKEN = 'VIRoHdqUAtpklgKg';
+  const loadServices = useCallback(async (latitude, longitude) => {
+    setLoading(true);
+    setError(null);
 
-  useEffect(() => {
-    let mounted = true;
+    try {
+      const data = await fetchNearbyServices({
+        searchFor: 'Service',
+        latitude,
+        longitude,
+        page: 1
+      });
 
-    const headerVariants = [
-      { 'Authorization': `Bearer ${AUTH_TOKEN}` },
-    ];
+      setServices([...data, ...data]);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load services');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const tryFetchWithHeaders = async (headers) => {
-      try {
-        const resp = await fetch(API_URL, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json', ...headers },
-          // mode: 'cors' // browser will select; uncomment to force if needed
-        });
-        const text = await resp.text();
-        let json;
-        try { json = JSON.parse(text); } catch (e) { json = text; }
-        return { resp, body: json };
-      } catch (err) {
-        return { error: err };
+  // Get user location
+  const getUserLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      console.error('Geolocation not supported');
+      loadServices(28.6767965, 78.9897978);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        loadServices(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        console.error('Location access denied:', error);
+        loadServices(28.6767965, 78.9897978);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
       }
-    };
+    );
+  }, [loadServices]);
 
-    const fetchServices = async () => {
-      setLoading(true);
-      setError(null);
-      setDebugInfo(null);
-      try {
-        let finalJson = null;
-        let finalStatus = null;
-        // iterate header variants until we get items or exhaust options
-        for (const hdr of headerVariants) {
-          const { resp, body, error: fetchErr } = await tryFetchWithHeaders(hdr);
-          if (fetchErr) {
-            // network error, try next
-            continue;
-          }
-          finalStatus = resp?.status;
-          // prefer structured JSON
-          const items = body?.Data?.items || (body && body.Data && body.Data.items) || [];
-          if (Array.isArray(items) && items.length > 0) {
-            finalJson = body;
-            // map items and break
-            const mapped = items.map(it => ({
-              title: it.ServiceName  || 'Service',
-              image: it.ServiceImage || FALLBACK_IMAGE,
-              action: 'BOOK NOW',
-              link: `/business/${it.BussinessId || ''}`
-            }));
-            if (mounted) setServices([...mapped, ...mapped]);
-            setDebugInfo({ usedHeaders: hdr, status: finalStatus, itemCount: items.length });
-            return;
-          }
+  // Start auto-scroll
+  const startAutoScroll = useCallback(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
 
-          // keep last response for debug if none returned items
-          setDebugInfo({ triedHeaders: hdr, status: finalStatus, body });
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
+      if (scrollContainer && !isManualScrolling) {
+        scrollContainer.scrollLeft += 1;
+
+        if (
+          scrollContainer.scrollLeft + scrollContainer.clientWidth >=
+          scrollContainer.scrollWidth
+        ) {
+          scrollContainer.scrollLeft = 0;
         }
-
-        // If we got here, no header variant returned items
-        setError('No services available.');
-      } catch (err) {
-        if (mounted) setError(err.message || 'Failed to load');
-      } finally {
-        if (mounted) setLoading(false);
       }
-    };
+    }, 10);
+  }, [isManualScrolling]);
 
-    fetchServices();
+  const stopAutoScroll = useCallback(() => {
+    setIsManualScrolling(true);
 
-    return () => { mounted = false; };
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setIsManualScrolling(false);
+    }, 1);
   }, []);
 
   useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    let scrollAmount = 1;
-    let interval;
+    getUserLocation();
 
-    const startAutoScroll = () => {
-      if (isManualScrolling) return;
-
-      interval = setInterval(() => {
-        if (scrollContainer) {
-          scrollContainer.scrollLeft += scrollAmount;
-          if (
-            scrollContainer.scrollLeft + scrollContainer.clientWidth >=
-            scrollContainer.scrollWidth
-          ) {
-            scrollContainer.scrollLeft = 0;
-          }
-        }
-      }, 10);
-    };
-
-    const stopAutoScroll = () => {
-      setIsManualScrolling(true);
-      clearInterval(interval);
-      setTimeout(() => setIsManualScrolling(false), 0); 
-    };
-
-    if (!isManualScrolling) startAutoScroll();
-
-    scrollContainer?.addEventListener("scroll", stopAutoScroll);
-    scrollContainer?.addEventListener("touchstart", stopAutoScroll);
-    scrollContainer?.addEventListener("touchend", () => {
-      setTimeout(() => setIsManualScrolling(false), 1000);
-    });
-    
     return () => {
-      clearInterval(interval);
-      scrollContainer?.removeEventListener("scroll", stopAutoScroll);
-      scrollContainer?.removeEventListener("touchstart", stopAutoScroll);
-      scrollContainer?.removeEventListener("touchend", () => {
-        setTimeout(() => setIsManualScrolling(false), 1000);
-      });
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [isManualScrolling]);
+  }, [getUserLocation]);
 
+  // auto-scroll setup
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+
+    if (!scrollContainer || services.length === 0) return;
+
+    if (!isManualScrolling) {
+      startAutoScroll();
+    }
+
+    scrollContainer.addEventListener('scroll', stopAutoScroll);
+    scrollContainer.addEventListener('touchstart', stopAutoScroll);
+
+    return () => {
+      scrollContainer.removeEventListener('scroll', stopAutoScroll);
+      scrollContainer.removeEventListener('touchstart', stopAutoScroll);
+      
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isManualScrolling, startAutoScroll, stopAutoScroll, services.length]);
+
+  // Memoize skeleton loaders
+  const skeletonLoaders = useMemo(() => 
+    Array.from({ length: 6 }, (_, i) => <ServiceCardSkeleton key={`skeleton-${i}`} />),
+  []);
+
+  const serviceCards = useMemo(() => 
+    services.map((service, index) => (
+      <ServiceCard
+        key={`${service.title}-${index}`}
+        service={service}
+      />
+    )),
+    [services]
+  );
 
   return (
-    <Box sx={{ bgcolor: 'black', pt: { xs: 8, sm: 10, md: 12 }, pb: { xs: 3, sm: 4 }, overflow: 'hidden' }}>
-      <Container maxWidth="lg" sx={{ px: { xs: 4, sm:8, md: 8, lg:4 } }}>
+    <Box
+      sx={{
+        bgcolor: 'black',
+        pt: { xs: 8, sm: 10, md: 12 },
+        pb: { xs: 3, sm: 4 },
+        mb: 10,
+        overflow: 'hidden'
+      }}
+    >
+      <Container
+        maxWidth="lg"
+        sx={{
+          px: { xs: 4, sm: 8, md: 8, lg: 4 }
+        }}
+      >
         <Box
           sx={{
             mb: { xs: 3, sm: 4, md: 6 },
@@ -229,21 +311,29 @@ const ServiceDirectory = () => {
           <Typography
             variant="h4"
             component="h2"
-            sx={{ 
-              color: 'white', 
-              fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' }, 
+            sx={{
+              color: 'white',
+              fontSize: {
+                xs: '1.2rem',
+                sm: '1.5rem',
+                md: '2rem'
+              },
               mb: { xs: 1, sm: 2 },
               width: '100%'
             }}
           >
             Your One-Stop Destination for Local Experts
           </Typography>
+
           <Typography
-            variant="h7"
-            sx={{ 
-              color: 'white', 
-              opacity: 0.8, 
-              fontSize: { xs: '0.7rem', sm: '0.8rem', md: '1rem' },
+            sx={{
+              color: 'white',
+              opacity: 0.8,
+              fontSize: {
+                xs: '0.7rem',
+                sm: '0.8rem',
+                md: '1rem'
+              },
               width: '100%'
             }}
           >
@@ -251,6 +341,7 @@ const ServiceDirectory = () => {
           </Typography>
         </Box>
 
+        {/* SERVICES */}
         <Box
           ref={scrollRef}
           sx={{
@@ -258,30 +349,32 @@ const ServiceDirectory = () => {
             overflowX: 'auto',
             scrollBehavior: 'smooth',
             scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
+            '&::-webkit-scrollbar': {
+              display: 'none'
+            },
             gap: { xs: 0.5, sm: 1 },
             pb: 1
           }}
         >
-          {loading && (
-            <Typography sx={{ color: 'white', p: 2 }}>Loading services...</Typography>
-          )}
+          {loading && skeletonLoaders}
+
           {error && (
-            <Typography sx={{ color: 'white', p: 2 }}>{error}</Typography>
+            <Typography sx={{ color: 'white', p: 2 }}>
+              {error}
+            </Typography>
           )}
 
           {!loading && !error && services.length === 0 && (
-            <Typography sx={{ color: 'white', p: 2 }}>No services found.</Typography>
+            <Typography sx={{ color: 'white', p: 2 }}>
+              No services found.
+            </Typography>
           )}
 
-          {!loading && !error && services.map((service, index) => (
-            <ServiceCard key={index} service={service} />
-          ))}
+          {!loading && !error && services.length > 0 && serviceCards}
         </Box>
-
       </Container>
     </Box>
   );
 };
 
-export default ServiceDirectory;
+export default React.memo(ServiceDirectory);

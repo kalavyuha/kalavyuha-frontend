@@ -3,9 +3,10 @@ import { Switch, Divider, } from "@mui/material";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Map, Search, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { Box, Button, Container, Grid, Radio, Dialog, FormControlLabel, DialogActions, Slider, RadioGroup, DialogTitle, DialogContent, Stack, Typography, Chip } from '@mui/material';
-import { apiget } from '../service/api';
 import SearchField from '../../components/searchField';
 import CustomButton from '../../components/customButton';
+import { fetchFilteredBusinesses } from '../../Services/overview/api/filterBusinesses.api';
+import { fetchNavigationPopularServices } from '../../Services/overview/api/navigationPopularServices.api';
 
 
 
@@ -193,53 +194,46 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
         setLoading(true)
         setIsLoading(true)
         
-        // Build query parameters including date and time if available
-        let queryParams = `ServiceName=${serviceName}&Location=${location}&BussinessType=${selectedCategory}`;
-        
-        if (date) {
-            queryParams += `&Date=${date}`;
-        }
-        
-        if (time) {
-            queryParams += `&Time=${time}`;
-        }
-        
-        // If we have detailed date data, we can add more specific parameters
-        if (selectedDateData) {
-            if (selectedDateData.slot && selectedDateData.slot !== '24 Hours') {
-                queryParams += `&TimeSlot=${selectedDateData.slot}`;
-            }
-            if (selectedDateData.startTime) {
-                queryParams += `&StartTime=${encodeURIComponent(selectedDateData.startTime)}`;
-            }
-            if (selectedDateData.endTime) {
-                queryParams += `&EndTime=${encodeURIComponent(selectedDateData.endTime)}`;
-            }
-        }
-        
-        
-        const result = await apiget(`api/v1/BussinessDetails/filter/?${queryParams}`);
-        if (result && result.status === 200) {
-            onDataChange(result?.data?.Data);
+        try {
+            const businesses = await fetchFilteredBusinesses({
+                serviceName,
+                location,
+                businessType: selectedCategory,
+                date,
+                time,
+                timeSlot: selectedDateData?.slot,
+                startTime: selectedDateData?.startTime,
+                endTime: selectedDateData?.endTime
+            });
+            onDataChange(businesses);
             setBuisnessType(selectedCategory)
+        } catch (err) {
+            console.error('Error fetching filtered businesses:', err);
+        } finally {
+            setIsLoading(false)
+            setLoading(false)
         }
-        setIsLoading(false)
-        setLoading(false)
     }
 
-    const fetchPopularServices = async () => {
+    const loadPopularServices = async () => {
         try {
-            const result = await apiget(`api/v1/Service/popularServices/?max_distance_km=15&limit=5&MinPrice=50&SortBy=Price&user_latitude=28.466296&user_longitude=77.011864&new_businesses=true`);
-            if (result && result.data?.Status === 200) {
-                setPopularServices(result?.data?.Data)
-            }
+            const services = await fetchNavigationPopularServices({
+                maxDistanceKm: 15,
+                limit: 5,
+                minPrice: 50,
+                sortBy: 'Price',
+                userLatitude: 28.466296,
+                userLongitude: 77.011864,
+                newBusinesses: true
+            });
+            setPopularServices(services);
         } catch (err) {
-            // Handle error silently or with proper error handling
+            console.error('Error loading popular services:', err);
         }
     }
 
     useEffect(() => {
-        fetchPopularServices();
+        loadPopularServices();
     }, [])
 
 
@@ -275,53 +269,73 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
                         initialSelectedDateData={selectedDateData}
                     />
 
-                    {/* need to remove  */}
-                    <Box mt={1} display={'flex'} gap={1} flexWrap={'wrap'}>
+                    {/* Category Selection */}
+                    <Box mt={2} mb={2} display={'flex'} gap={1} flexWrap={'wrap'}>
                         {category.map((item, index) => (
-                            <Typography
+                            <Chip
                                 key={index}
-                                variant="body2"
+                                label={item}
                                 onClick={() => setSelectedCategory(item)}
+                                variant={selectedCategory === item ? 'filled' : 'outlined'}
+                                color={selectedCategory === item ? 'primary' : 'default'}
                                 sx={{
-                                    background: selectedCategory === item ? '#164a5a' : '#f1f1f1',
-                                    color: selectedCategory === item ? '#f1f1f1' : '#164a5a',
-                                    width: 'max-content',
-                                    padding: '2px 12px',
-                                    borderRadius: '15px',
+                                    fontWeight: selectedCategory === item ? 600 : 500,
+                                    backgroundColor: selectedCategory === item ? '#1b4d69' : 'transparent',
+                                    borderColor: selectedCategory === item ? '#1b4d69' : '#d1d5db',
+                                    color: selectedCategory === item ? 'white' : '#4b5563',
                                     cursor: 'pointer',
-                                    transition: 'background 0.3s, color 0.3s'
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        backgroundColor: selectedCategory === item ? '#164a5a' : '#f3f4f6'
+                                    }
                                 }}
-                            >
-                                {item}
-                            </Typography>
+                            />
                         ))}
                     </Box>
 
                     {/* Popular Services Section */}
-                    <Box mt={2}>
-                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold", mb: 1 }}>
-                            Popular Services
-                        </Typography>
+                    {popularServices && popularServices.length > 0 && (
+                        <Box mt={2} mb={2}>
+                            <Typography 
+                                variant="subtitle2" 
+                                sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#4b5563',
+                                    mb: 1.5,
+                                    fontSize: '0.9rem'
+                                }}
+                            >
+                                Popular Services
+                            </Typography>
 
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {popularServices && popularServices.map((service, index) => {
-                                const { Service } = service;
-                                return (
-                                    <Chip
-                                        key={index}
-                                        label={Service?.Name}
-                                        variant="outlined"
-                                        icon={<Search size="15px" style={{ color: '#1b4d69', paddingRight: "2px" }} />}
-                                        onClick={() => setServiceName(Service?.Name)}
-                                        sx={{
-                                            borderRadius: '8px',
-                                            px: 1,
-                                        }}
-                                    />
-                                )
-                            })}
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                {popularServices.map((service, index) => {
+                                    const { Service } = service;
+                                    return (
+                                        <Chip
+                                            key={service._id || index}
+                                            label={Service?.Name}
+                                            variant="outlined"
+                                            icon={<Search size="14px" style={{ color: '#1b4d69' }} />}
+                                            onClick={() => setServiceName(Service?.Name)}
+                                            sx={{
+                                                borderRadius: '16px',
+                                                borderColor: '#d1d5db',
+                                                color: '#4b5563',
+                                                fontSize: '0.85rem',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    backgroundColor: '#f3f4f6',
+                                                    borderColor: '#1b4d69'
+                                                }
+                                            }}
+                                        />
+                                    )
+                                })}
+                            </Box>
                         </Box>
-                    </Box>
+                    )}
                     <Box sx={{ mt: '20px' }}>
                         <Grid container spacing={1} alignItems="center">
 

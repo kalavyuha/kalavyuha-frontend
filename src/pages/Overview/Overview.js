@@ -3,13 +3,12 @@ import { Container } from '@mui/material';
 import Navigation from './Navigation'
 import CardList from './Card'
 import MapComponent from './Map';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import RecommendedSection from './OtherServices';
-import { apiget } from '../service/api';
-import { constant } from '../../constant';
+import { fetchPopularServices } from '../../Services/overview/api/popularServices.api';
 
 const Overview = () => {
-    const [data, setData] = useState(null);
+    const [data, setData] = useState([]);
     const previousData = useLocation();
     const [showMap, setShowMap] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -40,22 +39,24 @@ const Overview = () => {
         setData(newData);
     };
 
-    const fetchPopularServices = async () => {
+    const loadPopularServices = async () => {
         try {
-            const result = await apiget(`${constant.baseUrl}/api/v1/Service/popularServiceAndBusinesses/?SearchFor=Service&Category=Beauty&latitude=78.9897978&longitude=28.6767965&page=1`);
-            if (result && result.data?.Status === 200) {
-                setPopularServices(result?.data?.Data)
-            }
+            const services = await fetchPopularServices({
+                category: 'Beauty',
+                searchFor: 'Service',
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                page: 1
+            });
+            setPopularServices(services);
         } catch (err) {
-            // Handle error silently or with proper error handling
+            console.error('Error loading popular services:', err);
         }
     }
 
     useEffect(() => {
-        fetchPopularServices()
-    }, [])
-
-   
+        loadPopularServices();
+    }, [userLocation])
 
     useEffect(() => {
         if (IndexFilterData) {

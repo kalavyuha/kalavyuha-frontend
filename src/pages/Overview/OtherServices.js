@@ -1,64 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardMedia, Typography, Box, IconButton, Button, Container } from '@mui/material';
-import { NavigateBefore, NavigateNext, LocationOn } from '@mui/icons-material';
-import RecommendedImgPath from '../../assets/images/recommended/recommended.png';
+import { Box, IconButton, Container, Typography } from '@mui/material';
+import { NavigateBefore, NavigateNext } from '@mui/icons-material';
 import { useMediaQuery } from '@mui/material';
 import TypeOneCard from '../../components/cardtypeone';
 
-const ServicesRecommendations = ({Services=[]}) => {
-    const salons = [
-        {
-            id: 1,
-            name: 'Shree Sai Nath Saloon',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-        {
-            id: 2,
-            name: 'Meraki Unisex Salon',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-        {
-            id: 3,
-            name: 'Wellbeings Salon',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-        {
-            id: 4,
-            name: 'Karishma Hair Cuts',
-            location: 'Jaipur',
-            rating: 4.8,
-            service: 'Hair cut',
-            discountedPrice: 50,
-            originalPrice: 50,
-            distance: '2.3 Km',
-            image: RecommendedImgPath
-        },
-    ];
-
+const ServicesRecommendations = ({ Services = [] }) => {
     const carouselRef = useRef(null);
     const [scrollPosition, setScrollPosition] = useState(0);
     const isSmallScreen = useMediaQuery('(max-width: 600px)');
 
-    // Normalize incoming `Services` prop to an array so .map is safe.
-    // Accept formats: array, { items: [...] }, { Data: { items: [...] } }, single object, or null.
+    // Normalize incoming Services prop to handle various data formats
     const normalizedServices = (() => {
         if (Array.isArray(Services)) return Services;
         if (Services && Array.isArray(Services.items)) return Services.items;
@@ -82,24 +33,33 @@ const ServicesRecommendations = ({Services=[]}) => {
         container.scrollTo({ left: validPosition, behavior: 'smooth' });
     };
 
+    // Don't render if no services available
+    if (!normalizedServices || normalizedServices.length === 0) {
+        return null;
+    }
 
     return (
-        <Container maxWidth="lg" sx={{ px: { xs: 4, sm: 8, md: 8, lg: 4 }, my: 10 }}>
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4, md: 4, lg: 4 }, my: 8 }}>
             <Box>
                 <Box
                     sx={{
                         display: isSmallScreen ? 'block' : 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        mb: isSmallScreen ? 2 : 4
+                        mb: 4
                     }}
                 >
                     <Typography
                         variant="h4"
                         component="h2"
-                        sx={{ fontSize: { xs: '1.5rem', sm: '2rem' }, mb: 2 }}
+                        sx={{
+                            fontSize: { xs: '1.5rem', sm: '2rem' },
+                            fontWeight: 600,
+                            color: '#1b4d69',
+                            mb: 2
+                        }}
                     >
-                        Recommended
+                        Recommended Services
                     </Typography>
                 </Box>
 
@@ -107,61 +67,70 @@ const ServicesRecommendations = ({Services=[]}) => {
                     ref={carouselRef}
                     sx={{
                         display: 'flex',
-                        gap: 7,
+                        gap: 4,
                         position: 'relative',
                         overflowX: 'auto',
                         scrollbarWidth: 'none',
                         '&::-webkit-scrollbar': { display: 'none' },
                         msOverflowStyle: 'none',
-                        scrollBehavior: 'smooth'
+                        scrollBehavior: 'smooth',
+                        pb: 2
                     }}
                 >
-                    {normalizedServices.length > 0 ? (
-                        normalizedServices.map((salon, idx) => (
-                            <TypeOneCard key={salon.id || salon._id || idx} salon={salon} isSmallScreen={isSmallScreen} />
-                        ))
-                    ) : (
-                        // render placeholder sample salons when no services provided
-                        salons.map((salon) => (
-                            <TypeOneCard key={salon.id} salon={salon} isSmallScreen={isSmallScreen} />
-                        ))
-                    )}
+                    {normalizedServices.map((service, idx) => (
+                        <TypeOneCard
+                            key={service.id || service._id || idx}
+                            salon={service}
+                            isSmallScreen={isSmallScreen}
+                        />
+                    ))}
                 </Box>
 
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        mt: 0,
-                        gap: 4
-                    }}
-                >
-                    <IconButton
+                {normalizedServices.length > 4 && (
+                    <Box
                         sx={{
-                            height: "26px",
-                            width: "26px",
-                            bgcolor: '#e2e6ea',
-                            boxShadow: 2,
-                            '&:hover': { bgcolor: 'white' }
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            mt: 2,
+                            gap: 2
                         }}
-                        onClick={() => scroll('prev')}
                     >
-                        <NavigateBefore />
-                    </IconButton>
-
-                    <IconButton
-                        sx={{
-                            height: "26px",
-                            width: "26px",
-                            bgcolor: '#cdddec',
-                            boxShadow: 2,
-                            '&:hover': { bgcolor: 'white' }
-                        }}
-                        onClick={() => scroll('next')}
-                    >
-                        <NavigateNext sx={{ color: "#1b4d69" }} />
-                    </IconButton>
-                </Box>
+                        <IconButton
+                            sx={{
+                                height: '36px',
+                                width: '36px',
+                                bgcolor: '#e8f0f7',
+                                boxShadow: 1,
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    bgcolor: '#1b4d69',
+                                    '& svg': { color: 'white' }
+                                }
+                            }}
+                            onClick={() => scroll('prev')}
+                            aria-label="scroll left"
+                        >
+                            <NavigateBefore sx={{ color: '#1b4d69' }} />
+                        </IconButton>
+                        <IconButton
+                            sx={{
+                                height: '36px',
+                                width: '36px',
+                                bgcolor: '#e8f0f7',
+                                boxShadow: 1,
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    bgcolor: '#1b4d69',
+                                    '& svg': { color: 'white' }
+                                }
+                            }}
+                            onClick={() => scroll('next')}
+                            aria-label="scroll right"
+                        >
+                            <NavigateNext sx={{ color: '#1b4d69' }} />
+                        </IconButton>
+                    </Box>
+                )}
             </Box>
         </Container>
     );
