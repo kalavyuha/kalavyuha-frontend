@@ -34,15 +34,12 @@ const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
 
 
   const processAmenities = (businessFacilities) => {
-  // Handle case where businessFacilities is null, undefined, empty array, or not an array
   if (!businessFacilities || !Array.isArray(businessFacilities) || businessFacilities.length === 0) {
     return [];
   }
 
-  // Get the first (and likely only) facilities object from the array
   const facilities = businessFacilities[0];
   
-  // Return empty array if facilities object is invalid
   if (!facilities || typeof facilities !== 'object') {
     return [];
   }
@@ -222,34 +219,64 @@ const getAmenityIcon = (amenityName) => {
 // Test with your sample data
 const sampleApiData = [
   {
-    "ACCooler": true,
-    "Accessibility": true,
-    "AtHomeService": false,
-    "BusinessId": 99349543,
-    "CreatedBy": null,
-    "CreatedOn": "2025-06-05T17:34:19.217000",
-    "ExtraAmenities": {
-      "GymInside": true,
-      "PetFriendly": false,
-      "SpaAvailable": true,
-      "ValetParking": true
+    business_details: {
+      BusinessName: 'Glow Beauty Salon',
+      StreetAddress: 'MG Road',
+      Region: 'New Delhi',
+      LikesCount: 128,
+      ClosingTime: '9:00 PM',
+      ProfileImage: ImageIcon,
+      _id: 'dummy-1'
     },
-    "FreeWiFi": true,
-    "InstantConfirmation": false,
-    "Internet": true,
-    "Parking": true,
-    "ParkingFacility": true,
-    "UpdatedBy": null,
-    "UpdatedOn": "2025-06-05T17:34:19.217000",
-    "VirtualConsultation": true,
-    "Water": true,
-    "_id": 91187966
+    services: [
+      {
+        Categories: [
+          {
+            Services: [
+              {
+                Name: 'Haircut',
+                Duration: '30 mins',
+                Price: 250,
+                isDiscount: false
+              }
+            ]
+          },
+          {
+            Services: [
+              {
+                Name: 'Facial',
+                Duration: '45 mins',
+                Price: 499,
+                isDiscount: true,
+                DiscountedPrice: 399
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    'Business Facilities': [
+      {
+        ACCooler: true,
+        FreeWiFi: true,
+        Parking: true,
+        Water: true,
+        ExtraAmenities: {
+          SpaAvailable: true,
+          ValetParking: true,
+          GymInside: true
+        }
+      }
+    ],
+    'Average Rating': 4.8
   }
 ];
 
 
 
-  const listings = data && data.map(filter => {
+  const sourceData = Array.isArray(data) && data.length > 0 ? data : sampleApiData;
+
+  const listings = sourceData.map(filter => {
     const { business_details, services, 'Business Facilities': apiAmenities, 'Average Rating': rating } = filter;
 
     const processedAmenities = processAmenities(apiAmenities);
