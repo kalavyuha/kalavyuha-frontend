@@ -504,11 +504,7 @@ export default function Navbar() {
           />
         </ListItem>
       </List>
-<<<<<<< HEAD
-      <Link to="/business-page" style={{ textDecoration: "none" }}>
-=======
       <a href="/kalavyuha-frontend/business/page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
->>>>>>> 6b13621 (final code push)
         <Box sx={{ p: 2 }}>
           <DownloadButton
             fullWidth
@@ -521,7 +517,7 @@ export default function Navbar() {
             List Your Business
           </DownloadButton>
         </Box>
-      </Link>
+      </a>
     </Box>
   );
 
@@ -571,13 +567,9 @@ export default function Navbar() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <NavButton startIcon={<Download />} onClick={handleDownloadClick}>Download</NavButton>
 
-<<<<<<< HEAD
-                <Link to="/business-page" style={{ textDecoration: "none" }}>
-=======
                 <a href="/kalavyuha-frontend/business/page" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
->>>>>>> 6b13621 (final code push)
                   <NavButton startIcon={<Store />}>List Your Business</NavButton>
-                </Link>
+                </a>
               </Box>
 
               <Box
