@@ -1,120 +1,249 @@
-import React from 'react';
-import { Card, CardContent, CardMedia, Typography, Box } from '@mui/material';
-import NearMeOutlinedIcon from '@mui/icons-material/NearMeOutlined';
-import { useNavigate } from 'react-router-dom';
-import ImageIcon from '../assets/images/Overview_Images/image.png'
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Box,
+} from "@mui/material";
+
+import NearMeOutlinedIcon from "@mui/icons-material/NearMeOutlined";
+import StarIcon from "@mui/icons-material/Star";
+
+import { useNavigate } from "react-router-dom";
+
+import ImageIcon from "../assets/images/Overview_Images/image.png";
+
+const CARD_WIDTH = 300;
 
 const TypeOneCard = React.memo(({ salon, isSmallScreen }) => {
-    const { Business, Service, id } = salon;
-    const navigate = useNavigate();
+  const { Business, id } = salon;
 
-    const handleCardClick = () => {
-        // console.log('Card clicked, salon object:', salon);
-        // console.log('Salon ID:', id);
-        if (id) {
-            // console.log('Navigating to:', `/detail/${id}`);
-            navigate(`/detail/${id}`);
-        } else {
-            // console.log('No salon ID found');
-        }
-    };
+  const navigate = useNavigate();
 
-    return (
-        <Card
-            sx={{
-                minWidth: 300,
-                maxWidth: 300,
-                borderRadius: 1,
-                position: 'relative',
-                background: "transparent",
-                boxShadow: 'none',
-                cursor: 'pointer',
-                transition: 'transform 0.2s ease-in-out',
-                '&:hover': {
-                    transform: 'translateY(-2px)',
-                    // boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                }
-            }}
-            onClick={handleCardClick}
+  const handleCardClick = () => {
+    if (id) {
+      navigate(`/detail/${id}`);
+    }
+  };
+
+  return (
+    <Card
+      onClick={handleCardClick}
+      sx={{
+        minWidth: CARD_WIDTH,
+        maxWidth: CARD_WIDTH,
+
+        flexShrink: 0,
+
+        borderRadius: 0,
+
+        background: "transparent",
+
+        boxShadow: "none",
+
+        cursor: "pointer",
+
+        transition: "all 0.25s ease",
+
+        "&:hover": {
+          transform: "translateY(-3px)",
+        },
+      }}
+    >
+      {/* IMAGE */}
+      <Box
+        sx={{
+          position: "relative",
+        }}
+      >
+        <CardMedia
+          component="img"
+          image={Business?.Image || ImageIcon}
+          alt={Business?.Name || "Business"}
+          height="175"
+          sx={{
+            borderRadius: "10px",
+            objectFit: "cover",
+          }}
+          onError={(e) => {
+            e.target.src = ImageIcon;
+          }}
+        />
+
+        {/* OFFER TAG */}
+        {/* <Box
+          sx={{
+            position: "absolute",
+            top: 14,
+            left: 14,
+
+            bgcolor: "#114B69",
+            color: "#fff",
+
+            px: 1.2,
+            py: 0.6,
+
+            borderRadius: "6px",
+
+            fontSize: "0.72rem",
+            fontWeight: 600,
+
+            letterSpacing: "0.2px",
+          }}
         >
-            <Box sx={{ position: 'relative' }}>
-                <CardMedia
-                    component="img"
-                    height="175"
-                    image={Business?.Image ? Business?.Image : ImageIcon}
-                    alt={Business?.Name || 'Business Image'}
-                    sx={{
-                        borderRadius: "8px",
-                        objectFit: "cover"
-                    }}
-                    onError={(e) => {
-                        e.target.src = ImageIcon;
-                    }}
-                />
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        bgcolor: '#1B4B66',
-                        color: 'white',
-                        py: 0.5,
-                        px: 1,
-                        borderRadius: 1,
-                        fontSize: "0.7rem"
-                    }}
-                >
-                    UP TO 10% OFF
-                </Box>
-            </Box>
+          UP TO 10% OFF
+        </Box> */}
+      </Box>
 
-            <CardContent sx={{ px: 0 }}>
-                <Box sx={{ mb: 1 }}>
-                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ fontSize: isSmallScreen ? '0.75rem' : '0.9rem' }}
-                    >
-                        {Business?.Address || 'TEST'}
-                    </Typography>
-                     <Box sx={{ display: 'flex', alignItems: 'center' , gap: 0.5 }}>
-                    <NearMeOutlinedIcon sx={{ color: 'text.secondary', fontSize: '0.95rem' }} />
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ fontSize: isSmallScreen ? '0.75rem' : '0.9rem' }}
-                    >
-                        {Business?.Distance || '0 Km'}
-                    </Typography>
-                    </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            fontWeight="bold"
-                            sx={{ fontSize: isSmallScreen ? '0.9rem' : '1.15rem' }}
-                        >
-                            {Business?.Name || 'TEST'}
-                        </Typography>
-                        <Typography
-                            sx={{
-                                bgcolor: '#1B4B66',
-                                color: 'white',
-                                py: 0.2,
-                                px: 1,
-                                borderRadius: 1,
-                                fontSize: isSmallScreen ? '0.65rem' : '0.8rem'
-                            }}
-                        >
-                            {Business?.Rating || "4.5"} ★
-                        </Typography>
-                    </Box>
-                </Box>
-            </CardContent>
-        </Card>
-    );
+      {/* CONTENT */}
+      <CardContent
+        sx={{
+          px: 0,
+          pt: 1.8,
+          pb: "0 !important",
+        }}
+      >
+        {/* LOCATION + DISTANCE */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+
+            gap: 1,
+
+            mb: 0.8,
+          }}
+        >
+          {/* LOCATION */}
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#6B7280",
+
+              fontSize: isSmallScreen ? "0.82rem" : "0.9rem",
+
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+
+              flex: 1,
+            }}
+          >
+            {Business?.Address || "Location"}
+          </Typography>
+
+          {/* DISTANCE */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+
+              gap: 0.3,
+
+              flexShrink: 0,
+            }}
+          >
+            <NearMeOutlinedIcon
+              sx={{
+                fontSize: "0.9rem",
+                color: "#6B7280",
+              }}
+            />
+
+            <Typography
+              sx={{
+                color: "#6B7280",
+
+                fontSize: isSmallScreen ? "0.82rem" : "0.9rem",
+
+                whiteSpace: "nowrap",
+              }}
+            >
+              {Business?.Distance || "1.2 Km"}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* NAME + RATING */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+
+            gap: 1,
+          }}
+        >
+          {/* NAME */}
+          <Typography
+            sx={{
+              fontWeight: 700,
+
+              color: "#111827",
+
+              fontSize: isSmallScreen ? "1.05rem" : "1.15rem",
+
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+
+              flex: 1,
+            }}
+          >
+            {Business?.Name || "Glow Beauty Salon"}
+          </Typography>
+
+          {/* RATING */}
+          <Box
+            sx={{
+              bgcolor: "#114B69",
+
+              color: "#fff",
+
+              borderRadius: "6px",
+
+              py: 0.45,
+
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+
+              minWidth: "58px",
+
+              flexShrink: 0,
+            }}
+          >
+            <Typography
+              sx={{
+                display: "flex",
+                alignItems: "center",
+
+                gap: 0.5,
+
+                fontSize: "0.82rem",
+
+                fontWeight: 600,
+
+                lineHeight: 1,
+
+                whiteSpace: "nowrap",
+              }}
+            >
+              {Business?.Rating || "4.7"}
+
+              <StarIcon
+                sx={{
+                  fontSize: "0.78rem",
+                }}
+              />
+            </Typography>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
 });
 
 export default TypeOneCard;

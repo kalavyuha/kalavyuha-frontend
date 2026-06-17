@@ -33,7 +33,6 @@ export function DealsSection({loading}) {
   return (
     <Box
       sx={{
-        mt: 3,
         borderRadius: '16px',
       }}
     >

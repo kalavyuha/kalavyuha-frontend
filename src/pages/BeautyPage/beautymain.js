@@ -106,6 +106,7 @@ function BeautyMain() {
   const fetchDetailData = async () => {
     setLoading(true);
     const result = await apiget(`api/v1/BussinessDetails/alldetails/${id}`);
+    console.log(result)
     if (result && result?.data?.Status === 200) {
       setBuisnessInfo(result?.data?.Data?.BusinessInfo);
       setServices(result?.data?.Data?.Services);

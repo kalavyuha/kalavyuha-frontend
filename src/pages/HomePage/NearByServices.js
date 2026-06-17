@@ -13,14 +13,18 @@ import {
   Skeleton
 } from '@mui/material';
 
-import { fetchNearbyServices } from '../../Services/home/api/nearbyServices.api';
+import { fetchServiceCategories } from '../../Services/home/api/serviceCategories.api';
 
 const ServiceCard = React.memo(({ service }) => {
   const navigate = useNavigate();
 
   const handleClick = useCallback(() => {
-    navigate(service.link);
-  }, [navigate, service.link]);
+    if (service.state) {
+      navigate(service.link, { state: service.state });
+    } else {
+      navigate(service.link);
+    }
+  }, [navigate, service.link, service.state]);
 
   return (
     <Card
@@ -147,50 +151,20 @@ const ServiceDirectory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadServices = useCallback(async (latitude, longitude) => {
+  const loadServices = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await fetchNearbyServices({
-        searchFor: 'Service',
-        latitude,
-        longitude,
-        page: 1
-      });
-
+      const data = await fetchServiceCategories();
       setServices([...data, ...data]);
     } catch (err) {
       console.error(err);
-      setError('Failed to load services');
+      setError('Failed to load service categories');
     } finally {
       setLoading(false);
     }
   }, []);
-
-  // Get user location
-  const getUserLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      console.error('Geolocation not supported');
-      loadServices(28.6767965, 78.9897978);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        loadServices(position.coords.latitude, position.coords.longitude);
-      },
-      (error) => {
-        console.error('Location access denied:', error);
-        loadServices(28.6767965, 78.9897978);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
-  }, [loadServices]);
 
   // Start auto-scroll
   const startAutoScroll = useCallback(() => {
@@ -233,7 +207,8 @@ const ServiceDirectory = () => {
   }, []);
 
   useEffect(() => {
-    getUserLocation();
+    loadServices();
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -244,7 +219,7 @@ const ServiceDirectory = () => {
         timeoutRef.current = null;
       }
     };
-  }, [getUserLocation]);
+  }, [loadServices]);
 
   // auto-scroll setup
   useEffect(() => {

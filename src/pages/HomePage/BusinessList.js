@@ -59,7 +59,7 @@ const KalavyuhaBusinessPage = () => {
   const navigate = useNavigate();
 
   return (
-    <Container maxWidth="lg" sx={{ px: { xs: 4, sm:8, md: 8, lg:4 }, pb:6 }}>
+    <Container maxWidth="lg" sx={{ px: { xs: 4, sm:8, md: 8, lg:4 }, py:6 }}>
       <Typography  
         variant="h4"
         component="h2"

@@ -22,7 +22,7 @@ const BookingAppLanding = () => {
     <Box
       id="app-info-section"
       sx={{
-        my:10,
+        my:6,
         width: "100%",
         display: "flex",
         flexDirection: "column",

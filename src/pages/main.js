@@ -77,7 +77,7 @@ const Main = () => {
             <Banner />
             <ServiceDirectory/>
             <RecommendedSection category="Beauty" />
-            <RecommendedSection category="Wellness" />
+            <RecommendedSection category="Fitness" />
             <RecommendedSection category="Health Care" />
             <BusinessList/>
             <AppInfoSection />

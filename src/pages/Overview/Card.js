@@ -34,98 +34,69 @@ const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
 
 
   const processAmenities = (businessFacilities) => {
-  if (!businessFacilities || !Array.isArray(businessFacilities) || businessFacilities.length === 0) {
-    return [];
-  }
-
-  const facilities = businessFacilities[0];
-  
-  if (!facilities || typeof facilities !== 'object') {
-    return [];
-  }
-
-  const uniqueAmenities = [];
-  const seenAmenities = new Set();
-
-  // Helper function to add amenity if not already seen
-  const addUniqueAmenity = (key, displayName) => {
-    const normalizedKey = displayName.toLowerCase().trim();
-    if (!seenAmenities.has(normalizedKey)) {
-      seenAmenities.add(normalizedKey);
-      uniqueAmenities.push({
-        icon: getAmenityIcon(key),
-        label: displayName
-      });
-    }
-  };
-
-  // Fields to skip (non-amenity database fields)
-  const skipFields = [
-    'BusinessId', 
-    'CreatedBy', 
-    'CreatedOn', 
-    'UpdatedBy', 
-    'UpdatedOn', 
-    '_id',
-    'ExtraAmenities' // We'll handle this separately
-  ];
-
-  // Process main facilities (excluding ExtraAmenities and database fields)
-  Object.entries(facilities).forEach(([key, value]) => {
-    // Skip non-amenity fields and ExtraAmenities (handled separately)
-    if (skipFields.includes(key)) {
-      return;
+    if (!businessFacilities || !Array.isArray(businessFacilities) || businessFacilities.length === 0) {
+      return [];
     }
 
-    // Only process boolean true values
-    if (typeof value === 'boolean' && value === true) {
-      let displayName = key;
+    const facilities = businessFacilities[0];
 
-      // Special cases for better display names
-      const displayNameMap = {
-        'ACCooler': 'AC',
-        'FreeWiFi': 'WiFi',
-        'Internet': 'WiFi',
-        'ParkingFacility': 'Parking',
-        'Parking': 'Parking',
-        'InstantConfirmation': 'Instant Booking',
-        'VirtualConsultation': 'Virtual Service',
-        'AtHomeService': 'Home Service',
-        'Accessibility': 'Wheelchair Accessible',
-        'Water': 'Water Supply'
-      };
+    if (!facilities || typeof facilities !== 'object') {
+      return [];
+    }
 
-      if (displayNameMap[key]) {
-        displayName = displayNameMap[key];
-      } else {
-        // Convert camelCase to readable format
-        displayName = key
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, str => str.toUpperCase())
-          .trim();
+    const uniqueAmenities = [];
+    const seenAmenities = new Set();
+
+    // Helper function to add amenity if not already seen
+    const addUniqueAmenity = (key, displayName) => {
+      const normalizedKey = displayName.toLowerCase().trim();
+      if (!seenAmenities.has(normalizedKey)) {
+        seenAmenities.add(normalizedKey);
+        uniqueAmenities.push({
+          icon: getAmenityIcon(key),
+          label: displayName
+        });
+      }
+    };
+
+    // Fields to skip (non-amenity database fields)
+    const skipFields = [
+      'BusinessId',
+      'CreatedBy',
+      'CreatedOn',
+      'UpdatedBy',
+      'UpdatedOn',
+      '_id',
+      'ExtraAmenities' // We'll handle this separately
+    ];
+
+    // Process main facilities (excluding ExtraAmenities and database fields)
+    Object.entries(facilities).forEach(([key, value]) => {
+      // Skip non-amenity fields and ExtraAmenities (handled separately)
+      if (skipFields.includes(key)) {
+        return;
       }
 
-      addUniqueAmenity(key, displayName);
-    }
-  });
-
-  // Process ExtraAmenities separately
-  if (facilities.ExtraAmenities && typeof facilities.ExtraAmenities === 'object') {
-    Object.entries(facilities.ExtraAmenities).forEach(([key, value]) => {
       // Only process boolean true values
       if (typeof value === 'boolean' && value === true) {
         let displayName = key;
 
-        // Special cases for extra amenities
-        const extraDisplayNameMap = {
-          'SpaAvailable': 'Spa',
-          'GymInside': 'Gym',
-          'PetFriendly': 'Pet Friendly',
-          'ValetParking': 'Valet Parking'
+        // Special cases for better display names
+        const displayNameMap = {
+          'ACCooler': 'AC',
+          'FreeWiFi': 'WiFi',
+          'Internet': 'WiFi',
+          'ParkingFacility': 'Parking',
+          'Parking': 'Parking',
+          'InstantConfirmation': 'Instant Booking',
+          'VirtualConsultation': 'Virtual Service',
+          'AtHomeService': 'Home Service',
+          'Accessibility': 'Wheelchair Accessible',
+          'Water': 'Water Supply'
         };
 
-        if (extraDisplayNameMap[key]) {
-          displayName = extraDisplayNameMap[key];
+        if (displayNameMap[key]) {
+          displayName = displayNameMap[key];
         } else {
           // Convert camelCase to readable format
           displayName = key
@@ -137,140 +108,169 @@ const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
         addUniqueAmenity(key, displayName);
       }
     });
-  }
 
-  return uniqueAmenities;
-};
+    // Process ExtraAmenities separately
+    if (facilities.ExtraAmenities && typeof facilities.ExtraAmenities === 'object') {
+      Object.entries(facilities.ExtraAmenities).forEach(([key, value]) => {
+        // Only process boolean true values
+        if (typeof value === 'boolean' && value === true) {
+          let displayName = key;
 
-// Enhanced getAmenityIcon function with more comprehensive mapping
-const getAmenityIcon = (amenityName) => {
-  const iconStyle = {
-    height: '16px',
-    fontSize: '16px'
-  };
+          // Special cases for extra amenities
+          const extraDisplayNameMap = {
+            'SpaAvailable': 'Spa',
+            'GymInside': 'Gym',
+            'PetFriendly': 'Pet Friendly',
+            'ValetParking': 'Valet Parking'
+          };
 
-  const iconMap = {
-    // AC/Cooling related
-    'ACCooler': <AirVent style={iconStyle} />,
-    'AC': <AirVent style={iconStyle} />,
-    'A C Cooler': <AirVent style={iconStyle} />,
-    'Air Conditioning': <AirVent style={iconStyle} />,
-    'Cooler': <AirVent style={iconStyle} />,
-    
-    // WiFi/Internet related
-    'FreeWiFi': <Wifi style={iconStyle} />,
-    'WiFi': <Wifi style={iconStyle} />,
-    'Wifi': <Wifi style={iconStyle} />,
-    'Wi-Fi': <Wifi style={iconStyle} />,
-    'Free Wi Fi': <Wifi style={iconStyle} />,
-    'Internet': <Wifi style={iconStyle} />,
-    'VirtualConsultation': <Wifi style={iconStyle} />,
-    'Virtual Consultation': <Wifi style={iconStyle} />,
-    
-    // Pet related
-    'PetFriendly': <PawPrint style={iconStyle} />,
-    'Pet Friendly': <PawPrint style={iconStyle} />,
-    'Pet-Friendly': <PawPrint style={iconStyle} />,
-    'Pets': <PawPrint style={iconStyle} />,
-    'Animals': <PawPrint style={iconStyle} />,
-    
-    // Water/Pool/Spa related
-    'Pool': <PoolIcon style={iconStyle} />,
-    'Swimming Pool': <PoolIcon style={iconStyle} />,
-    'Swimming': <PoolIcon style={iconStyle} />,
-    'Water': <PoolIcon style={iconStyle} />,
-    'SpaAvailable': <PoolIcon style={iconStyle} />,
-    'Spa Available': <PoolIcon style={iconStyle} />,
-    
-    // Parking related
-    'Parking': <PlusIcon style={iconStyle} />,
-    'ParkingFacility': <PlusIcon style={iconStyle} />,
-    'Parking Facility': <PlusIcon style={iconStyle} />,
-    'ValetParking': <PlusIcon style={iconStyle} />,
-    'Valet Parking': <PlusIcon style={iconStyle} />,
-    
-    // Time/Booking related
-    'InstantConfirmation': <Clock style={iconStyle} />,
-    'Instant Confirmation': <Clock style={iconStyle} />,
-    
-    // Other services
-    'GymInside': <PlusIcon style={iconStyle} />,
-    'Gym Inside': <PlusIcon style={iconStyle} />,
-    'Accessibility': <PlusIcon style={iconStyle} />,
-    'AtHomeService': <PlusIcon style={iconStyle} />,
-    'At Home Service': <PlusIcon style={iconStyle} />,
-  };
-
-  // Direct match first
-  if (iconMap[amenityName]) {
-    return iconMap[amenityName];
-  }
-
-  // Case-insensitive match
-  const normalizedName = amenityName?.trim();
-  const matchedKey = Object.keys(iconMap).find(key =>
-    key.toLowerCase() === normalizedName?.toLowerCase()
-  );
-
-  // Return matched icon or default to AirVent
-  return matchedKey ? iconMap[matchedKey] : <AirVent style={iconStyle} />;
-};
-
-// Test with your sample data
-const sampleApiData = [
-  {
-    business_details: {
-      BusinessName: 'Glow Beauty Salon',
-      StreetAddress: 'MG Road',
-      Region: 'New Delhi',
-      LikesCount: 128,
-      ClosingTime: '9:00 PM',
-      ProfileImage: ImageIcon,
-      _id: 'dummy-1'
-    },
-    services: [
-      {
-        Categories: [
-          {
-            Services: [
-              {
-                Name: 'Haircut',
-                Duration: '30 mins',
-                Price: 250,
-                isDiscount: false
-              }
-            ]
-          },
-          {
-            Services: [
-              {
-                Name: 'Facial',
-                Duration: '45 mins',
-                Price: 499,
-                isDiscount: true,
-                DiscountedPrice: 399
-              }
-            ]
+          if (extraDisplayNameMap[key]) {
+            displayName = extraDisplayNameMap[key];
+          } else {
+            // Convert camelCase to readable format
+            displayName = key
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/^./, str => str.toUpperCase())
+              .trim();
           }
-        ]
-      }
-    ],
-    'Business Facilities': [
-      {
-        ACCooler: true,
-        FreeWiFi: true,
-        Parking: true,
-        Water: true,
-        ExtraAmenities: {
-          SpaAvailable: true,
-          ValetParking: true,
-          GymInside: true
+
+          addUniqueAmenity(key, displayName);
         }
-      }
-    ],
-    'Average Rating': 4.8
-  }
-];
+      });
+    }
+
+    return uniqueAmenities;
+  };
+
+  // Enhanced getAmenityIcon function with more comprehensive mapping
+  const getAmenityIcon = (amenityName) => {
+    const iconStyle = {
+      height: '16px',
+      fontSize: '16px'
+    };
+
+    const iconMap = {
+      // AC/Cooling related
+      'ACCooler': <AirVent style={iconStyle} />,
+      'AC': <AirVent style={iconStyle} />,
+      'A C Cooler': <AirVent style={iconStyle} />,
+      'Air Conditioning': <AirVent style={iconStyle} />,
+      'Cooler': <AirVent style={iconStyle} />,
+
+      // WiFi/Internet related
+      'FreeWiFi': <Wifi style={iconStyle} />,
+      'WiFi': <Wifi style={iconStyle} />,
+      'Wifi': <Wifi style={iconStyle} />,
+      'Wi-Fi': <Wifi style={iconStyle} />,
+      'Free Wi Fi': <Wifi style={iconStyle} />,
+      'Internet': <Wifi style={iconStyle} />,
+      'VirtualConsultation': <Wifi style={iconStyle} />,
+      'Virtual Consultation': <Wifi style={iconStyle} />,
+
+      // Pet related
+      'PetFriendly': <PawPrint style={iconStyle} />,
+      'Pet Friendly': <PawPrint style={iconStyle} />,
+      'Pet-Friendly': <PawPrint style={iconStyle} />,
+      'Pets': <PawPrint style={iconStyle} />,
+      'Animals': <PawPrint style={iconStyle} />,
+
+      // Water/Pool/Spa related
+      'Pool': <PoolIcon style={iconStyle} />,
+      'Swimming Pool': <PoolIcon style={iconStyle} />,
+      'Swimming': <PoolIcon style={iconStyle} />,
+      'Water': <PoolIcon style={iconStyle} />,
+      'SpaAvailable': <PoolIcon style={iconStyle} />,
+      'Spa Available': <PoolIcon style={iconStyle} />,
+
+      // Parking related
+      'Parking': <PlusIcon style={iconStyle} />,
+      'ParkingFacility': <PlusIcon style={iconStyle} />,
+      'Parking Facility': <PlusIcon style={iconStyle} />,
+      'ValetParking': <PlusIcon style={iconStyle} />,
+      'Valet Parking': <PlusIcon style={iconStyle} />,
+
+      // Time/Booking related
+      'InstantConfirmation': <Clock style={iconStyle} />,
+      'Instant Confirmation': <Clock style={iconStyle} />,
+
+      // Other services
+      'GymInside': <PlusIcon style={iconStyle} />,
+      'Gym Inside': <PlusIcon style={iconStyle} />,
+      'Accessibility': <PlusIcon style={iconStyle} />,
+      'AtHomeService': <PlusIcon style={iconStyle} />,
+      'At Home Service': <PlusIcon style={iconStyle} />,
+    };
+
+    // Direct match first
+    if (iconMap[amenityName]) {
+      return iconMap[amenityName];
+    }
+
+    // Case-insensitive match
+    const normalizedName = amenityName?.trim();
+    const matchedKey = Object.keys(iconMap).find(key =>
+      key.toLowerCase() === normalizedName?.toLowerCase()
+    );
+
+    // Return matched icon or default to AirVent
+    return matchedKey ? iconMap[matchedKey] : <AirVent style={iconStyle} />;
+  };
+
+  // Test with your sample data
+  const sampleApiData = [
+    {
+      business_details: {
+        BusinessName: 'Glow Beauty Salon',
+        StreetAddress: 'MG Road',
+        Region: 'New Delhi',
+        LikesCount: 128,
+        ClosingTime: '9:00 PM',
+        ProfileImage: ImageIcon,
+        _id: 'dummy-1'
+      },
+      services: [
+        {
+          Categories: [
+            {
+              Services: [
+                {
+                  Name: 'Haircut',
+                  Duration: '30 mins',
+                  Price: 250,
+                  isDiscount: false
+                }
+              ]
+            },
+            {
+              Services: [
+                {
+                  Name: 'Facial',
+                  Duration: '45 mins',
+                  Price: 499,
+                  isDiscount: true,
+                  DiscountedPrice: 399
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      'Business Facilities': [
+        {
+          ACCooler: true,
+          FreeWiFi: true,
+          Parking: true,
+          Water: true,
+          ExtraAmenities: {
+            SpaAvailable: true,
+            ValetParking: true,
+            GymInside: true
+          }
+        }
+      ],
+      'Average Rating': 4.8
+    }
+  ];
 
 
 
@@ -565,7 +565,6 @@ const sampleApiData = [
 
         <Grid item sx={{ width: { xs: '100%', sm: '100%', md: '70%' } }}>
           <Box sx={{
-            mt: 5,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -578,7 +577,16 @@ const sampleApiData = [
             ) : (
               <>
                 {(listings && listings.length > 0) && <Typography variant="h5" sx={{ fontSize: { xs: '1rem', sm: '1rem' }, color: '#000' }}>
-                  Home / {type}
+                  Home / {" "} <Box
+                    component="span"
+                    sx={{
+                      color: "#164056",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Overview
+                  </Box>{" "}
+                  {type}
                 </Typography>}
                 {(listings && listings.length > 0) && <Typography variant="h5" sx={{ fontSize: { xs: '1rem', sm: '1rem' }, color: '#000' }}>
                   {listings.length} nearby location found matched to your Search
@@ -905,7 +913,7 @@ const sampleApiData = [
                             whiteSpace: 'nowrap',
                             maxWidth: '100%',
                             color: 'rgb(70 64 64 / 60%)',
-                            marginBottom:'5px'
+                            marginBottom: '5px'
                           }}
                         >
                           {item.location}

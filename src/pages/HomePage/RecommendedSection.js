@@ -261,7 +261,6 @@ const ServicesRecommendations = ({ category = "Beauty" }) => {
 
       const data = await fetchRecommendedServices({
         category,
-        searchFor: "Businesses",
         latitude: latitude || null,
         longitude: longitude || null,
         page: 1,

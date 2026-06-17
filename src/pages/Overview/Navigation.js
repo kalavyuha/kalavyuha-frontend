@@ -33,12 +33,12 @@ const Navigation = React.memo(({ onDataChange, setBuisnessType, setIsLoading, se
         },
     });
 
-    useEffect(() => {
-        if (selectedCategory) {
-            setBuisnessType(selectedCategory);
-            updateSearchResult();
-        }
-    }, [selectedCategory])
+    // useEffect(() => {
+    //     if (selectedCategory) {
+    //         setBuisnessType(selectedCategory);
+    //         updateSearchResult();
+    //     }
+    // }, [selectedCategory])
 
     // Update local state when searchData changes
     useEffect(() => {
