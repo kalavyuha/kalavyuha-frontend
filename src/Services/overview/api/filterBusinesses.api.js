@@ -51,7 +51,6 @@ export const fetchFilteredBusinesses = async ({
     );
 
     const data = await response.json();
-
     if (data?.status === 1 && data?.data?.businesses) {
       return transformFilteredBusinesses(data.data.businesses);
     }

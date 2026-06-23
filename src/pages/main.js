@@ -80,7 +80,7 @@ const Main = () => {
             <RecommendedSection category="Fitness" />
             <RecommendedSection category="Health Care" />
             <BusinessList/>
-            <AppInfoSection />
+            {/* <AppInfoSection /> */}
             <Reviews />
         </>
     )

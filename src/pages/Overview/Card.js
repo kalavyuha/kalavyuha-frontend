@@ -1,352 +1,408 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardMedia, Button, IconButton, Typography, Chip, Box, Grid, Stack, Tooltip, Skeleton } from '@mui/material';
-import { Clock, Wifi, AirVent, PawPrint } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Button,
+  IconButton,
+  Typography,
+  Chip,
+  Box,
+  Grid,
+  Stack,
+  Skeleton,
+} from '@mui/material';
+import {
+  Clock,
+  Wifi,
+  AirVent,
+  PawPrint,
+  Plus,
+  MapPin,
+  Star,
+} from 'lucide-react';
 import FavoriteOutlinedIcon from '@mui/icons-material/FavoriteOutlined';
-import PlusIcon from '@mui/icons-material/PlusOne';
-import PoolIcon from '@mui/icons-material/Pool';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
-import ArrowCircleRightOutlinedIcon from '@mui/icons-material/ArrowCircleRightOutlined';
+import PoolIcon from '@mui/icons-material/Pool';
 import { DealsSection } from './DealSeaction';
 import { apidelete, apiget, apipost } from '../service/api';
 import { showError, showSuccess } from '../../components/toast';
-import ImageIcon from '../../assets/images/Overview_Images/image.png'
+import ImageIcon from '../../assets/images/Overview_Images/image.png';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const userId = 76368169;
+// Constants
+const USER_ID = 76368169;
+const AMENITY_ICON_SIZE = { height: '16px', fontSize: '16px' };
 
-const iconStyle = {
-  height: '16px',
-  fontSize: '16px'
-}
+// Amenity Configuration
+const AMENITY_CONFIG = {
+  displayNames: {
+    ACCooler: 'AC',
+    FreeWiFi: 'WiFi',
+    Internet: 'WiFi',
+    ParkingFacility: 'Parking',
+    Parking: 'Parking',
+    InstantConfirmation: 'Instant Booking',
+    VirtualConsultation: 'Virtual Service',
+    AtHomeService: 'Home Service',
+    Accessibility: 'Wheelchair Accessible',
+    Water: 'Water Supply',
+  },
+  extraAmenityDisplayNames: {
+    SpaAvailable: 'Spa',
+    GymInside: 'Gym',
+    PetFriendly: 'Pet Friendly',
+    ValetParking: 'Valet Parking',
+  },
+  skipFields: [
+    'BusinessId',
+    'CreatedBy',
+    'CreatedOn',
+    'UpdatedBy',
+    'UpdatedOn',
+    '_id',
+    'ExtraAmenities',
+  ],
+};
 
-const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [favourites, setFavourites] = useState([])
-  const [updatingFavourite, setUpdatingFavourite] = useState(null);
-  const [type, setType] = useState('');
+// Icon Mapping
+const getAmenityIcon = (amenityName) => {
+  const iconMap = {
+    // AC/Cooling
+    ACCooler: <AirVent style={AMENITY_ICON_SIZE} />,
+    AC: <AirVent style={AMENITY_ICON_SIZE} />,
+    'Air Conditioning': <AirVent style={AMENITY_ICON_SIZE} />,
 
-  useEffect(() => {
-    setType(buisnessType)
-  }, [buisnessType])
+    // WiFi/Internet
+    FreeWiFi: <Wifi style={AMENITY_ICON_SIZE} />,
+    WiFi: <Wifi style={AMENITY_ICON_SIZE} />,
+    Wifi: <Wifi style={AMENITY_ICON_SIZE} />,
+    Internet: <Wifi style={AMENITY_ICON_SIZE} />,
 
+    // Pet
+    PetFriendly: <PawPrint style={AMENITY_ICON_SIZE} />,
+    'Pet Friendly': <PawPrint style={AMENITY_ICON_SIZE} />,
 
+    // Water/Pool
+    Pool: <PoolIcon style={AMENITY_ICON_SIZE} />,
+    'Swimming Pool': <PoolIcon style={AMENITY_ICON_SIZE} />,
+    Water: <PoolIcon style={AMENITY_ICON_SIZE} />,
+    SpaAvailable: <PoolIcon style={AMENITY_ICON_SIZE} />,
 
+    // Parking
+    Parking: <Plus style={AMENITY_ICON_SIZE} />,
+    ParkingFacility: <Plus style={AMENITY_ICON_SIZE} />,
+    ValetParking: <Plus style={AMENITY_ICON_SIZE} />,
 
-  const processAmenities = (businessFacilities) => {
-    if (!businessFacilities || !Array.isArray(businessFacilities) || businessFacilities.length === 0) {
-      return [];
+    // Time/Booking
+    InstantConfirmation: <Clock style={AMENITY_ICON_SIZE} />,
+
+    // Other
+    GymInside: <Plus style={AMENITY_ICON_SIZE} />,
+    Accessibility: <Plus style={AMENITY_ICON_SIZE} />,
+    AtHomeService: <Plus style={AMENITY_ICON_SIZE} />,
+  };
+
+  const normalizedName = amenityName?.trim();
+  const directMatch = iconMap[amenityName];
+  if (directMatch) return directMatch;
+
+  const caseInsensitiveMatch = Object.keys(iconMap).find(
+    (key) => key.toLowerCase() === normalizedName?.toLowerCase()
+  );
+
+  return caseInsensitiveMatch
+    ? iconMap[caseInsensitiveMatch]
+    : <AirVent style={AMENITY_ICON_SIZE} />;
+};
+
+// Utility Functions
+const formatDisplayName = (key, displayNameMap) => {
+  if (displayNameMap && displayNameMap[key]) {
+    return displayNameMap[key];
+  }
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
+};
+
+const processAmenities = (businessFacilities) => {
+  if (!businessFacilities?.length) return [];
+
+  const facilities = businessFacilities[0];
+  if (!facilities || typeof facilities !== 'object') return [];
+
+  const uniqueAmenities = [];
+  const seenAmenities = new Set();
+
+  const addUniqueAmenity = (key, displayName) => {
+    const normalizedKey = displayName.toLowerCase().trim();
+    if (!seenAmenities.has(normalizedKey)) {
+      seenAmenities.add(normalizedKey);
+      uniqueAmenities.push({
+        icon: getAmenityIcon(key),
+        label: displayName,
+      });
     }
+  };
 
-    const facilities = businessFacilities[0];
-
-    if (!facilities || typeof facilities !== 'object') {
-      return [];
+  // Process main facilities
+  Object.entries(facilities).forEach(([key, value]) => {
+    if (AMENITY_CONFIG.skipFields.includes(key)) return;
+    if (typeof value === 'boolean' && value === true) {
+      const displayName = formatDisplayName(key, AMENITY_CONFIG.displayNames);
+      addUniqueAmenity(key, displayName);
     }
+  });
 
-    const uniqueAmenities = [];
-    const seenAmenities = new Set();
-
-    // Helper function to add amenity if not already seen
-    const addUniqueAmenity = (key, displayName) => {
-      const normalizedKey = displayName.toLowerCase().trim();
-      if (!seenAmenities.has(normalizedKey)) {
-        seenAmenities.add(normalizedKey);
-        uniqueAmenities.push({
-          icon: getAmenityIcon(key),
-          label: displayName
-        });
-      }
-    };
-
-    // Fields to skip (non-amenity database fields)
-    const skipFields = [
-      'BusinessId',
-      'CreatedBy',
-      'CreatedOn',
-      'UpdatedBy',
-      'UpdatedOn',
-      '_id',
-      'ExtraAmenities' // We'll handle this separately
-    ];
-
-    // Process main facilities (excluding ExtraAmenities and database fields)
-    Object.entries(facilities).forEach(([key, value]) => {
-      // Skip non-amenity fields and ExtraAmenities (handled separately)
-      if (skipFields.includes(key)) {
-        return;
-      }
-
-      // Only process boolean true values
+  // Process ExtraAmenities
+  if (facilities.ExtraAmenities && typeof facilities.ExtraAmenities === 'object') {
+    Object.entries(facilities.ExtraAmenities).forEach(([key, value]) => {
       if (typeof value === 'boolean' && value === true) {
-        let displayName = key;
-
-        // Special cases for better display names
-        const displayNameMap = {
-          'ACCooler': 'AC',
-          'FreeWiFi': 'WiFi',
-          'Internet': 'WiFi',
-          'ParkingFacility': 'Parking',
-          'Parking': 'Parking',
-          'InstantConfirmation': 'Instant Booking',
-          'VirtualConsultation': 'Virtual Service',
-          'AtHomeService': 'Home Service',
-          'Accessibility': 'Wheelchair Accessible',
-          'Water': 'Water Supply'
-        };
-
-        if (displayNameMap[key]) {
-          displayName = displayNameMap[key];
-        } else {
-          // Convert camelCase to readable format
-          displayName = key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase())
-            .trim();
-        }
-
+        const displayName = formatDisplayName(
+          key,
+          AMENITY_CONFIG.extraAmenityDisplayNames
+        );
         addUniqueAmenity(key, displayName);
       }
     });
+  }
 
-    // Process ExtraAmenities separately
-    if (facilities.ExtraAmenities && typeof facilities.ExtraAmenities === 'object') {
-      Object.entries(facilities.ExtraAmenities).forEach(([key, value]) => {
-        // Only process boolean true values
-        if (typeof value === 'boolean' && value === true) {
-          let displayName = key;
+  return uniqueAmenities;
+};
 
-          // Special cases for extra amenities
-          const extraDisplayNameMap = {
-            'SpaAvailable': 'Spa',
-            'GymInside': 'Gym',
-            'PetFriendly': 'Pet Friendly',
-            'ValetParking': 'Valet Parking'
-          };
+const processServices = (services) => {
+  if (!services?.length || !Array.isArray(services[0]?.Categories)) {
+    return [];
+  }
 
-          if (extraDisplayNameMap[key]) {
-            displayName = extraDisplayNameMap[key];
-          } else {
-            // Convert camelCase to readable format
-            displayName = key
-              .replace(/([A-Z])/g, ' $1')
-              .replace(/^./, str => str.toUpperCase())
-              .trim();
-          }
-
-          addUniqueAmenity(key, displayName);
-        }
-      });
-    }
-
-    return uniqueAmenities;
-  };
-
-  // Enhanced getAmenityIcon function with more comprehensive mapping
-  const getAmenityIcon = (amenityName) => {
-    const iconStyle = {
-      height: '16px',
-      fontSize: '16px'
-    };
-
-    const iconMap = {
-      // AC/Cooling related
-      'ACCooler': <AirVent style={iconStyle} />,
-      'AC': <AirVent style={iconStyle} />,
-      'A C Cooler': <AirVent style={iconStyle} />,
-      'Air Conditioning': <AirVent style={iconStyle} />,
-      'Cooler': <AirVent style={iconStyle} />,
-
-      // WiFi/Internet related
-      'FreeWiFi': <Wifi style={iconStyle} />,
-      'WiFi': <Wifi style={iconStyle} />,
-      'Wifi': <Wifi style={iconStyle} />,
-      'Wi-Fi': <Wifi style={iconStyle} />,
-      'Free Wi Fi': <Wifi style={iconStyle} />,
-      'Internet': <Wifi style={iconStyle} />,
-      'VirtualConsultation': <Wifi style={iconStyle} />,
-      'Virtual Consultation': <Wifi style={iconStyle} />,
-
-      // Pet related
-      'PetFriendly': <PawPrint style={iconStyle} />,
-      'Pet Friendly': <PawPrint style={iconStyle} />,
-      'Pet-Friendly': <PawPrint style={iconStyle} />,
-      'Pets': <PawPrint style={iconStyle} />,
-      'Animals': <PawPrint style={iconStyle} />,
-
-      // Water/Pool/Spa related
-      'Pool': <PoolIcon style={iconStyle} />,
-      'Swimming Pool': <PoolIcon style={iconStyle} />,
-      'Swimming': <PoolIcon style={iconStyle} />,
-      'Water': <PoolIcon style={iconStyle} />,
-      'SpaAvailable': <PoolIcon style={iconStyle} />,
-      'Spa Available': <PoolIcon style={iconStyle} />,
-
-      // Parking related
-      'Parking': <PlusIcon style={iconStyle} />,
-      'ParkingFacility': <PlusIcon style={iconStyle} />,
-      'Parking Facility': <PlusIcon style={iconStyle} />,
-      'ValetParking': <PlusIcon style={iconStyle} />,
-      'Valet Parking': <PlusIcon style={iconStyle} />,
-
-      // Time/Booking related
-      'InstantConfirmation': <Clock style={iconStyle} />,
-      'Instant Confirmation': <Clock style={iconStyle} />,
-
-      // Other services
-      'GymInside': <PlusIcon style={iconStyle} />,
-      'Gym Inside': <PlusIcon style={iconStyle} />,
-      'Accessibility': <PlusIcon style={iconStyle} />,
-      'AtHomeService': <PlusIcon style={iconStyle} />,
-      'At Home Service': <PlusIcon style={iconStyle} />,
-    };
-
-    // Direct match first
-    if (iconMap[amenityName]) {
-      return iconMap[amenityName];
-    }
-
-    // Case-insensitive match
-    const normalizedName = amenityName?.trim();
-    const matchedKey = Object.keys(iconMap).find(key =>
-      key.toLowerCase() === normalizedName?.toLowerCase()
-    );
-
-    // Return matched icon or default to AirVent
-    return matchedKey ? iconMap[matchedKey] : <AirVent style={iconStyle} />;
-  };
-
-  // Test with your sample data
-  const sampleApiData = [
-    {
-      business_details: {
-        BusinessName: 'Glow Beauty Salon',
-        StreetAddress: 'MG Road',
-        Region: 'New Delhi',
-        LikesCount: 128,
-        ClosingTime: '9:00 PM',
-        ProfileImage: ImageIcon,
-        _id: 'dummy-1'
-      },
-      services: [
-        {
-          Categories: [
-            {
-              Services: [
-                {
-                  Name: 'Haircut',
-                  Duration: '30 mins',
-                  Price: 250,
-                  isDiscount: false
-                }
-              ]
-            },
-            {
-              Services: [
-                {
-                  Name: 'Facial',
-                  Duration: '45 mins',
-                  Price: 499,
-                  isDiscount: true,
-                  DiscountedPrice: 399
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      'Business Facilities': [
-        {
-          ACCooler: true,
-          FreeWiFi: true,
-          Parking: true,
-          Water: true,
-          ExtraAmenities: {
-            SpaAvailable: true,
-            ValetParking: true,
-            GymInside: true
-          }
-        }
-      ],
-      'Average Rating': 4.8
-    }
-  ];
-
-
-
-  const sourceData = Array.isArray(data) && data.length > 0 ? data : sampleApiData;
-
-  const listings = sourceData.map(filter => {
-    const { business_details, services, 'Business Facilities': apiAmenities, 'Average Rating': rating } = filter;
-
-    const processedAmenities = processAmenities(apiAmenities);
-
-    // Extract first service from first two categories only
-
-    let mappedServices = [];
-    if (Array.isArray(services) && services.length > 0 && Array.isArray(services[0].Categories)) {
-      mappedServices = services[0].Categories.slice(0, 2).map(category => {
-        if (Array.isArray(category?.Services) && category.Services.length > 0) {
-          const service = category.Services[0];
-          return {
-            name: service?.Name || 'N/A',
-            duration: service?.Duration || 'N/A',
-            basePrice: service?.Price ? `₹${service.Price}` : 'N/A',
-            discountPrice:
-              service?.isDiscount && service?.DiscountedPrice
-                ? `₹${service.DiscountedPrice}`
-                : (service?.Price ? `₹${service.Price}` : 'N/A'),
-          };
-        } else {
-          // If no service, show N/A
-          return {
-            name: 'N/A',
-            duration: 'N/A',
-            basePrice: 'N/A',
-            discountPrice: 'N/A',
-          };
-        }
-      });
+  return services[0].Categories.slice(0, 2).map((category) => {
+    const service = category?.Services?.[0];
+    if (!service) {
+      return { name: 'N/A', duration: 'N/A', basePrice: 'N/A', discountPrice: 'N/A' };
     }
 
     return {
-      name: business_details.BusinessName,
-      location: `${business_details.StreetAddress}, ${business_details.Region}`,
-      rating: rating,
-      reviews: business_details.LikesCount,
-      distance: '0.5km Away',
-      closeAt: business_details.ClosingTime,
-      services: mappedServices,
-      amenities: processedAmenities, // Use the new processed amenities
-      image: business_details.ProfileImage,
-      _id: business_details._id
+      name: service.Name || 'N/A',
+      duration: service.Duration || 'N/A',
+      basePrice: service.Price ? `₹${service.Price}` : 'N/A',
+      discountPrice: service.isDiscount && service.DiscountedPrice
+        ? `₹${service.DiscountedPrice}`
+        : service.Price
+          ? `₹${service.Price}`
+          : 'N/A',
     };
   });
+};
 
+const transformListingData = (data) => {
+  if (!Array.isArray(data)) return [];
 
+  return data.map((item) => {
+    const details = item.business_details || {};
 
-  const favouriteServices = async () => {
+    return {
+      id: details._id,
+
+      name: details.BusinessName || "N/A",
+
+      image: details.ProfileImage || ImageIcon,
+
+      location: `${details.StreetAddress || ""} ${details.Region || ""
+        }`.trim(),
+
+      rating: details.AverageRating || 0,
+
+      reviews: details.ReviewCount || 0,
+
+      closeTime: details.ClosingTime,
+
+      service_count:
+        item.services?.length + (item.more_services_count || 0),
+
+      services:
+        item.services?.map((service) => ({
+          name: service.Name,
+          duration: "Service",
+          price:
+            service.isDiscount && service.DiscountedPrice
+              ? service.DiscountedPrice
+              : service.Price,
+        })) || [],
+
+      more_services_count: item.more_services_count || 0,
+
+      more_services_starting_from:
+        item.more_services_starting_from || 0,
+    };
+  });
+};
+// Sub-components
+const ServiceItem = ({ service, onViewAll }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: { xs: 'column', sm: 'row' },
+      justifyContent: 'space-between',
+      alignItems: { xs: 'flex-start', sm: 'center' },
+      mb: 1,
+      borderBottom: '1px solid #e2e6ea',
+      gap: { xs: 1, sm: 0 },
+      width: '100%',
+    }}
+  >
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+      <Typography
+        variant="subtitle1"
+        sx={{
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          textTransform: 'capitalize',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: '60%',
+        }}
+      >
+        {service.name}
+      </Typography>
+      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+        {service.discountPrice}
+      </Typography>
+    </Box>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+      <Typography variant="body1" sx={{ fontSize: '12px', fontWeight: 600, color: 'gray' }}>
+        {service.duration}
+      </Typography>
+      <Button
+        sx={{ color: '#1b4d69', fontSize: '1.4rem', fontWeight: 700, height: '28px' }}
+        onClick={onViewAll}
+      >
+        +
+      </Button>
+    </Box>
+  </Box>
+);
+
+const SkeletonCard = () => (
+  <Box sx={{ maxWidth: '100%', mx: 'auto', mt: 2 }}>
+    <Card
+      variant="contained"
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        p: 1,
+        gap: 1,
+        bgcolor: '#e2e6ea',
+        borderRadius: '15px',
+      }}
+    >
+      <Box sx={{ position: 'relative', width: { xs: '100%', md: '250px' }, minHeight: { xs: 200, md: 220 } }}>
+        <Skeleton variant="rectangular" sx={{ height: '80%', borderRadius: 3 }} />
+        <Skeleton variant="rectangular" sx={{ height: '40px', width: '100%', mt: '10px', borderRadius: 3 }} />
+      </Box>
+      <CardContent
+        sx={{
+          flex: { xs: '1', md: '2' },
+          p: { xs: 1, sm: 2, md: '10px' },
+          border: '2px solid #919191',
+          borderRadius: '10px',
+          backgroundColor: '#fff',
+          m: { xs: 1, sm: 0 },
+          width: { sm: '100%', md: '200px' },
+          minWidth: '230px',
+          boxSizing: 'border-box',
+        }}
+      >
+        <Skeleton variant="text" width="70%" height={28} />
+        <Skeleton variant="text" width="40%" height={24} sx={{ mt: 1 }} />
+        <Skeleton variant="text" width="80%" height={20} sx={{ mt: 1 }} />
+        {[0, 1].map((_, index) => (
+          <Box key={index} sx={{ mt: 2, borderBottom: '1px solid #e2e6ea', py: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Skeleton variant="text" width="50%" height={24} />
+              <Skeleton variant="text" width="30%" height={24} />
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+              <Skeleton variant="text" width="30%" height={20} />
+              <Skeleton variant="text" width="10%" height={20} />
+            </Box>
+          </Box>
+        ))}
+        <Skeleton variant="text" width="20%" height={20} sx={{ mt: 1 }} />
+      </CardContent>
+      <Box
+        sx={{
+          width: { md: '400px' },
+          p: { xs: 1, sm: '12px' },
+          bgcolor: 'grey.100',
+          border: '2px solid #919191',
+          borderRadius: '10px',
+          m: { xs: 1, sm: 0 },
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Skeleton variant="rectangular" width="30%" height={24} sx={{ borderRadius: '20px' }} />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+          <Skeleton variant="text" width="30%" height={20} />
+          <Skeleton variant="text" width="30%" height={20} />
+        </Box>
+        <Skeleton variant="rectangular" width="40%" height={24} sx={{ borderRadius: '20px', mt: 1 }} />
+        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+          {[1, 2, 3].map((_, index) => (
+            <Skeleton key={index} variant="circular" width={16} height={16} />
+          ))}
+        </Box>
+        <Box sx={{ mt: 'auto', pt: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Skeleton variant="text" width="20%" height={20} />
+          <Skeleton variant="text" width="40%" height={20} />
+        </Box>
+      </Box>
+    </Card>
+  </Box>
+);
+
+// Main Component
+const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [favourites, setFavourites] = useState([]);
+  const [updatingFavourite, setUpdatingFavourite] = useState(null);
+
+  // Memoized transformed data
+  console.log(data)
+  const listings = useMemo(() => {
+    return Array.isArray(data)
+      ? transformListingData(data)
+      : [];
+  }, [data]);
+
+  // Fetch favorites
+  const fetchFavourites = useCallback(async () => {
     try {
-      if (!userId) return;
-      const result = await apiget(`api/v1/FavoriteService/list/${userId}`);
+      const result = await apiget(`api/v1/FavoriteService/list/${USER_ID}`);
       if (result?.data?.Status === 200) {
-        setFavourites(result?.data?.Data || [])
+        setFavourites(result?.data?.Data || []);
       }
     } catch (error) {
-      // Error fetching favourites
+      console.error('Failed to fetch favorites:', error);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    favouriteServices();
-  }, [])
+    fetchFavourites();
+  }, [fetchFavourites]);
 
   useEffect(() => {
     setLoading(false);
-  }, [listings])
+  }, [listings]);
 
-  const addFavourite = async (businessId) => {
-    if (!businessId || !userId) {
+  // Favourite handlers
+  const addFavourite = useCallback(async (businessId) => {
+    if (!businessId || !USER_ID) {
       showError('Please Login First');
       return;
     }
@@ -355,31 +411,31 @@ const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
 
     try {
       const result = await apipost('api/v1/FavoriteService/create', {
-        UserId: userId,
+        UserId: USER_ID,
         BussinessId: businessId,
-        AddedOn: new Date()
+        AddedOn: new Date(),
       });
 
       if (result?.data?.Status === 200) {
         const newFavourite = {
           BussinessId: businessId,
-          UserId: userId,
+          UserId: USER_ID,
           _id: result?.data?.Data?._id || Date.now(),
-          AddedOn: new Date()
+          AddedOn: new Date(),
         };
-        setFavourites(prevFavs => [...prevFavs, newFavourite]);
-      } else {
-        // Failed to add to favourites
+        setFavourites((prev) => [...prev, newFavourite]);
+        showSuccess('Added to favourites');
       }
     } catch (error) {
-      // Error adding favourite
+      console.error('Failed to add favourite:', error);
+      showError('Failed to add to favourites');
     } finally {
       setUpdatingFavourite(null);
     }
-  }
+  }, []);
 
-  const removeFavourite = async (favouriteId, businessId) => {
-    if (!userId) {
+  const removeFavourite = useCallback(async (favouriteId, businessId) => {
+    if (!USER_ID) {
       showError('Please Login First');
       return;
     }
@@ -390,621 +446,393 @@ const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
       const result = await apidelete(`api/v1/FavoriteService/delete/${favouriteId}`);
 
       if (result?.data?.Status === 200) {
-        setFavourites(prevFavs => prevFavs.filter(fav => fav._id !== favouriteId));
-      } else {
-        // Failed to remove from favourites
+        setFavourites((prev) => prev.filter((fav) => fav._id !== favouriteId));
+        showSuccess('Removed from favourites');
       }
     } catch (error) {
-      // Error removing favourite
+      console.error('Failed to remove favourite:', error);
+      showError('Failed to remove from favourites');
     } finally {
       setUpdatingFavourite(null);
     }
-  }
+  }, []);
 
-  const handleFavouriteToggle = (businessId) => {
-    const favouriteItem = favourites.find(fav => fav.BussinessId === businessId);
+  const handleFavouriteToggle = useCallback(
+    (businessId) => {
+      const favouriteItem = favourites.find((fav) => fav.BussinessId === businessId);
+      if (favouriteItem) {
+        removeFavourite(favouriteItem._id, businessId);
+      } else {
+        addFavourite(businessId);
+      }
+    },
+    [favourites, addFavourite, removeFavourite]
+  );
 
-    if (favouriteItem) {
-      removeFavourite(favouriteItem._id, businessId);
-    } else {
-      addFavourite(businessId);
-    }
-  }
+  const handleViewDetails = useCallback(
+    (id) => {
+      navigate(`/detail/${id}`);
+    },
+    [navigate]
+  );
 
-  const SkeletonCard = () => (
-    <Box sx={{
-      maxWidth: { xs: '100%', sm: '100%', md: '100%' },
-      mx: 'auto',
-      mt: 2,
-    }}>
-      <Card variant="contained" sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', md: 'row' },
-        p: 1,
-        gap: { xs: 1, sm: 1 },
-        bgcolor: '#e2e6ea',
-        borderRadius: '15px'
-      }}>
-        {/* Left section - Image skeleton */}
-        <Box sx={{
-          position: 'relative',
-          width: { xs: '100%', md: '250px' },
-          minHeight: { xs: 200, md: 220 },
-          overflow: 'hidden',
-        }}>
-          <Skeleton
-            variant="rectangular"
-            sx={{
-              height: '80%',
-              borderRadius: 3,
-              animation: 'pulse 1.5s ease-in-out 0.5s infinite'
-            }}
-          />
-          <Skeleton
-            variant="rectangular"
-            sx={{
-              height: '40px',
-              width: '100%',
-              marginTop: '10px',
-              borderRadius: 3,
-              animation: 'pulse 1.5s ease-in-out 0.5s infinite'
-            }}
-          />
-        </Box>
 
-        {/* Middle section - Services skeleton */}
-        <CardContent
-          sx={{
-            flex: { xs: '1', md: '2' },
-            p: { xs: 1, sm: 2, md: '10px 10px 0px' },
-            border: '2px solid #919191',
-            borderRadius: '10px',
-            backgroundColor: '#fff',
-            m: { xs: 1, sm: 0 },
-            width: { sm: '100%', md: '200px' },
-            minWidth: '230px',
-            boxSizing: 'border-box',
-          }}
-        >
-          <Skeleton variant="text" width="70%" height={28} sx={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
-          <Skeleton variant="text" width="40%" height={24} sx={{ animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
-          <Skeleton variant="text" width="80%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.4s infinite' }} />
+  const getRatingLabel = (rating) => {
+    if (rating >= 4.5) return "Excellent";
+    if (rating > 4) return "Great";
+    return "Good";
+  };
+  
+  // Render functions
+  const renderListingCard = (item, index) => {
+    const isFavorite = favourites.some((fav) => fav.BussinessId === item.id);
+    const isUpdating = updatingFavourite === item.id;
 
-          <Box sx={{ mt: 2, width: '100%', maxWidth: '300px' }}>
-            {[0, 1].map((item, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  mb: '5px',
-                  borderBottom: '1px solid #e2e6ea',
-                  width: '100%',
-                  py: 1
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                  <Skeleton variant="text" width="50%" height={24} sx={{ animation: 'pulse 1.5s ease-in-out 0.3s infinite' }} />
-                  <Skeleton variant="text" width="30%" height={24} sx={{ animation: 'pulse 1.5s ease-in-out 0.4s infinite' }} />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 1 }}>
-                  <Skeleton variant="text" width="30%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.5s infinite' }} />
-                  <Skeleton variant="text" width="10%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.6s infinite' }} />
-                </Box>
-              </Box>
-            ))}
-            <Skeleton variant="text" width="20%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.7s infinite' }} />
-          </Box>
-        </CardContent>
-
-        {/* Right section - Overview skeleton */}
+    return (
+      <Card
+        key={index}
+        sx={{
+          mb: 2,
+          borderRadius: "20px",
+          p: 2,
+          background: "#f7f7f7",
+          boxShadow: "none",
+          border: "1px solid #e5e5e5",
+        }}
+      >
         <Box
           sx={{
-            width: { md: '400px' },
-            p: { xs: 1, sm: '12px' },
-            bgcolor: 'grey.100',
-            border: '2px solid #919191',
-            borderRadius: '10px',
-            m: { xs: 1, sm: 0 },
-            display: 'flex',
-            flexDirection: 'column',
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+            alignItems: "stretch",
           }}
         >
-          <Skeleton variant="rectangular" width="30%" height={24} sx={{ borderRadius: '20px', animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
+          {/* LEFT IMAGE SECTION */}
+          <Box
+            sx={{
+              width: { xs: "100%", md: 250 },
+              position: "relative",
+              flexShrink: 0,
+            }}
+          >
+            <CardMedia
+              component="img"
+              image={item.image || ImageIcon}
+              alt={item.name}
+              sx={{
+                height: 'stretch',
+                borderRadius: "10px",
+                objectFit: "cover",
+              }}
+            />
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, mb: 1 }}>
-            <Skeleton variant="text" width="30%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.3s infinite' }} />
-            <Skeleton variant="text" width="30%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.4s infinite' }} />
+            {/* Favourite Button */}
+            <IconButton
+              onClick={() => handleFavouriteToggle(item.id)}
+              disabled={isUpdating}
+              sx={{
+                position: "absolute",
+                top: 12,
+                left: 12,
+                bgcolor: "#fff",
+                width: 42,
+                height: 42,
+                "&:hover": {
+                  bgcolor: "#fff",
+                },
+              }}
+            >
+              {isFavorite ? (
+                <FavoriteOutlinedIcon color="error" />
+              ) : (
+                <FavoriteBorderOutlinedIcon />
+              )}
+            </IconButton>
           </Box>
 
-          <Skeleton variant="rectangular" width="40%" height={24} sx={{ borderRadius: '20px', mb: 1, animation: 'pulse 1.5s ease-in-out 0.5s infinite' }} />
+          {/* CENTER CONTENT */}
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              py: 1,
+            }}
+          >
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: "1.2rem",
+                  fontWeight: 600,
+                  color: "#111",
+                  mb: 1,
+                }}
+              >
+                {item.name}
+              </Typography>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-            {[1, 2, 3, 4, 5].map((_, index) => (
-              <Skeleton
-                key={index}
-                variant="circular"
-                width={16}
-                height={16}
-                sx={{ animation: `pulse 1.5s ease-in-out ${0.1 * index}s infinite` }}
-              />
-            ))}
+              {/* LOCATION */}
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mb: 1 }}
+              >
+                <MapPin size={14} color="#8c8c8c" />
+
+                <Typography
+                  sx={{
+                    color: "#666",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  3.4 km to {item.location}
+                </Typography>
+              </Stack>
+
+              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                {!item.is_closed && (
+                  <Chip
+                    label="Open Now"
+                    size="small"
+                    sx={{
+                      bgcolor: "#dcfce7",
+                      color: "#15803d",
+                      fontWeight: 700,
+                    }}
+                  />
+                )}
+              </Stack>
+            </Box>
+
+            {/* RATING */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  bgcolor: "#1b4d69",
+                  color: "#fff",
+                  px: 2,
+                  py: 1,
+                  borderRadius: "10px 10px 10px 0",
+                  minWidth: 35,
+                  textAlign: "center",
+                }}
+              >
+                <Typography sx={{ fontWeight: 500, fontSize: "1.2rem" }}>
+                  {item.rating}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: "1rem",
+                    color: "#111",
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {getRatingLabel(item.rating)}
+                </Typography>
+
+                <Typography
+                  sx={{
+                    color: "#777",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  ({item.reviews || 0} reviews)
+                </Typography>
+              </Box>
+            </Box>
           </Box>
 
-          <Box sx={{ mt: 'auto', pt: 2, display: 'flex', justifyContent: 'space-between' }}>
-            <Skeleton variant="text" width="20%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.6s infinite' }} />
-            <Skeleton variant="text" width="40%" height={20} sx={{ animation: 'pulse 1.5s ease-in-out 0.7s infinite' }} />
+          {/* RIGHT PRICE PANEL */}
+          <Box
+            sx={{
+              width: { xs: "100%", md: 230 },
+              pl: { md: 2 },
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <Stack spacing={1.2}>
+              {item.services?.slice(0, 3).map((service, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    bgcolor: "#fefefe",
+                    borderRadius: "9px",
+                    px: 2.5,
+                    py: 1,
+                    gap: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontSize: "0.7rem",
+                        color: "#888",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {service.name}
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        fontSize: "0.8rem",
+                        fontWeight: 700,
+                        color: "#000",
+                      }}
+                    >
+                      ₹{service.price || service.discountPrice}
+                    </Typography>
+                  </Box>
+
+                  <Button
+                    variant="contained"
+                    sx={{
+                      borderRadius: "999px",
+                      bgcolor: "#aec5d2",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      boxShadow: "none",
+
+                      px: "9px",
+                      py: "5px",
+
+                      minWidth: "unset",
+                      lineHeight: 1,
+
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+
+                      "&:hover": {
+                        bgcolor: "#CBD5E0",
+                        boxShadow: "none",
+                      },
+                    }}
+                  >
+                    ADD
+                  </Button>
+                </Box>
+              ))}
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  bgcolor: "#f8fafc",
+                  borderRadius: "12px",
+                  px: 2.5,
+                  py: 1,
+                }}
+              >
+                <Box>
+                  <Typography
+                    sx={{
+                      fontSize: "0.7rem",
+                      color: "#888",
+                      fontWeight: 600,
+
+                    }}
+                  >
+                    +{item.more_services_count} more
+                  </Typography>
+                  <Typography
+                    sx={{
+
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    From ₹{item.more_services_starting_from}
+                  </Typography>
+                </Box>
+                <ExpandMoreIcon sx={{ color: "#888" }} />
+              </Box>
+
+            </Stack>
           </Box>
         </Box>
       </Card>
-    </Box>
-  );
+    );
+  };
 
-  // Add the CSS keyframes for the pulse animation
-  const pulseAnimation = `
-    @keyframes pulse {
-      0% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
-      100% {
-        opacity: 1;
-      }
-    }
-  `;
+  const renderSkeletons = () => (
+    <>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <SkeletonCard key={index} />
+      ))}
+    </>
+  );
 
   return (
     <>
-      <style>{pulseAnimation}</style>
       <Grid container mt={0} spacing={3}>
         <Grid item sx={{ width: { xs: '100%', sm: '100%', md: '30%' } }}>
           <DealsSection loading={isLoading} />
         </Grid>
 
         <Grid item sx={{ width: { xs: '100%', sm: '100%', md: '70%' } }}>
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}>
-            {(loading || isLoading) ? (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {loading || isLoading ? (
               <>
-                <Skeleton variant="text" width="20%" height={24} sx={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
-                <Skeleton variant="text" width="40%" height={24} sx={{ animation: 'pulse 1.5s ease-in-out 0.2s infinite' }} />
+                <Skeleton variant="text" width="20%" height={24} />
+                <Skeleton variant="text" width="40%" height={24} />
               </>
             ) : (
               <>
-                {(listings && listings.length > 0) && <Typography variant="h5" sx={{ fontSize: { xs: '1rem', sm: '1rem' }, color: '#000' }}>
-                  Home / {" "} <Box
-                    component="span"
-                    sx={{
-                      color: "#164056",
-                      fontWeight: 700,
-                    }}
-                  >
-                    Overview
-                  </Box>{" "}
-                  {type}
-                </Typography>}
-                {(listings && listings.length > 0) && <Typography variant="h5" sx={{ fontSize: { xs: '1rem', sm: '1rem' }, color: '#000' }}>
-                  {listings.length} nearby location found matched to your Search
-                </Typography>}
+                {listings.length > 0 && (
+                  <>
+                    <Typography variant="h5" sx={{ fontSize: { xs: '1rem', sm: '1rem' }, color: '#000' }}>
+                      Home /{' '}
+                      <Box component="span" sx={{ color: '#164056', fontWeight: 700 }}>
+                        Overview
+                      </Box>{' '}
+                      {buisnessType}
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontSize: { xs: '1rem', sm: '1rem' }, color: '#000' }}>
+                      {listings.length} nearby location found matched to your Search
+                    </Typography>
+                  </>
+                )}
               </>
             )}
           </Box>
 
-          {(listings && listings.length > 0) ? <Box sx={{ mt: 1 }}>
-            {(loading || isLoading) ? (
-              // Display skeleton cards while loading
-              Array.from(new Array(3)).map((_, index) => (
-                <SkeletonCard key={index} />
-              ))
-            ) : (
-              // Display actual content when data is loaded
-              listings && listings.map((item, index) => {
-                // Check if current item is in favorites
-                const isFavorite = favourites && favourites.some(fav => fav.BussinessId === item._id);
-                const isUpdating = updatingFavourite === item._id;
-
-                return (
-                  <Box key={index} sx={{
-                    maxWidth: { xs: '100%', sm: '100%', md: '100%' },
-                    mx: 'auto',
-                    mt: 2,
-                  }}>
-                    <Card variant="contained" sx={{
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
-                      p: 1,
-                      gap: { xs: 1, sm: 1 },
-                      bgcolor: '#e2e6ea',
-                      borderRadius: '15px'
-                    }}>
-                      <Box sx={{
-                        position: 'relative',
-                        width: { xs: '100%', md: '250px' },
-                        minHeight: { xs: 200, md: 220 },
-                        overflow: 'hidden',
-                      }}>
-                        <Chip
-                          label="DEAL"
-                          color="success"
-                          size="small"
-                          sx={{
-                            position: 'absolute',
-                            top: 15,
-                            left: -30,
-                            transform: 'rotate(-45deg)',
-                            zIndex: 1,
-                            width: "120px"
-                          }}
-                        />
-                        <CardMedia
-                          component="img"
-                          image={item.image || ImageIcon}
-                          alt="Barber Hirsch"
-                          onError={(e) => { e.target.src = ImageIcon }}
-                          sx={{
-                            borderRadius: 3,
-                            height: '80%',
-                            objectFit: 'cover'
-                          }}
-                        />
-
-                        <IconButton
-                          sx={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            backgroundColor: 'white',
-                            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' },
-                            opacity: isUpdating ? 0.6 : 1
-                          }}
-                          aria-label="add to favorites"
-                          disabled={isUpdating}
-                          onClick={() => handleFavouriteToggle(item._id)}
-                        >
-                          {isFavorite ? (
-                            <FavoriteOutlinedIcon color="error" />
-                          ) : (
-                            <FavoriteBorderOutlinedIcon color="action" />
-                          )}
-                        </IconButton>
-                        <Button
-                          variant="contained"
-                          fullWidth
-                          endIcon={<ArrowCircleRightOutlinedIcon />}
-                          onClick={() => navigate(`/detail/${item._id}`)}
-                          sx={{
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            marginTop: '10px',
-                            borderRadius: 3,
-                            backgroundColor: '#1b4d69',
-                            color: '#fff',
-                            '&:hover': {
-                              backgroundColor: '#164056',
-                            },
-                            width: { xs: '100%', sm: 'auto', md: '100%' },
-                          }}
-                        >
-                          Book Slot
-                        </Button>
-                      </Box>
-
-                      {/* Middle Section - Services */}
-                      <CardContent
-                        sx={{
-                          flex: { xs: '1', md: '2' },
-                          p: { xs: 1, sm: 2, md: '10px 10px 0px' },
-                          border: '2px solid #919191',
-                          borderRadius: '10px',
-                          backgroundColor: '#fff',
-                          m: { xs: 1, sm: 0 },
-                          width: { sm: '100%', md: '200px' },
-                          minWidth: '230px',
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            justifyContent: 'space-between',
-                            gap: { xs: 1, sm: 0 },
-                            flexWrap: 'wrap',
-                            width: '100%',
-                          }}
-                        >
-                          <Box sx={{ flex: '1 1 100%', width: '100%' }}>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontSize: '1rem',
-                                fontWeight: 700,
-                                lineHeight: 1.2,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                maxWidth: '100%',
-                              }}
-                              component="div"
-                            >
-                              {item.name}
-                            </Typography>
-                            {item?.rating && item?.rating !== 'No ratings' ? (
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  flexWrap: 'wrap',
-                                  gap: 0.5,
-                                  maxWidth: '100%',
-                                }}
-                              >
-                                <Typography variant="body2" color="textSecondary" sx={{ fontWeight: 'bold' }}>
-                                  {item?.rating}
-                                </Typography>
-                                <Box sx={{ display: 'flex', color: '#1b4d69' }}>
-                                  {'★'.split('').map((star, i) => (
-                                    <span key={i}>{star}</span>
-                                  ))}
-                                </Box>
-                              </Box>
-                            ) : null}
-
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ mt: 1, width: '100%', maxWidth: '300px' }}>
-                          {item.services?.slice(0, 2).map((service, index) => (
-                            <Box
-                              key={index}
-                              sx={{
-                                display: 'flex',
-                                flexDirection: { xs: 'column', sm: 'row' },
-                                justifyContent: 'space-between',
-                                alignItems: { xs: 'flex-start', sm: 'center' },
-                                mb: '5px',
-                                borderBottom: '1px solid #e2e6ea',
-                                gap: { xs: 1, sm: 0 },
-                                flexWrap: 'wrap',
-                                width: '100%',
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  width: '100%',
-                                }}
-                              >
-                                <Typography
-                                  variant="subtitle1"
-                                  sx={{
-                                    lineHeight: 'inherit',
-                                    overflow: 'hidden',
-                                    fontSize: '0.9rem',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    maxWidth: '60%',
-                                    textTransform: 'capitalize',
-                                    fontWeight: 600
-                                  }}
-                                >
-                                  {service.name}
-                                </Typography>
-
-                                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                                  {/* <Typography variant="body2" color="textSecondary" sx={{ textDecoration: 'line-through' }}>
-                                    {service.basePrice}
-                                  </Typography> */}
-                                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                    {service.discountPrice}
-                                  </Typography>
-                                </Stack>
-                              </Box>
-
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  width: '100%',
-                                  justifyContent: 'space-between',
-                                  flexWrap: 'wrap',
-                                }}
-                              >
-                                <Typography variant="body1" sx={{ fontSize: '12px', fontWeight: 600, color: 'gray' }}>
-                                  {`${service.duration}`}
-                                </Typography>
-                                <Button
-                                  sx={{
-                                    color: '#1b4d69',
-                                    fontSize: '1.4rem',
-                                    fontWeight: 700,
-                                    height: '28px',
-                                    ml: { xs: 0, sm: 1 },
-                                  }}
-                                >
-                                  +
-                                </Button>
-                              </Box>
-                            </Box>
-                          ))}
-                          <Button
-                            onClick={() => navigate(`/detail/${item._id}`)}
-                            sx={{
-                              color: '#1b4d69',
-                              fontWeight: 700,
-                              textDecoration: 'underline',
-                              fontSize: '0.7rem'
-                            }}
-                            size="small"
-                          >
-                            View all
-                          </Button>
-                        </Box>
-                      </CardContent>
-
-                      {/* Right Section - Overview */}
-                      <Box
-                        sx={{
-                          width: { md: '400px' },
-                          p: { xs: 1, sm: '12px' },
-                          bgcolor: 'grey.100',
-                          border: '2px solid #919191',
-                          borderRadius: '10px',
-                          m: { xs: 1, sm: 0 },
-                          display: 'flex',
-                          flexDirection: 'column',
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          fontWeight="medium"
-                          mb={1}
-                          sx={{
-                            width: 'max-content',
-                            backgroundColor: '#1b4d69',
-                            color: '#fff',
-                            px: 1.5,
-                            py: 0,
-                            borderRadius: '20px',
-                            fontWeight: 600,
-                            fontSize: { xs: '0.775rem', sm: '0.8rem', md: '0.8rem' },
-                          }}
-                        >
-                          Overview
-                        </Typography>
-
-
-
-
-
-                        <Stack
-                          direction={'row'}
-                          spacing={{ xs: 1, sm: 2 }}
-                          alignItems={{ xs: 'flex-start', sm: 'center' }}
-                          justifyContent="space-between"
-                          mb={1}
-                        >
-                          <Typography variant="body2" color="gray">
-                            {item.distance}
-                          </Typography>
-                          <Stack direction={'row'}>
-                            <Typography variant="body2" color="red">
-                              Close At
-                            </Typography>
-                            <Typography variant="body2" color="gray">
-                              {` : ${item.closeAt}`}
-                            </Typography>
-                          </Stack>
-                        </Stack>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            fontSize: '0.7rem',
-                            fontWeight: 600,
-                            whiteSpace: 'nowrap',
-                            maxWidth: '100%',
-                            color: 'rgb(70 64 64 / 60%)',
-                            marginBottom: '5px'
-                          }}
-                        >
-                          {item.location}
-                        </Typography>
-
-                        <Typography
-                          variant="subtitle1"
-                          fontWeight="medium"
-                          mb={1}
-                          sx={{
-                            width: 'max-content',
-                            backgroundColor: '#1b4d69',
-                            color: '#fff',
-                            px: 1.5,
-                            py: 0,
-                            borderRadius: '20px',
-                            fontWeight: 600,
-                            fontSize: { xs: '0.775rem', sm: '0.8rem', md: '0.8rem' },
-                          }}
-                        >
-                          What Includes
-                        </Typography>
-
-                        <Grid container spacing={1} sx={{ flexWrap: 'wrap' }}>
-                          {item?.amenities?.map((amenity, index) => (
-                            <Grid item sm="auto" key={index}>
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  color: 'gray',
-                                  gap: '6px',
-                                }}
-                              >
-                                <Tooltip title={amenity.label} arrow>
-                                  <Box
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      width: '16px',
-                                      height: '16px',
-                                      fontSize: '16px',
-                                      cursor: 'pointer',
-                                    }}
-                                  >
-                                    {amenity.icon}
-                                  </Box>
-                                </Tooltip>
-                              </Box>
-                            </Grid>
-                          ))}
-                        </Grid>
-
-                        <Box sx={{ mt: 'auto', pt: 2 }}>
-                          <Stack
-                            direction={{ xs: 'column', sm: 'row' }}
-                            alignItems={{ xs: 'flex-start', sm: 'center' }}
-                            justifyContent="space-between"
-                            spacing={{ xs: 2, sm: 1 }}
-                          >
-                            <Button
-                              onClick={() => navigate(`/detail/${item._id}`)}
-                              sx={{
-                                color: '#1b4d69',
-                                fontWeight: 800,
-                                fontSize: '10px',
-                                textDecoration: 'underline',
-                                padding: 0,
-                              }}
-                              size="small"
-                            >
-                              View Detail
-                            </Button>
-                          </Stack>
-                        </Box>
-                      </Box>
-                    </Card>
-                  </Box>
-                )
-              })
-            )}
-          </Box> :
-            <Typography style={{ width: '100%', textAlign: 'center', marginTop: '100px' }}>
+          {listings.length > 0 ? (
+            <Box sx={{ mt: 1 }}>
+              {loading || isLoading
+                ? renderSkeletons()
+                : listings.map((item, index) => renderListingCard(item, index))}
+            </Box>
+          ) : (
+            <Typography sx={{ width: '100%', textAlign: 'center', mt: '100px' }}>
               No Result Found
             </Typography>
-          }
+          )}
         </Grid>
       </Grid>
     </>
   );
 });
+
+CardList.displayName = 'CardList';
 
 export default CardList;
