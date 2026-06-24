@@ -817,7 +817,7 @@ const CardList = React.memo(({ data = [], isLoading, buisnessType }) => {
           </Box>
 
           {listings.length > 0 ? (
-            <Box sx={{ mt: 1 }}>
+            <Box sx={{ mt: 3 }}>
               {loading || isLoading
                 ? renderSkeletons()
                 : listings.map((item, index) => renderListingCard(item, index))}
